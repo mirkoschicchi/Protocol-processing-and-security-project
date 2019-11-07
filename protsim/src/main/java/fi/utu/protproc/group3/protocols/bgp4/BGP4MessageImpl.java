@@ -1,4 +1,4 @@
-package fi.utu.protproc.group3.bgp4;
+package fi.utu.protproc.group3.protocols.bgp4;
 
 public interface BGP4MessageImpl {
     short TYPE_OPEN = (short) 0x1;

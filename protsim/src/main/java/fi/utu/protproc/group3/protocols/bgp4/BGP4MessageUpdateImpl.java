@@ -1,4 +1,4 @@
-package fi.utu.protproc.group3.bgp4;
+package fi.utu.protproc.group3.protocols.bgp4;
 
 import java.net.InetAddress;
 import java.util.List;
