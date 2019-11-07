@@ -10,4 +10,9 @@ public interface NetworkNode {
      * Gets the hosts ethernet interfaces.
      */
     Iterable<EthernetInterface> getInterfaces();
+
+    /**
+     * Gets the background thread for the node (lifetime controlled by simulator).
+     */
+    Thread getBackgroundThread();
 }

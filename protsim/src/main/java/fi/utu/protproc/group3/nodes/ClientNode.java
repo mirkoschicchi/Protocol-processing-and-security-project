@@ -6,5 +6,5 @@ public interface ClientNode extends NetworkNode {
     /**
      * Simulates traffic with a server node (chosen by the simulation).
      */
-    void simulateTrafficWith(InetAddress server);
+    void simulateTrafficWith(InetAddress server, int tcpPort);
 }
