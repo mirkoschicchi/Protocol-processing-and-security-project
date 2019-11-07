@@ -1,7 +1,7 @@
 package fi.utu.protproc.group3.bgp4;
 
-public interface BGP4MessageOpenInterface extends BGP4MessageInterface {
-    static BGP4MessageOpenInterface create(short version, int myAutonomousSystem, int holdTime, int bgpIdentifier) {
+public interface BGP4MessageOpenImpl extends BGP4MessageImpl {
+    static BGP4MessageOpenImpl create(short version, int myAutonomousSystem, int holdTime, int bgpIdentifier) {
         throw new UnsupportedOperationException();
     }
 

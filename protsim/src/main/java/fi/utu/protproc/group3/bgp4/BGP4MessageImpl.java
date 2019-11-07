@@ -1,6 +1,6 @@
 package fi.utu.protproc.group3.bgp4;
 
-public interface BGP4MessageInterface {
+public interface BGP4MessageImpl {
     short TYPE_OPEN = (short) 0x1;
     short TYPE_UPDATE = (short) 0x2;
     short TYPE_NOTIFICATION = (short) 0x3;
@@ -11,7 +11,7 @@ public interface BGP4MessageInterface {
     short getType();
     byte[] getBody();
 
-    static BGP4MessageInterface parse(byte[] message) {
+    static BGP4MessageImpl parse(byte[] message) {
         throw new UnsupportedOperationException();
     }
 

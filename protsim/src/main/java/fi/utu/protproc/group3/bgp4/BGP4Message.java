@@ -1,8 +1,6 @@
 package fi.utu.protproc.group3.bgp4;
 
-import java.io.Serializable;
-
-public class BGP4Message implements BGP4MessageInterface {
+public class BGP4Message implements BGP4MessageImpl {
     public byte[] marker;
     public short length;
     public short type;
