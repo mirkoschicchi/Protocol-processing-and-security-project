@@ -1,6 +1,6 @@
 package fi.utu.protproc.group3.protocols.bgp4;
 
-public class BGP4Message implements BGP4MessageImpl {
+public abstract class BGP4Message implements BGP4MessageImpl {
     public byte[] marker;
     public short length;
     public short type;
@@ -26,11 +26,6 @@ public class BGP4Message implements BGP4MessageImpl {
     @Override
     public short getType() {
         return type;
-    }
-
-    @Override
-    public byte[] getBody() {
-        return body;
     }
 
     @Override
