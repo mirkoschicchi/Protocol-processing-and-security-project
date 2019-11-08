@@ -9,9 +9,8 @@ public interface BGP4MessageImpl {
     byte[] getMarker();
     int getLength();
     short getType();
-    byte[] getBody();
 
-    static BGP4MessageImpl create(byte[] marker, int length, short type, byte[] body) {
+    static BGP4MessageImpl create(byte[] marker, int length, short type) {
         throw new UnsupportedOperationException();
     }
 

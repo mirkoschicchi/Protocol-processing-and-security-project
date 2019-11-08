@@ -13,7 +13,8 @@ public class BGP4MessageImplTest {
         int length = 19;
         short type = 1;
         byte[] body = null;
-        var bgp4Message = BGP4MessageImpl.create(marker, length, type, body);
+
+        var bgp4Message = BGP4MessageKeepaliveImpl.create(marker, length, type);
         assertNotNull(bgp4Message);
 
         var bytes = bgp4Message.serialize();

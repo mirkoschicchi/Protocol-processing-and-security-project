@@ -6,13 +6,11 @@ public abstract class BGP4Message implements BGP4MessageImpl, Serializable {
     public byte[] marker;
     public short length;
     public short type;
-    public byte[] body;
 
-    public BGP4Message(byte[] marker, short length, short type, byte[] body) {
+    public BGP4Message(byte[] marker, short length, short type) {
         this.marker = marker;
         this.length = length;
         this.type = type;
-        this.body = body;
     }
 
     @Override
