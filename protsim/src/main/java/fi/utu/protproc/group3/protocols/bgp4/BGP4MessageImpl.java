@@ -9,6 +9,11 @@ public interface BGP4MessageImpl {
     byte[] getMarker();
     int getLength();
     short getType();
+    byte[] getBody();
+
+    static BGP4MessageImpl create(byte[] marker, int length, short type, byte[] body) {
+        throw new UnsupportedOperationException();
+    }
 
     static BGP4MessageImpl parse(byte[] message) {
         throw new UnsupportedOperationException();
