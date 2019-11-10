@@ -11,7 +11,7 @@ public class EthernetFrameTest {
 
     @Test
     public void createFrame() {
-        var frame = EthernetFrame.create(destMac, sourceMac, EthernetFrame.TYPE_IPV4, new byte[]{0x00});
+        var frame = EthernetFrame.create(destMac, sourceMac, EthernetFrame.TYPE_IPV6, new byte[]{0x00});
 
         assertNotNull(frame);
 
@@ -23,7 +23,7 @@ public class EthernetFrameTest {
 
     @Test
     public void reassembleFrame() {
-        var original = EthernetFrame.create(destMac, sourceMac, EthernetFrame.TYPE_IPV4, new byte[]{0x00, 0x01});
+        var original = EthernetFrame.create(destMac, sourceMac, EthernetFrame.TYPE_IPV6, new byte[]{0x00, 0x01});
 
         assertNotNull(original);
 

@@ -10,7 +10,7 @@ public interface Network {
     /**
      * Gets all devices attached to the network (simulated ARP scan)
      */
-    Iterable<EthernetInterface> getDevices();
+    Iterable<byte[]> getDevices();
 
     /**
      * Gets the network address for this network.
