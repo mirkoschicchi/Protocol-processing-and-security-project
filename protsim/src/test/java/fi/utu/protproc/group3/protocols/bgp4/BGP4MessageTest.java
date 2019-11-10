@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class BGP4MessageImplTest {
+public class BGP4MessageTest {
 
     @Test
     public void serialize() {
@@ -14,7 +14,7 @@ public class BGP4MessageImplTest {
         short type = 1;
         byte[] body = null;
 
-        var bgp4Message = BGP4MessageKeepaliveImpl.create(marker, length, type);
+        var bgp4Message = BGP4MessageKeepalive.create(marker, length, type);
         assertNotNull(bgp4Message);
 
         var bytes = bgp4Message.serialize();

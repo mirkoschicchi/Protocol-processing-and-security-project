@@ -1,28 +1,46 @@
 package fi.utu.protproc.group3.protocols.bgp4;
 
-public interface BGP4MessageImpl {
-    short TYPE_OPEN = (short) 0x1;
-    short TYPE_UPDATE = (short) 0x2;
-    short TYPE_NOTIFICATION = (short) 0x3;
-    short TYPE_KEEPALIVE = (short) 0x4;
+import java.io.*;
 
-    byte[] getMarker();
-    int getLength();
-    short getType();
+public abstract class BGP4MessageImpl implements BGP4Message, Serializable {
+    private byte[] marker;
+    private short length;
+    private short type;
 
-    static BGP4MessageImpl create(byte[] marker, int length, short type) {
-        throw new UnsupportedOperationException();
+    public BGP4MessageImpl(byte[] marker, short length, short type) {
+        this.marker = marker;
+        this.length = length;
+        this.type = type;
     }
 
-    static BGP4MessageImpl parse(byte[] message) {
-        throw new UnsupportedOperationException();
+    @Override
+    public byte[] getMarker() {
+        return marker;
     }
 
-    /**
-     * Serialize a BGP message into a byte array to send through the network
-     * @return serialized byte array
-     */
-    byte[] serialize();
+    @Override
+    public int getLength() {
+        return length;
+    }
+
+    @Override
+    public short getType() {
+        return type;
+    }
+
+    @Override
+    public byte[] serialize() {
+        byte[] serialized = null;
+
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+             ObjectOutputStream oos = new ObjectOutputStream(baos);) {
+            oos.writeObject(this);
+            serialized = baos.toByteArray();
+        } catch (IOException e) {
+            // Error in serialization
+            e.printStackTrace();
+        }
+        return serialized;
+    }
+
 }
-
-
