@@ -1,20 +1,24 @@
 package fi.utu.protproc.group3.protocols;
 
 /**
- * Represents an IPv6 packet.
+ * Represents a TCP Datagram
  */
 public interface TCPDatagram {
-  static TCPDatagram create(byte[] destination, byte[] source, byte[] payload) {
+  static TCPDatagram create(int destinationPort, int sourcePort, boolean ACK, boolean RST, boolean SYN, boolean FIN, byte[] payload) {
     throw new UnsupportedOperationException();
   }
 
-  static TCPDatagram parse(byte[] tpdu) {
+  static TCPDatagram parse(byte[] pdu) {
     throw new UnsupportedOperationException();
   }
 
-  byte[] getDestination();
+  int getDestinationPort();
+  int getSourcePort();
+  int getSeqN();
+  int getAckN();
+  int getChecksum();
 
-  byte[] getSource();
+  short getHeaderLength(); // between 5 and 15 (header between 20-60 bytes).
 
   byte[] getPayload();
 

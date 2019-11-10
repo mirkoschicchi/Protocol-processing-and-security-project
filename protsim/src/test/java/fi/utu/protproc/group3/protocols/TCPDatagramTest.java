@@ -5,12 +5,12 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TCPDatagramTest {
-    private static final byte[] sourceIPv6 = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 };
-    private static final byte[] destIPv6 = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2 };
+    private static final int sourcePort = 4444;
+    private static final int destPort = 8888;
 
     @Test
     public void createDatagram() {
-        var datagram = TCPDatagram.create(destIPv6, sourceIPv6, new byte[] { 0x00 });
+        var datagram = TCPDatagram.create(destPort, sourcePort, false, false, true, false, new byte[] { 0x01 });
 
         assertNotNull(datagram);
 
@@ -22,7 +22,7 @@ public class TCPDatagramTest {
 
     @Test
     public void reassembleDatagram() {
-        var original = TCPDatagram.create(destIPv6, sourceIPv6, new byte[] { 0x00, 0x01 });
+        var original = TCPDatagram.create(destPort, sourcePort, false, false, true, false, new byte[] { 0x01, 0x02 });
 
         assertNotNull(original);
 
@@ -31,8 +31,12 @@ public class TCPDatagramTest {
 
         assertNotNull(reassembled);
 
-        assertArrayEquals(original.getDestination(), reassembled.getDestination());
-        assertArrayEquals(original.getSource(), reassembled.getSource());
+        assertEquals(original.getDestinationPort(), reassembled.getDestinationPort());
+        assertEquals(original.getSourcePort(), reassembled.getSourcePort());
+        assertEquals(original.getAckN(), reassembled.getAckN());
+        assertEquals(original.getSeqN(), reassembled.getSeqN());
+        assertEquals(original.getChecksum(), reassembled.getChecksum());
+        assertEquals(original.getHeaderLength(), reassembled.getHeaderLength());
         assertArrayEquals(original.getPayload(), reassembled.getPayload());
     }
 }
