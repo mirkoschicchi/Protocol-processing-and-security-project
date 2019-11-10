@@ -2,13 +2,13 @@ package fi.utu.protproc.group3.protocols.bgp4;
 
 import java.io.*;
 
-public abstract class BGP4MessageImpl implements BGP4Message, Serializable {
-    private byte[] marker;
+public abstract class BGP4MessageImpl implements BGP4Message {
+    // Marker is set all to 1 following RFC-4271
+    private byte[] marker = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
     private short length;
-    private short type;
+    private byte type;
 
-    public BGP4MessageImpl(byte[] marker, short length, short type) {
-        this.marker = marker;
+    public BGP4MessageImpl(short length, byte type) {
         this.length = length;
         this.type = type;
     }
@@ -19,28 +19,12 @@ public abstract class BGP4MessageImpl implements BGP4Message, Serializable {
     }
 
     @Override
-    public int getLength() {
+    public short getLength() {
         return length;
     }
 
     @Override
-    public short getType() {
+    public byte getType() {
         return type;
     }
-
-    @Override
-    public byte[] serialize() {
-        byte[] serialized = null;
-
-        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
-             ObjectOutputStream oos = new ObjectOutputStream(baos);) {
-            oos.writeObject(this);
-            serialized = baos.toByteArray();
-        } catch (IOException e) {
-            // Error in serialization
-            e.printStackTrace();
-        }
-        return serialized;
-    }
-
 }

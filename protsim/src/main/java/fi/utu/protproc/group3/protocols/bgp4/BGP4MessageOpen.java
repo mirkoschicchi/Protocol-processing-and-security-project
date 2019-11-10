@@ -3,13 +3,15 @@ package fi.utu.protproc.group3.protocols.bgp4;
 import java.util.List;
 
 public interface BGP4MessageOpen extends BGP4Message {
-    static BGP4MessageOpen create(short version, int myAutonomousSystem, int holdTime, int bgpIdentifier) {
-        throw new UnsupportedOperationException();
+    byte BGP_VERSION = 0x4;
+
+    static BGP4MessageOpen create(short myAutonomousSystem, short holdTime, int bgpIdentifier) {
+        return new BGP4MessageOpenImpl((short) 1, BGP4Message.TYPE_OPEN, BGP_VERSION, myAutonomousSystem, holdTime, bgpIdentifier);
     }
 
-    short getVersion();
-    int getMyAutonomousSystem();
-    int getHoldTime();
-    long getBGPIdentifier();
+    byte getVersion();
+    short getMyAutonomousSystem();
+    short getHoldTime();
+    int getBGPIdentifier();
 
 }

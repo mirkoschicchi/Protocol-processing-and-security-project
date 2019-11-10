@@ -10,9 +10,9 @@ public interface BGP4MessageUpdate extends BGP4Message {
         throw new UnsupportedOperationException();
     }
 
-    int getWithdrawnRoutesLength();
+    short getWithdrawnRoutesLength();
     List<NetworkAddress> getWithdrawnRoutes();
-    int getTotalPathAttributeLength();
+    short getTotalPathAttributeLength();
     // TODO: Path attributes
     List<NetworkAddress> getNetworkLayerReachabilityInformation();
 }

@@ -1,18 +1,14 @@
 package fi.utu.protproc.group3.protocols.bgp4;
 
 public interface BGP4Message {
-    short TYPE_OPEN = (short) 0x1;
-    short TYPE_UPDATE = (short) 0x2;
-    short TYPE_NOTIFICATION = (short) 0x3;
-    short TYPE_KEEPALIVE = (short) 0x4;
+    byte TYPE_OPEN = (short) 0x1;
+    byte TYPE_UPDATE = (short) 0x2;
+    byte TYPE_NOTIFICATION = (short) 0x3;
+    byte TYPE_KEEPALIVE = (short) 0x4;
 
     byte[] getMarker();
-    int getLength();
-    short getType();
-
-    static BGP4Message create(byte[] marker, int length, short type) {
-        throw new UnsupportedOperationException();
-    }
+    short getLength();
+    byte getType();
 
     static BGP4Message parse(byte[] message) {
         throw new UnsupportedOperationException();
