@@ -6,13 +6,13 @@ public class TCPDatagramImpl implements TCPDatagram {
     // RFC-793
     private int sourcePort;
     private int destinationPort;
-    private long seqN;
-    private long ackN;
+    private long seqN = 0;
+    private long ackN = 0;
     private byte flags;
     private int checksum;
     private byte[] payload;
 
-    public TCPDatagram create(int destinationPort, int sourcePort, byte flags, long seqN, long ackN, byte[] payload) {
+    public TCPDatagramImpl(int destinationPort, int sourcePort, byte flags, long seqN, long ackN, byte[] payload) {
         if (destinationPort != 179) {
             throw new IllegalArgumentException("Destination port must be 179!"); // BGP router only receives BGP messages to port 179
         }
@@ -63,8 +63,6 @@ public class TCPDatagramImpl implements TCPDatagram {
         this.sourcePort = sourcePort;
         this.flags = flags;
         this.payload = payload;
-
-        return this;
     }
 
     public int getSourcePort() {

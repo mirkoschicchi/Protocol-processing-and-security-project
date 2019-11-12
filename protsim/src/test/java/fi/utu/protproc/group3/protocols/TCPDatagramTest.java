@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class TCPDatagramTest {
     private static final int sourcePort = 4444;
-    private static final int destPort = 8888;
+    private static final int destPort = 179;
 
     @Test
     public void createDatagram() {
@@ -27,7 +27,7 @@ public class TCPDatagramTest {
         assertNotNull(original);
 
         var bytes = original.serialize();
-        var reassembled = TCPDatagram.parse(bytes);
+        var reassembled = original.parse(bytes);
 
         assertNotNull(reassembled);
 

@@ -5,12 +5,10 @@ package fi.utu.protproc.group3.protocols;
  */
 public interface TCPDatagram {
     static TCPDatagram create(int destinationPort, int sourcePort, byte flags, long seqN, long ackN, byte[] payload) {
-      throw new UnsupportedOperationException();
+        return new TCPDatagramImpl(destinationPort, sourcePort, flags, seqN, ackN, payload);
     }
 
-    static TCPDatagram parse(byte[] pdu) {
-        throw new UnsupportedOperationException();
-    }
+    TCPDatagram parse(byte[] pdu);
 
     byte SYN = 0x1;
     byte ACK = 0x2;
