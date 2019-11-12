@@ -1,7 +1,5 @@
 package fi.utu.protproc.group3.protocols.bgp4;
 
-import java.io.*;
-
 public abstract class BGP4MessageImpl implements BGP4Message {
     // Marker is set all to 1 following RFC-4271
     private byte[] marker = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};

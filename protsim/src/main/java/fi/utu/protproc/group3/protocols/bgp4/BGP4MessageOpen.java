@@ -1,7 +1,5 @@
 package fi.utu.protproc.group3.protocols.bgp4;
 
-import java.util.List;
-
 public interface BGP4MessageOpen extends BGP4Message {
     byte BGP_VERSION = 0x4;
 

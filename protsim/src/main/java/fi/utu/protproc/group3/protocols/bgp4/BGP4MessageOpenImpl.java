@@ -1,6 +1,5 @@
 package fi.utu.protproc.group3.protocols.bgp4;
 
-import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 
 public class BGP4MessageOpenImpl extends BGP4MessageImpl implements BGP4MessageOpen {

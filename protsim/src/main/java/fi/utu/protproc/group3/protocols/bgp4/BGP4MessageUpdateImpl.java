@@ -2,7 +2,6 @@ package fi.utu.protproc.group3.protocols.bgp4;
 
 import fi.utu.protproc.group3.utils.NetworkAddress;
 
-import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.util.List;
 

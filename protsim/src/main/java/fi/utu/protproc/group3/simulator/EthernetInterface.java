@@ -1,14 +1,19 @@
 package fi.utu.protproc.group3.simulator;
 
+import reactor.core.publisher.Flux;
+
 import java.net.InetAddress;
-import java.util.Queue;
+import java.util.Collection;
 
 /**
  * Simulates an IEEE 802.3 ethernet interface as well as supporting protocols such as ARP.
  */
 public interface EthernetInterface {
-    static EthernetInterface create(byte[] address, Network connection) {
-        throw new UnsupportedOperationException();
+    static EthernetInterface create(byte[] address, Network network) {
+        var result = new EthernetInterfaceImpl(address, network);
+        network.addDevice(result);
+
+        return result;
     }
 
     /**
@@ -24,7 +29,7 @@ public interface EthernetInterface {
     /**
      * Gets all configured IP addresses
      */
-    Iterable<InetAddress> getInetAddresses();
+    Collection<InetAddress> getInetAddresses();
 
     /**
      * Removes an IP address from the interface
@@ -46,6 +51,12 @@ public interface EthernetInterface {
 
     /**
      * Gets the queue with received frames.
+     * @return
      */
-    Queue<byte[]> getReceiverQueue();
+    Flux<byte[]> getFlux();
+
+    /**
+     * Gets the underlying network connection.
+     */
+    Network getNetwork();
 }
