@@ -62,16 +62,10 @@ public class SimulationImpl implements Simulation {
 
     @Override
     public ServerNode createServer(Network network) {
-        try {
-            var result = ServerNode.create(this, generator, network);
-            nodes.add(result);
+        var result = ServerNode.create(this, generator, network);
+        nodes.add(result);
 
-            return result;
-        } catch (UnknownHostException e) {
-            rootLogger.severe("Error while creating server: " + e);
-
-            return null;
-        }
+        return result;
     }
 
     @Override

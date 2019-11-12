@@ -6,6 +6,7 @@ import fi.utu.protproc.group3.simulator.Simulation;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 
+import java.net.UnknownHostException;
 import java.time.Duration;
 
 public class ClientNodeImpl extends NetworkNodeImpl implements ClientNode {
@@ -54,7 +55,7 @@ public class ClientNodeImpl extends NetworkNodeImpl implements ClientNode {
     }
 
     @Override
-    protected void packetReceived(EthernetInterface intf, byte[] pdu) {
+    protected void packetReceived(EthernetInterface intf, byte[] pdu) throws UnknownHostException {
         super.packetReceived(intf, pdu);
 
         // TODO: Handle reply

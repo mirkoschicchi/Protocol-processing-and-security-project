@@ -1,8 +1,5 @@
 package fi.utu.protproc.group3.protocols;
 
-import java.net.Inet6Address;
-import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
@@ -11,52 +8,91 @@ import java.util.Arrays;
  */
 public class IPv6PacketImpl implements IPv6Packet {
     // RFC 2460
-    private Inet6Address destinationIP;
-    private Inet6Address sourceIP;
+    private byte version;
+    private byte trafficClass;
+    private int flowLabel;
+    private short payloadLength;
+    byte nextHeader;
     private byte hopLimit;
+    private byte[] sourceIP;
+    private byte[] destinationIP;
     private byte[] payload;
 
-    IPv6PacketImpl(Inet6Address destinationIP, Inet6Address sourceIP, byte hopLimit, byte[] payload) {
-        this.destinationIP = destinationIP;
-        this.sourceIP = sourceIP;
+    IPv6PacketImpl(byte version, byte trafficClass, int flowLabel, short payloadLength,
+                   byte nextHeader, byte hopLimit, byte[] sourceIP, byte[] destinationIP, byte[] payload) {
+        this.version = version;
+        this.trafficClass = trafficClass;
+        this.flowLabel = flowLabel;
+        this.payloadLength = payloadLength;
+        this.nextHeader = nextHeader;
         this.hopLimit = hopLimit;
+        this.sourceIP = sourceIP;
+        this.destinationIP = destinationIP;
         this.payload = payload;
     }
 
-    public Inet6Address getDestinationIP() {
-        return destinationIP;
-    }
-    public IPv6PacketImpl setDestinationIP(Inet6Address addr) {
-        this.destinationIP = addr;
-        return this;
+    public static IPv6PacketImpl parse(byte[] pdu) {
+        ByteBuffer bb = ByteBuffer.wrap(pdu);
+        // Retrieve values from IPv6 header.
+        byte firstByte = bb.get();
+        byte secondByte = bb.get();
+        byte version = (byte) ((firstByte & 0xF0) >>> 4); // 4 bit
+        if (version != 6) {
+            throw new IllegalArgumentException("Invalid version for IPv6 packet: " + version);
+        }
+        byte trafficClass = (byte) (((firstByte & 0xF) << 4) | ((secondByte & 0xF0) >>> 4)); // 8 bit
+        int flowLabel = ((secondByte & 0xF) << 16) | (bb.getShort() & 0xFFFF); // 20 bit
+        short payloadLength = bb.getShort(); // 16 bit
+        byte nextHeader = bb.get(); // 8 bit
+        byte hopLimit = bb.get(); // 8 bit
+        byte[] sourceIP = new byte[16];
+        bb.get(sourceIP, 0, 16);
+        byte[] destinationIP = new byte[16];
+        bb.get(destinationIP, 0, 16);
+
+        // Retrieve the payload, if possible.
+        short payloadBytes = (short)Math.min(payloadLength, bb.remaining());
+        byte[] payload = new byte[payloadBytes];
+        bb.get(payload, 0, payloadBytes);
+
+        return new IPv6PacketImpl(version, trafficClass, flowLabel, payloadLength,
+                nextHeader, hopLimit, sourceIP, destinationIP, payload);
     }
 
-    public Inet6Address getSourceIP(){
-        return sourceIP;
-    }
-    public IPv6PacketImpl setSourceIP(Inet6Address addr) {
-        this.sourceIP = addr;
-        return this;
+    public byte getVersion() {
+        return version;
     }
 
-    public byte getHopLimit(){
+    public byte getTrafficClass() {
+        return trafficClass;
+    }
+
+    public int getFlowLabel() {
+        return flowLabel;
+    }
+
+    public short getPayloadLength() {
+        return payloadLength;
+    }
+
+    public byte getNextHeader() {
+        return nextHeader;
+    }
+
+    public byte getHopLimit() {
         return hopLimit;
     }
-    public IPv6PacketImpl setHopLimit(byte hopLimit){
-        this.hopLimit = hopLimit;
-        return this;
+
+    public byte[] getSourceIP() {
+        return sourceIP;
     }
 
-    public int getPayloadLength(){
-        return payload.length;
+    public byte[] getDestinationIP() {
+        return destinationIP;
     }
 
-    public byte[] getPayload(){
+    public byte[] getPayload() {
         return payload;
-    }
-    public IPv6PacketImpl setPayload(byte[] payload){
-        this.payload = payload;
-        return this;
     }
 
     public byte[] serialize() {
@@ -68,28 +104,13 @@ public class IPv6PacketImpl implements IPv6Packet {
         byte[] data = new byte[length];
         ByteBuffer bb = ByteBuffer.wrap(data);
 
-        bb.put(this.sourceIP.getAddress());
-        bb.put(this.destinationIP.getAddress());
-        bb.put(this.hopLimit);
+        bb.put(sourceIP);
+        bb.put(destinationIP);
+        bb.put(hopLimit);
         if (payload != null){
             bb.put(payload);
         }
 
         return data;
-    }
-
-    public IPv6Packet parse(byte[] pdu) throws UnknownHostException {
-        ByteBuffer bb = ByteBuffer.wrap(pdu);
-        byte[] ipPacket = new byte[bb.remaining()];
-        byte[] sourceIP = Arrays.copyOfRange(ipPacket, 0, 16);
-        byte[] destinationIP = Arrays.copyOfRange(ipPacket, 17, 33);
-
-        this.sourceIP = (Inet6Address) Inet6Address.getByAddress(sourceIP);
-        this.destinationIP = (Inet6Address) Inet6Address.getByAddress(destinationIP);
-        bb.position(32);
-        this.hopLimit = bb.get();
-        this.payload = new byte[bb.remaining()];
-
-        return this;
     }
 }

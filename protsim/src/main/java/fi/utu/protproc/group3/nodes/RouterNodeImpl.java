@@ -8,6 +8,10 @@ import fi.utu.protproc.group3.simulator.EthernetInterface;
 import fi.utu.protproc.group3.simulator.Simulation;
 import fi.utu.protproc.group3.utils.NetworkAddress;
 
+import java.net.Inet6Address;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
     RouterNodeImpl(Simulation simulation, EthernetInterface[] interfaces) {
         super(simulation, interfaces);
@@ -21,14 +25,12 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
     }
 
     @Override
-    protected void packetReceived(EthernetInterface intf, byte[] pdu) {
+    protected void packetReceived(EthernetInterface intf, byte[] pdu) throws UnknownHostException {
         super.packetReceived(intf, pdu);
 
         // Parse the bytes into an Ethernet frame object
         EthernetFrame frame = EthernetFrame.parse(pdu);
-        // Here I have a doubt to discuss - Filippo
-        // IPv6Packet packet = IPv6Packet.parse(frame.getPayload());
-        IPv6Packet packet = IPv6Packet.create(null, null, (byte) 8, frame.getPayload());
+        IPv6Packet packet = IPv6Packet.parse(frame.getPayload());
         // Decrease hop count
         // packet.setHopLimit(packet.getHopLimit() - 1);
         byte[] serializedPacket = packet.serialize();
@@ -40,14 +42,16 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
         TableRow row = this.routingTable.getRowByDestinationAddress(destAddr);
         NetworkAddress nextHop = row.getNextHop();
         // Get the MAC address of the interface to which to forward the packet
-        byte[] nextHopMac = intf.resolveInetAddress(nextHop.getAddress());
+        // Filippo - Workaround to not change all the functions in the project:
+        // transform the IPv6 address into a InetAddress
+        InetAddress nextHopInetAddress = Inet6Address.getByAddress(nextHop.getAddress());
+        byte[] nextHopMac = intf.resolveInetAddress(nextHopInetAddress);
 
         // Update the destination of the ethernet frame
         // frame.setDestination = nextHopMac;
 
         // Put the update IP payload
         // frame.setPayload(serializedPacket);
-
         // Serialize the frame
         byte[] serializedFrame = frame.serialize();
 

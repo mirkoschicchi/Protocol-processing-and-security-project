@@ -35,7 +35,7 @@ public class AddressGenerator {
         }
 
         try {
-            return new NetworkAddress(InetAddress.getByAddress(netAddr), 7);
+            return new NetworkAddress(InetAddress.getByAddress(netAddr).getAddress(), 7);
         } catch (UnknownHostException e) {
             e.printStackTrace();
             return null;
@@ -45,7 +45,7 @@ public class AddressGenerator {
     public InetAddress inetAddress(NetworkAddress network) {
         Objects.requireNonNull(network);
 
-        var buf = network.getAddress().getAddress();
+        var buf = network.getAddress();
         for (var i = network.getPrefixLength() / 8; i < buf.length; i++) {
             buf[i] = (byte) random.nextInt();
         }

@@ -9,7 +9,7 @@ import java.net.UnknownHostException;
 import java.util.Objects;
 
 public interface ServerNode extends NetworkNode {
-    static ServerNode create(Simulation simulation, AddressGenerator generator, Network network) throws UnknownHostException {
+    static ServerNode create(Simulation simulation, AddressGenerator generator, Network network) {
         Objects.requireNonNull(simulation);
         Objects.requireNonNull(network);
         Objects.requireNonNull(generator);

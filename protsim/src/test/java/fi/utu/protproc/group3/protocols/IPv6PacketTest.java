@@ -9,20 +9,18 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class IPv6PacketTest {
     private static final String host = "localhost";
-    private final byte[] addr1 = Inet6Address.getByName("fe80::1").getAddress();
-    private final byte[] addr2 = Inet6Address.getByName("fe80::2").getAddress();
-
-    private final Inet6Address destIP = Inet6Address.getByAddress(host, addr1, 5);
-    private final Inet6Address sourceIP = Inet6Address.getByAddress(null, addr2, 6);
-
+    private final byte[] sourceIP = Inet6Address.getByName("fe80::1").getAddress();
+    private final byte[] destinationIP = Inet6Address.getByName("fe80::2").getAddress();
     private static final byte hopLimit = 8;
+
     IPv6PacketTest() throws UnknownHostException {
 
     }
 
     @Test
     void createPacket() {
-        var packet = IPv6Packet.create(destIP, sourceIP, hopLimit, new byte[] { 0x01 });
+        var packet = IPv6Packet.create((byte) 6, (byte) 0, 0, (short) 1,
+        (byte) 0, hopLimit, sourceIP, destinationIP, new byte[] { 0x01 });
 
         assertNotNull(packet);
 
@@ -33,20 +31,25 @@ class IPv6PacketTest {
     }
 
     @Test
-    void reassemblePacket() throws UnknownHostException {
-        var original = IPv6Packet.create(destIP, sourceIP, hopLimit, new byte[] { 0x01, 0x02 });
+    void reassemblePacket() {
+        var original = IPv6Packet.create((byte) 6, (byte) 0, 0, (short) 1,
+                (byte) 0, hopLimit, sourceIP, destinationIP, new byte[] { 0x01, 0x02 });
 
         assertNotNull(original);
 
         var bytes = original.serialize();
-        var reassembled = original.parse(bytes);
+        var reassembled = IPv6Packet.parse(bytes);
 
         assertNotNull(reassembled);
 
-        assertArrayEquals(original.getDestinationIP().getAddress(), reassembled.getDestinationIP().getAddress());
-        assertArrayEquals(original.getSourceIP().getAddress(), reassembled.getSourceIP().getAddress());
-        assertEquals(original.getHopLimit(), reassembled.getHopLimit());
+        assertEquals(original.getVersion(), reassembled.getVersion());
+        assertEquals(original.getTrafficClass(), reassembled.getTrafficClass());
+        assertEquals(original.getFlowLabel(), reassembled.getFlowLabel());
         assertEquals(original.getPayloadLength(), reassembled.getPayloadLength());
+        assertEquals(original.getNextHeader(), reassembled.getNextHeader());
+        assertEquals(original.getHopLimit(), reassembled.getHopLimit());
+        assertArrayEquals(original.getSourceIP(), reassembled.getSourceIP());
+        assertArrayEquals(original.getDestinationIP(), reassembled.getDestinationIP());
         assertArrayEquals(original.getPayload(), reassembled.getPayload());
     }
 }

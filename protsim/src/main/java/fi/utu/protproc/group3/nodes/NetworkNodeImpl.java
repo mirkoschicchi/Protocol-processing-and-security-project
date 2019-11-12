@@ -5,6 +5,7 @@ import fi.utu.protproc.group3.simulator.Simulation;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 
+import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -39,7 +40,13 @@ public abstract class NetworkNodeImpl implements NetworkNode {
         messageListener = Flux
                 .merge(
                         (Iterable<Flux<byte[]>>) interfaces.stream()
-                                .map(i -> i.getFlux().doOnEach(pdu -> packetReceived(i, pdu.get())))::iterator
+                                .map(i -> i.getFlux().doOnEach(pdu -> {
+                                    try {
+                                        packetReceived(i, pdu.get());
+                                    } catch (UnknownHostException e) {
+                                        e.printStackTrace();
+                                    }
+                                }))::iterator
                 )
                 .subscribe();
     }
@@ -52,7 +59,7 @@ public abstract class NetworkNodeImpl implements NetworkNode {
         }
     }
 
-    protected void packetReceived(EthernetInterface intf, byte[] pdu) {
+    protected void packetReceived(EthernetInterface intf, byte[] pdu) throws UnknownHostException {
         // NOP
     }
 }

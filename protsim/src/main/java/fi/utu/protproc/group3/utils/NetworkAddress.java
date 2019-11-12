@@ -8,7 +8,7 @@ import java.util.Objects;
  * Class to represent a CIDR network address in IPv4 or IPv6.
  */
 public final class NetworkAddress {
-    private final InetAddress address;
+    private final byte[] address;
     private final int prefixLength;
 
     /**
@@ -22,18 +22,18 @@ public final class NetworkAddress {
             throw new IllegalArgumentException("Error in CIDR notation: Prefix length missing.");
         }
 
-        var inetAddr = InetAddress.getByName(cidr.substring(0, lengthPos));
+        byte[] addr = InetAddress.getByName(cidr.substring(0, lengthPos)).getAddress();
         var prefixLength = Integer.parseInt(cidr.substring(lengthPos + 1));
 
-        return new NetworkAddress(inetAddr, prefixLength);
+        return new NetworkAddress(addr, prefixLength);
     }
 
-    public NetworkAddress(InetAddress address, int prefixLength) {
+    public NetworkAddress(byte[] address, int prefixLength) {
         this.address = address;
         this.prefixLength = prefixLength;
     }
 
-    public InetAddress getAddress() {
+    public byte[] getAddress() {
         return address;
     }
 
@@ -43,6 +43,12 @@ public final class NetworkAddress {
 
     @Override
     public String toString() {
-        return address.toString().substring(1) + "/" + prefixLength;
+        StringBuilder addressString = new StringBuilder();
+        for (byte b : address) {
+            addressString.append(String.format("%02x", b));
+        }
+        addressString.append("/" + prefixLength);
+
+        return addressString.toString();
     }
 }
