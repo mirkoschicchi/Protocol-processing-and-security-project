@@ -1,29 +1,34 @@
 package fi.utu.protproc.group3.protocols;
 
 /**
- * Represents a TCP Datagram
+ * Represents a TCP Datagram and should be set by a router to send data to another router
  */
 public interface TCPDatagram {
-  static TCPDatagram create(int destinationPort, int sourcePort, boolean ACK, boolean RST, boolean SYN, boolean FIN, byte[] payload) {
-    throw new UnsupportedOperationException();
-  }
+    static TCPDatagram create(int destinationPort, int sourcePort, byte flags, long seqN, long ackN, byte[] payload) {
+      throw new UnsupportedOperationException();
+    }
 
-  static TCPDatagram parse(byte[] pdu) {
-    throw new UnsupportedOperationException();
-  }
+    static TCPDatagram parse(byte[] pdu) {
+        throw new UnsupportedOperationException();
+    }
 
-  int getDestinationPort();
-  int getSourcePort();
-  int getSeqN();
-  int getAckN();
-  int getChecksum();
+    byte SYN = 0x1;
+    byte ACK = 0x2;
+    byte FIN = 0x3;
+//    byte RST = 0x4;
+    byte SYNACK = 0x5;
+    byte FINACK = 0x6;
 
-  short getHeaderLength(); // between 5 and 15 (header between 20-60 bytes).
+    int getDestinationPort();
+    int getSourcePort();
+    long getSeqN();
+    long getAckN();
+    byte getFlags();
+    int getChecksum();
+    byte[] getPayload();
 
-  byte[] getPayload();
-
-  /**
-   * Serializes the packet to transmit over the wire.
-   */
-  byte[] serialize();
+    /**
+     * Serializes the packet to transmit over the wire.
+     */
+    byte[] serialize();
 }

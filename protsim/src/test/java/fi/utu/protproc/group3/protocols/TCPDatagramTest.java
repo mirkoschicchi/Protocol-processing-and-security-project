@@ -10,7 +10,7 @@ public class TCPDatagramTest {
 
     @Test
     public void createDatagram() {
-        var datagram = TCPDatagram.create(destPort, sourcePort, false, false, true, false, new byte[] { 0x01 });
+        var datagram = TCPDatagram.create(destPort, sourcePort, TCPDatagram.SYN, 0, 0, new byte[] { 0x01 });
 
         assertNotNull(datagram);
 
@@ -22,7 +22,7 @@ public class TCPDatagramTest {
 
     @Test
     public void reassembleDatagram() {
-        var original = TCPDatagram.create(destPort, sourcePort, false, false, true, false, new byte[] { 0x01, 0x02 });
+        var original = TCPDatagram.create(destPort, sourcePort, TCPDatagram.SYN, 0, 0, new byte[] { 0x01, 0x02 });
 
         assertNotNull(original);
 
@@ -35,8 +35,8 @@ public class TCPDatagramTest {
         assertEquals(original.getSourcePort(), reassembled.getSourcePort());
         assertEquals(original.getAckN(), reassembled.getAckN());
         assertEquals(original.getSeqN(), reassembled.getSeqN());
+        assertEquals(original.getFlags(), reassembled.getFlags());
         assertEquals(original.getChecksum(), reassembled.getChecksum());
-        assertEquals(original.getHeaderLength(), reassembled.getHeaderLength());
         assertArrayEquals(original.getPayload(), reassembled.getPayload());
     }
 }
