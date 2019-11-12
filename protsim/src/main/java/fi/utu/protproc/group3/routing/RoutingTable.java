@@ -20,6 +20,13 @@ public interface RoutingTable {
     TableRow getRowByIndex(int rowIndex);
 
     /**
+     * Get the route to go to a specific destination address
+     * @param destinationAddress The destination address
+     * @return A row in the routing table corresponding with that destination address
+     */
+    TableRow getRowByDestinationAddress(NetworkAddress destinationAddress);
+
+    /**
      * Insert a new row in the table
      * @param row The row to be inserted
      */

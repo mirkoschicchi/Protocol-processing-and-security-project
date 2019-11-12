@@ -17,7 +17,7 @@ public interface BGP4Message {
     /**
      * Serialize a BGP message into a byte array to send through the network
      * @return serialized byte array
-     */
+    */
     byte[] serialize();
 }
 
