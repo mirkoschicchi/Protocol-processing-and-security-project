@@ -1,6 +1,7 @@
 package fi.utu.protproc.group3.protocols.bgp4;
 
 import fi.utu.protproc.group3.utils.NetworkAddress;
+
 import java.util.List;
 
 public interface BGP4MessageUpdate extends BGP4Message {

@@ -2,42 +2,56 @@ package fi.utu.protproc.group3.simulator;
 
 import fi.utu.protproc.group3.protocols.EthernetFrame;
 import org.junit.jupiter.api.Test;
+import reactor.test.StepVerifier;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 public class EthernetInterfaceTest {
-    private static final byte[] sourceMac = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05};
-    private static final byte[] destMac = {0x10, 0x11, 0x12, 0x13, 0x14, 0x15};
-
     @Test
     public void transmitAndReceiveFrame() {
-        var net = Network.create();
-        var intf1 = EthernetInterface.create(sourceMac, net);
-        var intf2 = EthernetInterface.create(destMac, net);
+        var sim = Simulation.create();
+        var net = sim.createNetwork();
+        var s1 = sim.createServer(net);
+        var i1 = s1.getInterfaces().iterator().next();
+        var s2 = sim.createServer(net);
+        var i2 = s2.getInterfaces().iterator().next();
 
-        var frame = EthernetFrame.create(destMac, sourceMac, EthernetFrame.TYPE_IPV6, new byte[] { 0x00 });
+        sim.start(null);
+        try {
+            var frame = EthernetFrame.create(
+                    i1.getAddress(),
+                    i2.getAddress(),
+                    EthernetFrame.TYPE_IPV6, new byte[]{0x00});
 
-        var buf = frame.serialize();
-        intf1.transmit(buf);
+            var buf = frame.serialize();
+            var flux = i1.getFlux();
 
-        var received = intf2.getReceiverQueue().element();
-        assertArrayEquals(buf, received);
+            StepVerifier.create(flux)
+                    .then(() -> net.transmit(buf))
+                    .assertNext(pdu -> assertArrayEquals(buf, pdu))
+                    .thenCancel()
+                    .verify(Duration.ofSeconds(1));
+        } finally {
+            sim.stop();
+        }
     }
 
     @Test
-    public void resolveAddress() throws UnknownHostException {
-        var net = Network.create();
-        var intf1 = EthernetInterface.create(sourceMac, net);
+    public void resolveAddress() {
+        var sim = Simulation.create();
+        var net = sim.createNetwork();
 
-        var intf2 = EthernetInterface.create(destMac, net);
-        var addr = InetAddress.getByName("2000:69a6:6030:939b::1");
-        intf2.addInetAddress(addr);
+        var s1 = sim.createServer(net);
+        var i1 = s1.getInterfaces().iterator().next();
 
-        var mac = intf1.resolveInetAddress(addr);
+        var s2 = sim.createServer(net);
+        var i2 = s2.getInterfaces().iterator().next();
 
-        assertArrayEquals(intf2.getAddress(), mac);
+        var addr = i1.getInetAddresses().iterator().next();
+        var mac = i2.resolveInetAddress(addr);
+
+        assertArrayEquals(i1.getAddress(), mac);
     }
 }
