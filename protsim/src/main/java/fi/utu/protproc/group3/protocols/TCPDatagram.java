@@ -1,28 +1,65 @@
 package fi.utu.protproc.group3.protocols;
 
+import java.util.Objects;
+
 /**
  * Represents a TCP Datagram
  */
 public interface TCPDatagram {
-    static TCPDatagram create(int destinationPort, int sourcePort, byte flags, long seqN, long ackN, byte[] payload) {
-        return new TCPDatagramImpl(destinationPort, sourcePort, flags, seqN, ackN, payload);
+    /*
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |          Source Port          |       Destination Port        |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                        Sequence Number                        |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                    Acknowledgment Number                      |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |  Data |           |U|A|P|R|S|F|                               |
+    | Offset| Reserved  |R|C|S|S|Y|I|            Window             |
+    |       |           |G|K|H|T|N|N|                               |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |           Checksum            |         Urgent Pointer        |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                    Options                    |    Padding    |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    |                             data                              |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    */
+
+    static TCPDatagram create(short sourcePort, short destinationPort, int seqN, int ackN,
+                              byte dataOffset, short flags, short window, short checksum, short urgentPointer,
+                              byte[] optionsAndPadding, byte[] payload) {
+        return new TCPDatagramImpl(sourcePort, destinationPort, seqN, ackN,
+                dataOffset, flags, window, checksum, urgentPointer, optionsAndPadding, payload);
     }
 
-    byte SYN = 0x1;
-    byte ACK = 0x2;
-    byte FIN = 0x3;
-//    byte RST = 0x4;
-    byte SYNACK = 0x5;
-    byte FINACK = 0x6;
+    static TCPDatagram parse(byte[] pdu){
+        Objects.requireNonNull(pdu);
+        return TCPDatagramImpl.parse(pdu);
+    }
 
-    int getDestinationPort();
-    int getSourcePort();
-    long getSeqN();
-    long getAckN();
-    byte getFlags();
+    // FLAGS
+    // 63 = 111111 (all flags set)
+    short FIN = (short)1;
+    short SYN = (short) (1 << 1);
+    short RST = (short) (1 << 2);
+    short PSH = (short) (1 << 3);
+    short ACK = (short) (1 << 4);
+    short URG = (short) (1 << 5);
+
+    short getDestinationPort();
+    short getSourcePort();
+    int getSeqN();
+    int getAckN();
+    byte getDataOffset();
+    short getFlags();
+    short getWindow();
     int getChecksum();
+    int getUrgentPointer();
+    byte[] getOptionsAndPadding();
     byte[] getPayload();
 
     byte[] serialize();
-    TCPDatagram parse(byte[] pdu);
 }
