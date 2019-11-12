@@ -4,12 +4,12 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TCPDatagramTest {
+class TCPDatagramTest {
     private static final int sourcePort = 4444;
     private static final int destPort = 179;
 
     @Test
-    public void createDatagram() {
+    void createDatagram() {
         var datagram = TCPDatagram.create(destPort, sourcePort, TCPDatagram.SYN, 0, 0, new byte[] { 0x01 });
 
         assertNotNull(datagram);
@@ -21,7 +21,7 @@ public class TCPDatagramTest {
     }
 
     @Test
-    public void reassembleDatagram() {
+    void reassembleDatagram() {
         var original = TCPDatagram.create(destPort, sourcePort, TCPDatagram.SYN, 0, 0, new byte[] { 0x01, 0x02 });
 
         assertNotNull(original);

@@ -33,7 +33,9 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
             for (byte[] pdu: receiverQueue) {
                 // Parse the bytes into an Ethernet frame object
                 EthernetFrame frame = EthernetFrame.parse(pdu);
-                IPv6Packet packet = IPv6Packet.parse(frame.getPayload());
+                // Fil - this should be create and not parse from what I understood
+                // IPv6Packet packet = IPv6Packet.parse(frame.getPayload());
+                IPv6Packet packet = IPv6Packet.create(null, null, (byte) 8, frame.getPayload());
                 // Decrease hop count
                 // packet.setHopLimit(packet.getHopLimit() - 1);
                 byte[] serializedPacket = packet.serialize();

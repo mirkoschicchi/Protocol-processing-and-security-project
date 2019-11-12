@@ -12,7 +12,7 @@ public class TCPDatagramImpl implements TCPDatagram {
     private int checksum;
     private byte[] payload;
 
-    public TCPDatagramImpl(int destinationPort, int sourcePort, byte flags, long seqN, long ackN, byte[] payload) {
+    TCPDatagramImpl(int destinationPort, int sourcePort, byte flags, long seqN, long ackN, byte[] payload) {
         if (destinationPort != 179) {
             throw new IllegalArgumentException("Destination port must be 179!"); // BGP router only receives BGP messages to port 179
         }

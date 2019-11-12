@@ -1,14 +1,12 @@
 package fi.utu.protproc.group3.protocols;
 
 /**
- * Represents a TCP Datagram and should be set by a router to send data to another router
+ * Represents a TCP Datagram
  */
 public interface TCPDatagram {
     static TCPDatagram create(int destinationPort, int sourcePort, byte flags, long seqN, long ackN, byte[] payload) {
         return new TCPDatagramImpl(destinationPort, sourcePort, flags, seqN, ackN, payload);
     }
-
-    TCPDatagram parse(byte[] pdu);
 
     byte SYN = 0x1;
     byte ACK = 0x2;
@@ -25,8 +23,6 @@ public interface TCPDatagram {
     int getChecksum();
     byte[] getPayload();
 
-    /**
-     * Serializes the packet to transmit over the wire.
-     */
     byte[] serialize();
+    TCPDatagram parse(byte[] pdu);
 }

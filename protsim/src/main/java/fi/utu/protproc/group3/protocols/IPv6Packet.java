@@ -1,17 +1,15 @@
 package fi.utu.protproc.group3.protocols;
 
 import java.net.Inet6Address;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 
 /**
  * Represents an IPv6 Packet
  */
 public interface IPv6Packet {
     static IPv6Packet create(Inet6Address destinationIP, Inet6Address sourceIP, byte hopLimit, byte[] payload) {
-        throw new UnsupportedOperationException();
-    }
-
-    static IPv6Packet parse(byte[] pdu) {
-        throw new UnsupportedOperationException();
+        return new IPv6PacketImpl(destinationIP, sourceIP, hopLimit, payload);
     }
 
     Inet6Address getDestinationIP();
@@ -24,4 +22,5 @@ public interface IPv6Packet {
      * Serializes the packet to transmit over the wire.
      */
     byte[] serialize();
+    IPv6Packet parse(byte[] pdu) throws UnknownHostException;
 }
