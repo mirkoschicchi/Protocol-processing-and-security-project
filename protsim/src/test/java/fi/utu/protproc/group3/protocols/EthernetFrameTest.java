@@ -84,5 +84,11 @@ public class EthernetFrameTest {
         assertEquals((short) 0x86dd, frame.getType());
         assertNotNull(frame.getPayload());
         assertEquals(72, frame.getPayload().length);
+
+        var rebuilt = EthernetFrame.create(
+                frame.getDestination(), frame.getSource(), frame.getType(), frame.getPayload()
+        ).serialize();
+
+        assertArrayEquals(pdu, rebuilt);
     }
 }

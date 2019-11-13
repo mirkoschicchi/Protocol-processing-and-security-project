@@ -66,5 +66,20 @@ class TCPDatagramTest {
         assertArrayEquals(TestUtils.parseHexStream("0101080a1e678b161e678b16"), datagram.getOptionsAndPadding());
         assertNotNull(datagram.getPayload());
         assertEquals(381, datagram.getPayload().length);
+
+        var rebuilt = EthernetFrame.create(
+                frame.getDestination(), frame.getSource(), frame.getType(),
+                IPv6Packet.create(packet.getVersion(), packet.getTrafficClass(), packet.getFlowLabel(),
+                        packet.getPayloadLength(), packet.getNextHeader(), packet.getHopLimit(),
+                        packet.getSourceIP(), packet.getDestinationIP(),
+                        TCPDatagram.create(datagram.getSourcePort(), datagram.getDestinationPort(), datagram.getSeqN(),
+                                datagram.getAckN(), datagram.getDataOffset(), datagram.getFlags(), datagram.getWindow(),
+                                (short) datagram.getChecksum(), (short) datagram.getUrgentPointer(),
+                                datagram.getOptionsAndPadding(), datagram.getPayload()
+                        ).serialize()
+                ).serialize()
+        ).serialize();
+
+        assertArrayEquals(pdu, rebuilt);
     }
 }

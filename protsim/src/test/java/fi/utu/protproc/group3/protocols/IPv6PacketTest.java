@@ -69,5 +69,16 @@ class IPv6PacketTest {
         assertEquals(32, packet.getPayloadLength());
         assertNotNull(packet.getPayload());
         assertEquals(32, packet.getPayload().length);
+
+        var rebuilt = EthernetFrame.create(
+                frame.getDestination(), frame.getSource(), frame.getType(),
+                IPv6Packet.create(packet.getVersion(), packet.getTrafficClass(), packet.getFlowLabel(),
+                        packet.getPayloadLength(), packet.getNextHeader(), packet.getHopLimit(),
+                        packet.getSourceIP(), packet.getDestinationIP(),
+                        packet.getPayload()
+                ).serialize()
+        ).serialize();
+
+        assertArrayEquals(pdu, rebuilt);
     }
 }
