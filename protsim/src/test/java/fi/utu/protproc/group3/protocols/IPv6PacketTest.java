@@ -1,5 +1,6 @@
 package fi.utu.protproc.group3.protocols;
 
+import fi.utu.protproc.group3.TestUtils;
 import org.junit.jupiter.api.Test;
 
 import java.net.Inet6Address;
@@ -51,5 +52,22 @@ class IPv6PacketTest {
         assertArrayEquals(original.getSourceIP(), reassembled.getSourceIP());
         assertArrayEquals(original.getDestinationIP(), reassembled.getDestinationIP());
         assertArrayEquals(original.getPayload(), reassembled.getPayload());
+    }
+
+    @Test
+    void parseIcmpPacket() {
+        var pdu = TestUtils.parseHexStream("3333ff000a4a6045cb9e8d8386dd6000000000203afffddf5af267a400000000000000000a4fff0200000000000000000001ff000a4a8700206700000000fddf5af267a400000000000000000a4a01016045cb9e8d83");
+
+        var frame = EthernetFrame.parse(pdu);
+        var packet = IPv6Packet.parse(frame.getPayload());
+
+        assertEquals(6, packet.getVersion());
+        assertEquals(0, packet.getTrafficClass());
+        assertEquals(58, packet.getNextHeader());
+        assertArrayEquals(TestUtils.parseHexStream("fddf5af267a400000000000000000a4f"), packet.getSourceIP());
+        assertArrayEquals(TestUtils.parseHexStream("ff0200000000000000000001ff000a4a"), packet.getDestinationIP());
+        assertEquals(32, packet.getPayloadLength());
+        assertNotNull(packet.getPayload());
+        assertEquals(32, packet.getPayload().length);
     }
 }

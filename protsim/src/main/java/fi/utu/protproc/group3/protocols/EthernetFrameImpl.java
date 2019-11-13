@@ -22,8 +22,8 @@ public class EthernetFrameImpl implements EthernetFrame {
         var dest = new byte[6];
         var src = new byte[6];
         byte[] payload = new byte[pdu.length - 14];
-        var buf = ByteBuffer.allocate(pdu.length);
-        buf.put(pdu).rewind();
+
+        var buf = ByteBuffer.wrap(pdu);
 
         buf.get(dest);
         buf.get(src);
