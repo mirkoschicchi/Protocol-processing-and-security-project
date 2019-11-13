@@ -1,7 +1,5 @@
 package fi.utu.protproc.group3.utils;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Objects;
 import java.util.Random;
 
@@ -34,27 +32,17 @@ public class AddressGenerator {
             netAddr[i] = 0;
         }
 
-        try {
-            return new NetworkAddress(InetAddress.getByAddress(netAddr).getAddress(), 7);
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-            return null;
-        }
+        return new NetworkAddress(new IPAddress(netAddr), 7);
     }
 
-    public InetAddress inetAddress(NetworkAddress network) {
+    public IPAddress ipAddress(NetworkAddress network) {
         Objects.requireNonNull(network);
 
-        var buf = network.getAddress();
+        var buf = network.getAddress().toArray();
         for (var i = network.getPrefixLength() / 8; i < buf.length; i++) {
             buf[i] = (byte) random.nextInt();
         }
 
-        try {
-            return InetAddress.getByAddress(buf);
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-            return null;
-        }
+        return new IPAddress(buf);
     }
 }

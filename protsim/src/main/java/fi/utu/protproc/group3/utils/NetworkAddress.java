@@ -1,20 +1,18 @@
 package fi.utu.protproc.group3.utils;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Objects;
 
 /**
  * Class to represent a CIDR network address in IPv4 or IPv6.
  */
 public final class NetworkAddress {
-    private final byte[] address;
+    private final IPAddress address;
     private final int prefixLength;
 
     /**
      * Parses a network address in CIDR notation.
      */
-    public static NetworkAddress parse(String cidr) throws UnknownHostException {
+    public static NetworkAddress parse(String cidr) {
         Objects.requireNonNull(cidr);
 
         var lengthPos = cidr.indexOf('/');
@@ -22,18 +20,18 @@ public final class NetworkAddress {
             throw new IllegalArgumentException("Error in CIDR notation: Prefix length missing.");
         }
 
-        byte[] addr = InetAddress.getByName(cidr.substring(0, lengthPos)).getAddress();
+        IPAddress addr = IPAddress.parse(cidr.substring(0, lengthPos));
         var prefixLength = Integer.parseInt(cidr.substring(lengthPos + 1));
 
         return new NetworkAddress(addr, prefixLength);
     }
 
-    public NetworkAddress(byte[] address, int prefixLength) {
+    public NetworkAddress(IPAddress address, int prefixLength) {
         this.address = address;
         this.prefixLength = prefixLength;
     }
 
-    public byte[] getAddress() {
+    public IPAddress getAddress() {
         return address;
     }
 
@@ -43,12 +41,6 @@ public final class NetworkAddress {
 
     @Override
     public String toString() {
-        StringBuilder addressString = new StringBuilder();
-        for (byte b : address) {
-            addressString.append(String.format("%02x", b));
-        }
-        addressString.append("/" + prefixLength);
-
-        return addressString.toString();
+        return address.toString() + "/" + prefixLength;
     }
 }

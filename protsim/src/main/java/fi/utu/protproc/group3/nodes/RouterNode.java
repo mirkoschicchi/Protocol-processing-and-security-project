@@ -17,7 +17,7 @@ public interface RouterNode extends NetworkNode {
         var intfs = new EthernetInterface[networks.length];
         for (var i = 0; i < networks.length; i++) {
             intfs[i] = EthernetInterface.create(generator.ethernetAddress(), networks[i]);
-            intfs[i].addInetAddress(generator.inetAddress(networks[i].getNetworkAddress()));
+            intfs[i].addIpAddress(generator.ipAddress(networks[i].getNetworkAddress()));
         }
 
         return new RouterNodeImpl(simulation, intfs);

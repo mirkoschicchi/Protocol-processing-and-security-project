@@ -1,7 +1,8 @@
 package fi.utu.protproc.group3.protocols;
 
+import fi.utu.protproc.group3.utils.IPAddress;
+
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 
 /**
  * Represents an IPv6 Packet
@@ -14,12 +15,12 @@ public class IPv6PacketImpl implements IPv6Packet {
     private short payloadLength;
     byte nextHeader;
     private byte hopLimit;
-    private byte[] sourceIP;
-    private byte[] destinationIP;
+    private IPAddress sourceIP;
+    private IPAddress destinationIP;
     private byte[] payload;
 
     IPv6PacketImpl(byte version, byte trafficClass, int flowLabel, short payloadLength,
-                   byte nextHeader, byte hopLimit, byte[] sourceIP, byte[] destinationIP, byte[] payload) {
+                   byte nextHeader, byte hopLimit, IPAddress sourceIP, IPAddress destinationIP, byte[] payload) {
         this.version = version;
         this.trafficClass = trafficClass;
         this.flowLabel = flowLabel;
@@ -56,7 +57,7 @@ public class IPv6PacketImpl implements IPv6Packet {
         bb.get(payload, 0, payloadBytes);
 
         return new IPv6PacketImpl(version, trafficClass, flowLabel, payloadLength,
-                nextHeader, hopLimit, sourceIP, destinationIP, payload);
+                nextHeader, hopLimit, new IPAddress(sourceIP), new IPAddress(destinationIP), payload);
     }
 
     public byte getVersion() {
@@ -83,11 +84,11 @@ public class IPv6PacketImpl implements IPv6Packet {
         return hopLimit;
     }
 
-    public byte[] getSourceIP() {
+    public IPAddress getSourceIP() {
         return sourceIP;
     }
 
-    public byte[] getDestinationIP() {
+    public IPAddress getDestinationIP() {
         return destinationIP;
     }
 
@@ -104,8 +105,8 @@ public class IPv6PacketImpl implements IPv6Packet {
         byte[] data = new byte[length];
         ByteBuffer bb = ByteBuffer.wrap(data);
 
-        bb.put(sourceIP);
-        bb.put(destinationIP);
+        bb.put(sourceIP.toArray());
+        bb.put(destinationIP.toArray());
         bb.put(hopLimit);
         if (payload != null){
             bb.put(payload);

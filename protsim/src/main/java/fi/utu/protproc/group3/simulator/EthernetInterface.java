@@ -1,8 +1,8 @@
 package fi.utu.protproc.group3.simulator;
 
+import fi.utu.protproc.group3.utils.IPAddress;
 import reactor.core.publisher.Flux;
 
-import java.net.InetAddress;
 import java.util.Collection;
 
 /**
@@ -24,24 +24,24 @@ public interface EthernetInterface {
     /**
      * Adds an IP address to the interface
      */
-    void addInetAddress(InetAddress addr);
+    void addIpAddress(IPAddress addr);
 
     /**
      * Gets all configured IP addresses
      */
-    Collection<InetAddress> getInetAddresses();
+    Collection<IPAddress> getIpAddresses();
 
     /**
      * Removes an IP address from the interface
      */
-    void removeInetAddress(InetAddress addr);
+    void removeIpAddress(IPAddress addr);
 
     /**
      * Resolves an IP address using simulated ARP.
      * @param address The address to resolve.
      * @return The MAC address of the resolved address or null if not found.
      */
-    byte[] resolveInetAddress(InetAddress address);
+    byte[] resolveIpAddress(IPAddress address);
 
     /**
      * Transmits a PDU to the given MAC address

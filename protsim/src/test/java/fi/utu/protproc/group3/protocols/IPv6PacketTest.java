@@ -1,17 +1,17 @@
 package fi.utu.protproc.group3.protocols;
 
 import fi.utu.protproc.group3.TestUtils;
+import fi.utu.protproc.group3.utils.IPAddress;
 import org.junit.jupiter.api.Test;
 
-import java.net.Inet6Address;
 import java.net.UnknownHostException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class IPv6PacketTest {
     private static final String host = "localhost";
-    private final byte[] sourceIP = Inet6Address.getByName("fe80::1").getAddress();
-    private final byte[] destinationIP = Inet6Address.getByName("fe80::2").getAddress();
+    private final IPAddress sourceIP = IPAddress.parse("fe80::1");
+    private final IPAddress destinationIP = IPAddress.parse("fe80::2");
     private static final byte hopLimit = 8;
 
     IPv6PacketTest() throws UnknownHostException {
@@ -49,8 +49,8 @@ class IPv6PacketTest {
         assertEquals(original.getPayloadLength(), reassembled.getPayloadLength());
         assertEquals(original.getNextHeader(), reassembled.getNextHeader());
         assertEquals(original.getHopLimit(), reassembled.getHopLimit());
-        assertArrayEquals(original.getSourceIP(), reassembled.getSourceIP());
-        assertArrayEquals(original.getDestinationIP(), reassembled.getDestinationIP());
+        assertEquals(original.getSourceIP(), reassembled.getSourceIP());
+        assertEquals(original.getDestinationIP(), reassembled.getDestinationIP());
         assertArrayEquals(original.getPayload(), reassembled.getPayload());
     }
 
@@ -64,8 +64,8 @@ class IPv6PacketTest {
         assertEquals(6, packet.getVersion());
         assertEquals(0, packet.getTrafficClass());
         assertEquals(58, packet.getNextHeader());
-        assertArrayEquals(TestUtils.parseHexStream("fddf5af267a400000000000000000a4f"), packet.getSourceIP());
-        assertArrayEquals(TestUtils.parseHexStream("ff0200000000000000000001ff000a4a"), packet.getDestinationIP());
+        assertEquals(new IPAddress(TestUtils.parseHexStream("fddf5af267a400000000000000000a4f")), packet.getSourceIP());
+        assertEquals(new IPAddress(TestUtils.parseHexStream("ff0200000000000000000001ff000a4a")), packet.getDestinationIP());
         assertEquals(32, packet.getPayloadLength());
         assertNotNull(packet.getPayload());
         assertEquals(32, packet.getPayload().length);

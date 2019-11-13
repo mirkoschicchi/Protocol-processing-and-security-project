@@ -1,14 +1,14 @@
 package fi.utu.protproc.group3.simulator;
 
+import fi.utu.protproc.group3.utils.IPAddress;
 import reactor.core.publisher.Flux;
 
-import java.net.InetAddress;
 import java.util.*;
 
 public class EthernetInterfaceImpl implements EthernetInterface {
     private final byte[] address;
     private final Network network;
-    private final List<InetAddress> inetAddresses = new ArrayList<>();
+    private final List<IPAddress> ipAddresses = new ArrayList<>();
 
     EthernetInterfaceImpl(byte[] address, Network network) {
         Objects.requireNonNull(address);
@@ -24,26 +24,26 @@ public class EthernetInterfaceImpl implements EthernetInterface {
     }
 
     @Override
-    public void addInetAddress(InetAddress addr) {
-        inetAddresses.add(addr);
+    public void addIpAddress(IPAddress addr) {
+        ipAddresses.add(addr);
     }
 
     @Override
-    public Collection<InetAddress> getInetAddresses() {
-        return Collections.unmodifiableCollection(inetAddresses);
+    public Collection<IPAddress> getIpAddresses() {
+        return Collections.unmodifiableCollection(ipAddresses);
     }
 
     @Override
-    public void removeInetAddress(InetAddress addr) {
-        inetAddresses.remove(addr);
+    public void removeIpAddress(IPAddress addr) {
+        ipAddresses.remove(addr);
     }
 
     @Override
-    public byte[] resolveInetAddress(InetAddress address) {
+    public byte[] resolveIpAddress(IPAddress address) {
         Objects.requireNonNull(address);
 
         for (var dev : getNetwork().getDevices()) {
-            if (dev.getInetAddresses().contains(address)) {
+            if (dev.getIpAddresses().contains(address)) {
                 return dev.getAddress();
             }
         }

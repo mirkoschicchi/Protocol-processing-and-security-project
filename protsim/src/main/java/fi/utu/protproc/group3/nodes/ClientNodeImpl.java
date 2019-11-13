@@ -48,7 +48,7 @@ public class ClientNodeImpl extends NetworkNodeImpl implements ClientNode {
                 dest.getInterfaces().iterator().next().getAddress(),
                 srcIntf.getAddress(),
                 EthernetFrame.TYPE_IPV6,
-                ("This is a test message to " + dest.getInterfaces().iterator().next().getInetAddresses()).getBytes()
+                ("This is a test message to " + dest.getInterfaces().iterator().next().getIpAddresses().iterator().next()).getBytes()
         );
 
         srcIntf.getNetwork().transmit(frame.serialize());

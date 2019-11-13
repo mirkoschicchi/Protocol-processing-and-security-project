@@ -14,9 +14,9 @@ public interface ClientNode extends NetworkNode {
         Objects.requireNonNull(network);
         Objects.requireNonNull(generator);
 
-        var addr = generator.inetAddress(network.getNetworkAddress());
+        var addr = generator.ipAddress(network.getNetworkAddress());
         var intf = EthernetInterface.create(generator.ethernetAddress(), network);
-        intf.addInetAddress(addr);
+        intf.addIpAddress(addr);
 
         return new ClientNodeImpl(simulation, intf);
     }

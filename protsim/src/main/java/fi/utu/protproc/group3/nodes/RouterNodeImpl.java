@@ -6,10 +6,9 @@ import fi.utu.protproc.group3.routing.RoutingTable;
 import fi.utu.protproc.group3.routing.TableRow;
 import fi.utu.protproc.group3.simulator.EthernetInterface;
 import fi.utu.protproc.group3.simulator.Simulation;
+import fi.utu.protproc.group3.utils.IPAddress;
 import fi.utu.protproc.group3.utils.NetworkAddress;
 
-import java.net.Inet6Address;
-import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
@@ -43,9 +42,9 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
         NetworkAddress nextHop = row.getNextHop();
         // Get the MAC address of the interface to which to forward the packet
         // Filippo - Workaround to not change all the functions in the project:
-        // transform the IPv6 address into a InetAddress
-        InetAddress nextHopInetAddress = Inet6Address.getByAddress(nextHop.getAddress());
-        byte[] nextHopMac = intf.resolveInetAddress(nextHopInetAddress);
+        // transform the IPv6 address into a IPAddress
+        IPAddress nextHopIpAddress = nextHop.getAddress();
+        byte[] nextHopMac = intf.resolveIpAddress(nextHopIpAddress);
 
         // Update the destination of the ethernet frame
         // frame.setDestination = nextHopMac;

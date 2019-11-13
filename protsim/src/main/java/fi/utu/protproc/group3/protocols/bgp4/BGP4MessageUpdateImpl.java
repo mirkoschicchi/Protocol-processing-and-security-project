@@ -45,9 +45,9 @@ public class BGP4MessageUpdateImpl extends BGP4MessageImpl implements BGP4Messag
                 .putShort(getWithdrawnRoutesLength())
                 .array();
         for(NetworkAddress addr : getWithdrawnRoutes()) {
-            serialized = ByteBuffer.allocate(1 + addr.getAddress().length)
+            serialized = ByteBuffer.allocate(1 + addr.getAddress().toArray().length)
                     .putInt(addr.getPrefixLength())
-                    .put(addr.getAddress())
+                    .put(addr.getAddress().toArray())
                     .array();
         }
         serialized = ByteBuffer.allocate(2)
@@ -56,9 +56,9 @@ public class BGP4MessageUpdateImpl extends BGP4MessageImpl implements BGP4Messag
 
         // TODO: Missing path attributes
         for(NetworkAddress addr : getNetworkLayerReachabilityInformation()) {
-            serialized = ByteBuffer.allocate(1 + addr.getAddress().length)
+            serialized = ByteBuffer.allocate(1 + addr.getAddress().toArray().length)
                     .putInt(addr.getPrefixLength())
-                    .put(addr.getAddress())
+                    .put(addr.getAddress().toArray())
                     .array();
         }
 

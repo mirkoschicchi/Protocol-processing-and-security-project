@@ -49,8 +49,8 @@ public class EthernetInterfaceTest {
         var s2 = sim.createServer(net);
         var i2 = s2.getInterfaces().iterator().next();
 
-        var addr = i1.getInetAddresses().iterator().next();
-        var mac = i2.resolveInetAddress(addr);
+        var addr = i1.getIpAddresses().iterator().next();
+        var mac = i2.resolveIpAddress(addr);
 
         assertArrayEquals(i1.getAddress(), mac);
     }

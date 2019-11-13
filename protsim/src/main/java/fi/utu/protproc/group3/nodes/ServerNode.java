@@ -5,7 +5,6 @@ import fi.utu.protproc.group3.simulator.Network;
 import fi.utu.protproc.group3.simulator.Simulation;
 import fi.utu.protproc.group3.utils.AddressGenerator;
 
-import java.net.UnknownHostException;
 import java.util.Objects;
 
 public interface ServerNode extends NetworkNode {
@@ -14,9 +13,9 @@ public interface ServerNode extends NetworkNode {
         Objects.requireNonNull(network);
         Objects.requireNonNull(generator);
 
-        var addr = generator.inetAddress(network.getNetworkAddress());
+        var addr = generator.ipAddress(network.getNetworkAddress());
         var intf = EthernetInterface.create(generator.ethernetAddress(), network);
-        intf.addInetAddress(addr);
+        intf.addIpAddress(addr);
 
         return new ServerNodeImpl(simulation, intf);
     }
