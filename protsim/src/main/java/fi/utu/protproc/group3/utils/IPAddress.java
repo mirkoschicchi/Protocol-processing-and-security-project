@@ -1,7 +1,5 @@
 package fi.utu.protproc.group3.utils;
 
-import reactor.util.function.Tuple8;
-
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Objects;
@@ -61,7 +59,7 @@ public class IPAddress {
                     result.append(':');
                 }
             }
-            return result.toString().replace(":(0:)+", "::");
+            return result.toString().replaceFirst(":(0:)+", "::");
         }
     }
 

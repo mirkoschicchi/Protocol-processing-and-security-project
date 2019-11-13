@@ -2,8 +2,6 @@ package fi.utu.protproc.group3.utils;
 
 import org.junit.jupiter.api.Test;
 
-import java.net.UnknownHostException;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -21,6 +19,6 @@ public class NetworkAddressTest {
         var netAddr = NetworkAddress.parse("fe80:2001::17:0:0/96");
 
         assertNotNull(netAddr);
-        assertEquals("fe80:2001:0:0:0:17:0:0/96", netAddr.toString());
+        assertEquals("fe80:2001::17:0:0/96", netAddr.toString());
     }
 }
