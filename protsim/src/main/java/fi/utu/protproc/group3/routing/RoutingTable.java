@@ -1,9 +1,10 @@
 package fi.utu.protproc.group3.routing;
 
 
+import fi.utu.protproc.group3.utils.IPAddress;
 import fi.utu.protproc.group3.utils.NetworkAddress;
 
-import java.util.List;
+import java.util.Collection;
 
 public interface RoutingTable {
     static RoutingTable create() {throw new UnsupportedOperationException();}
@@ -15,16 +16,14 @@ public interface RoutingTable {
     short TABLEID_UNSPEC = 0;
 
     short getTableId();
-    List<TableRow> getRows();
-
-    TableRow getRowByIndex(int rowIndex);
+    Collection<TableRow> getRows();
 
     /**
      * Get the route to go to a specific destination address
      * @param destinationAddress The destination address
      * @return A row in the routing table corresponding with that destination address
      */
-    TableRow getRowByDestinationAddress(NetworkAddress destinationAddress);
+    TableRow getRowByDestinationAddress(IPAddress destinationAddress);
 
     /**
      * Insert a new row in the table

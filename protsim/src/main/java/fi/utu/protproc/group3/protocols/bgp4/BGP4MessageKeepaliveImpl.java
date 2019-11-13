@@ -10,15 +10,6 @@ public class BGP4MessageKeepaliveImpl extends BGP4MessageImpl implements BGP4Mes
 
     @Override
     public byte[] serialize() {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        baos.write(getMarker(), 0, getMarker().length);
-
-        byte[] length_array;
-        length_array = ByteBuffer.allocate(2).putShort(getLength()).array();
-        baos.write(length_array, 0, length_array.length);
-
-        baos.write(getType());
-
-        return baos.toByteArray();
+        return super.serialize();
     }
 }

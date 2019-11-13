@@ -1,13 +1,15 @@
 package fi.utu.protproc.group3.routing;
 
 import fi.utu.protproc.group3.simulator.EthernetInterface;
+import fi.utu.protproc.group3.utils.IPAddress;
 import fi.utu.protproc.group3.utils.NetworkAddress;
+
 
 /**
  * This represents a row in the routing table
  */
 public interface TableRow {
-    static TableRow create(NetworkAddress prefix, NetworkAddress nextHop, int metric,
+    static TableRow create(NetworkAddress prefix, IPAddress nextHop, int metric,
                            short tos, short scope, EthernetInterface eInterface) {
         return new TableRowImpl(prefix, nextHop, metric, tos, scope, eInterface);
     }
@@ -37,14 +39,11 @@ public interface TableRow {
     short SCOPE_LINK = 253;
 
     NetworkAddress getPrefix();
-    NetworkAddress getNextHop();
+    IPAddress getNextHop();
     int getMetric();
     short getTos();
     short getScope();
     EthernetInterface getEInterface();
-
-    void update(NetworkAddress prefix, NetworkAddress nextHop, int metric,
-                short tos, short scope, EthernetInterface eInterface);
 
     void show();
 }

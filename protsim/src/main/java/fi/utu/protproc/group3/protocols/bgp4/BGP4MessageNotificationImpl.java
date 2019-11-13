@@ -32,21 +32,14 @@ public class BGP4MessageNotificationImpl extends BGP4MessageImpl implements BGP4
 
     @Override
     public byte[] serialize() {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        baos.write(getMarker(), 0, getMarker().length);
+        byte[] serialized;
+        serialized = ByteBuffer.allocate(19 + 2 + getData().length)
+                .put(super.serialize())
+                .put(getErrorCode())
+                .put(getErrorSubCode())
+                .put(getData())
+                .array();
 
-        byte[] length_array;
-        length_array = ByteBuffer.allocate(2).putShort(getLength()).array();
-        baos.write(length_array, 0, length_array.length);
-
-        baos.write(getType());
-
-        baos.write(getErrorCode());
-
-        baos.write(getErrorSubCode());
-
-        baos.write(getData(), 0, getData().length);
-
-        return baos.toByteArray();
+        return serialized;
     }
 }

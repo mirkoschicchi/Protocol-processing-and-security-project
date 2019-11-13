@@ -30,32 +30,25 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
         // Parse the bytes into an Ethernet frame object
         EthernetFrame frame = EthernetFrame.parse(pdu);
         IPv6Packet packet = IPv6Packet.parse(frame.getPayload());
-        // Decrease hop count
-        // packet.setHopLimit(packet.getHopLimit() - 1);
-        byte[] serializedPacket = packet.serialize();
 
-        // Generate a Network address (IP and prefix)
-        NetworkAddress destAddr = new NetworkAddress(packet.getDestinationIP(), 32);
+        IPv6Packet newPacket = IPv6Packet.create(packet.getVersion(), packet.getTrafficClass(), packet.getFlowLabel(),
+                packet.getPayloadLength(), packet.getNextHeader(), (byte) (packet.getHopLimit()-1),
+                packet.getSourceIP(), packet.getDestinationIP(), packet.getPayload());
 
         // Get the MAC address of the next hop
-        TableRow row = this.routingTable.getRowByDestinationAddress(destAddr);
-        NetworkAddress nextHop = row.getNextHop();
+        TableRow row = this.routingTable.getRowByDestinationAddress(newPacket.getDestinationIP());
+
         // Get the MAC address of the interface to which to forward the packet
         // Filippo - Workaround to not change all the functions in the project:
         // transform the IPv6 address into a IPAddress
-        IPAddress nextHopIpAddress = nextHop.getAddress();
-        byte[] nextHopMac = intf.resolveIpAddress(nextHopIpAddress);
+        IPAddress nextHop = row.getNextHop();
 
-        // Update the destination of the ethernet frame
-        // frame.setDestination = nextHopMac;
+        byte[] nextHopMac = intf.resolveIpAddress(nextHop);
 
-        // Put the update IP payload
-        // frame.setPayload(serializedPacket);
-        // Serialize the frame
-        byte[] serializedFrame = frame.serialize();
+        EthernetFrame newFrame = EthernetFrame.create(nextHopMac, intf.getAddress(), frame.getType(), newPacket.serialize());
 
         // Route the frame
-        intf.transmit(serializedFrame);
+        intf.transmit(newFrame.serialize());
     }
 
 }

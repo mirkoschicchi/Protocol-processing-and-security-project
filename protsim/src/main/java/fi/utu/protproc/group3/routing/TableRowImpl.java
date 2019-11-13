@@ -1,17 +1,19 @@
 package fi.utu.protproc.group3.routing;
 
 import fi.utu.protproc.group3.simulator.EthernetInterface;
+import fi.utu.protproc.group3.utils.IPAddress;
 import fi.utu.protproc.group3.utils.NetworkAddress;
+
 
 public class TableRowImpl implements TableRow {
     private NetworkAddress prefix;
-    private NetworkAddress nextHop;
+    private IPAddress nextHop;
     private int metric;
     private short tos;
     private short scope;
     private EthernetInterface eInterface;
 
-    public TableRowImpl(NetworkAddress prefix, NetworkAddress nextHop,
+    public TableRowImpl(NetworkAddress prefix, IPAddress nextHop,
                         int metric, short tos, short scope, EthernetInterface eInterface) {
         this.prefix = prefix;
         this.nextHop = nextHop;
@@ -27,7 +29,7 @@ public class TableRowImpl implements TableRow {
     }
 
     @Override
-    public NetworkAddress getNextHop() {
+    public IPAddress getNextHop() {
         return nextHop;
     }
 
@@ -49,17 +51,6 @@ public class TableRowImpl implements TableRow {
     @Override
     public EthernetInterface getEInterface() {
         return eInterface;
-    }
-
-    @Override
-    public void update(NetworkAddress prefix, NetworkAddress nextHop, int metric, short tos,
-                       short scope, EthernetInterface eInterface) {
-        this.prefix = prefix;
-        this.nextHop = nextHop;
-        this.metric = metric;
-        this.tos = tos;
-        this.scope = scope;
-        this.eInterface = eInterface;
     }
 
     @Override

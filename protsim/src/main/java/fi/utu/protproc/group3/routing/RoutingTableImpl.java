@@ -1,15 +1,16 @@
 package fi.utu.protproc.group3.routing;
 
-import fi.utu.protproc.group3.utils.NetworkAddress;
+import fi.utu.protproc.group3.utils.IPAddress;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
+import java.util.Collections;
 
 public class RoutingTableImpl implements RoutingTable {
     // Don't know if we need it
     private short tableId;
 
-    private List<TableRow> rows;
+    private Collection<TableRow> rows;
 
     public RoutingTableImpl() {
         this.rows = new ArrayList<TableRow>();
@@ -21,17 +22,12 @@ public class RoutingTableImpl implements RoutingTable {
     }
 
     @Override
-    public List<TableRow> getRows() {
-        return rows;
+    public Collection<TableRow> getRows() {
+        return Collections.unmodifiableCollection(rows);
     }
 
     @Override
-    public TableRow getRowByIndex(int rowIndex) {
-        return rows.get(rowIndex);
-    }
-
-    @Override
-    public TableRow getRowByDestinationAddress(NetworkAddress destinationAddress) {
+    public TableRow getRowByDestinationAddress(IPAddress destinationAddress) {
         for(TableRow row: getRows()) {
             if(destinationAddress.equals(row.getPrefix())) {
                 return row;

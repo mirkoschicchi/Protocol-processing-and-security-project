@@ -40,9 +40,7 @@ public class BGP4MessageOpenImpl extends BGP4MessageImpl implements BGP4MessageO
     public byte[] serialize() {
         byte[] serialized;
         serialized = ByteBuffer.allocate(28)
-                .put(getMarker())
-                .putShort(getLength())
-                .put(getType())
+                .put(super.serialize())
                 .put(getVersion())
                 .putShort(getMyAutonomousSystem())
                 .putShort(getHoldTime())
