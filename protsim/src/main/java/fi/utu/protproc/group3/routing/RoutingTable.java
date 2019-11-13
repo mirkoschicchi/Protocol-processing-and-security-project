@@ -2,12 +2,13 @@ package fi.utu.protproc.group3.routing;
 
 
 import fi.utu.protproc.group3.utils.IPAddress;
-import fi.utu.protproc.group3.utils.NetworkAddress;
 
 import java.util.Collection;
 
 public interface RoutingTable {
-    static RoutingTable create() {throw new UnsupportedOperationException();}
+    static RoutingTable create() {
+        return new RoutingTableImpl();
+    }
 
     // TABLE ID
     short TABLEID_LOCAL = 255;

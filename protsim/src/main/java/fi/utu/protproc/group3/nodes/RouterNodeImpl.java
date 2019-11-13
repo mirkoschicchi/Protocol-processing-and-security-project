@@ -7,7 +7,6 @@ import fi.utu.protproc.group3.routing.TableRow;
 import fi.utu.protproc.group3.simulator.EthernetInterface;
 import fi.utu.protproc.group3.simulator.Simulation;
 import fi.utu.protproc.group3.utils.IPAddress;
-import fi.utu.protproc.group3.utils.NetworkAddress;
 
 import java.net.UnknownHostException;
 
@@ -29,26 +28,36 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
 
         // Parse the bytes into an Ethernet frame object
         EthernetFrame frame = EthernetFrame.parse(pdu);
-        IPv6Packet packet = IPv6Packet.parse(frame.getPayload());
+        if (frame.getType() == EthernetFrame.TYPE_IPV6) {
+            IPv6Packet packet = IPv6Packet.parse(frame.getPayload());
 
-        IPv6Packet newPacket = IPv6Packet.create(packet.getVersion(), packet.getTrafficClass(), packet.getFlowLabel(),
-                packet.getPayloadLength(), packet.getNextHeader(), (byte) (packet.getHopLimit()-1),
-                packet.getSourceIP(), packet.getDestinationIP(), packet.getPayload());
+            if (packet.getHopLimit() == 0) {
+                // TODO : Error handling
+                return;
+            }
 
-        // Get the MAC address of the next hop
-        TableRow row = this.routingTable.getRowByDestinationAddress(newPacket.getDestinationIP());
+            // Get the MAC address of the next hop
+            TableRow row = this.routingTable.getRowByDestinationAddress(packet.getDestinationIP());
 
-        // Get the MAC address of the interface to which to forward the packet
-        // Filippo - Workaround to not change all the functions in the project:
-        // transform the IPv6 address into a IPAddress
-        IPAddress nextHop = row.getNextHop();
+            // If we found a valid routing entry
+            if (row != null) {
+                // Get the exit interface
+                var exitIntf = row.getEInterface();
 
-        byte[] nextHopMac = intf.resolveIpAddress(nextHop);
+                // Get the MAC address of the interface to which to forward the packet
+                IPAddress nextHop = row.getNextHop();
+                byte[] nextHopMac = exitIntf.resolveIpAddress(nextHop);
 
-        EthernetFrame newFrame = EthernetFrame.create(nextHopMac, intf.getAddress(), frame.getType(), newPacket.serialize());
+                // Reassemble the IPv6 packet
+                IPv6Packet newPacket = IPv6Packet.create(packet.getVersion(), packet.getTrafficClass(), packet.getFlowLabel(),
+                        packet.getPayloadLength(), packet.getNextHeader(), (byte) (packet.getHopLimit() - 1),
+                        packet.getSourceIP(), packet.getDestinationIP(), packet.getPayload());
 
-        // Route the frame
-        intf.transmit(newFrame.serialize());
+                EthernetFrame newFrame = EthernetFrame.create(nextHopMac, exitIntf.getAddress(), frame.getType(), newPacket.serialize());
+
+                // Forward the frame
+                exitIntf.transmit(newFrame.serialize());
+            }
+        }
     }
-
 }
