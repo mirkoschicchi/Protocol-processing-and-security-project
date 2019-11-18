@@ -1,7 +1,10 @@
 package fi.utu.protproc.group3.utils;
 
+
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Objects;
 
 public class IPAddress {
@@ -61,6 +64,12 @@ public class IPAddress {
             }
             return result.toString().replaceFirst(":(0:)+", "::");
         }
+    }
+
+    public static String createMask(int netPrefix) {
+        String binary = String.join("", Collections.nCopies(netPrefix, "1"));
+        binary = binary + String.join("", Collections.nCopies(128-netPrefix, "0"));
+        return binary;
     }
 
     @Override

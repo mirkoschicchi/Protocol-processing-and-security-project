@@ -21,4 +21,12 @@ public class NetworkAddressTest {
         assertNotNull(netAddr);
         assertEquals("fe80:2001::17:0:0/96", netAddr.toString());
     }
+
+    @Test
+    public void longestPrefixMatch() {
+        var netAddr = NetworkAddress.parse("fe80:2001::17:0:0/9");
+        var ipAddr = IPAddress.parse("fe80:2001::17:1:1");
+        int ris = NetworkAddress.matchLength(netAddr, ipAddr);
+        assertEquals(ris, 9);
+    }
 }

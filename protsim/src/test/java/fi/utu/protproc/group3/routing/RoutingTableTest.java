@@ -26,14 +26,14 @@ public class RoutingTableTest {
         assertEquals(r1, table.getRowByDestinationAddress(IPAddress.parse("fe80:1::ffff")));
         assertEquals(r1, table.getRowByDestinationAddress(IPAddress.parse("fe80:1::ffff:ffff:ffff:ffff")));
 
-        assertEquals(r1, table.getRowByDestinationAddress(IPAddress.parse("fe80:2::")));
-        assertEquals(r1, table.getRowByDestinationAddress(IPAddress.parse("fe80:2::1")));
-        assertEquals(r1, table.getRowByDestinationAddress(IPAddress.parse("fe80:2::ffff")));
-        assertEquals(r1, table.getRowByDestinationAddress(IPAddress.parse("fe80:2::ffff:ffff:ffff:ffff")));
+        assertEquals(r2, table.getRowByDestinationAddress(IPAddress.parse("fe80:2::")));
+        assertEquals(r2, table.getRowByDestinationAddress(IPAddress.parse("fe80:2::1")));
+        assertEquals(r2, table.getRowByDestinationAddress(IPAddress.parse("fe80:2::ffff")));
+        assertEquals(r2, table.getRowByDestinationAddress(IPAddress.parse("fe80:2::ffff:ffff:ffff:ffff")));
 
-        assertEquals(r1, table.getRowByDestinationAddress(IPAddress.parse("fe80:3::")));
-        assertEquals(r1, table.getRowByDestinationAddress(IPAddress.parse("fe80:3::1")));
-        assertEquals(r1, table.getRowByDestinationAddress(IPAddress.parse("fe80:3::ffff")));
-        assertEquals(r1, table.getRowByDestinationAddress(IPAddress.parse("fe80:3::ffff:ffff:ffff:ffff")));
+        assertEquals(r3, table.getRowByDestinationAddress(IPAddress.parse("fe80:3::")));
+        assertEquals(r3, table.getRowByDestinationAddress(IPAddress.parse("fe80:3::1")));
+        assertEquals(r3, table.getRowByDestinationAddress(IPAddress.parse("fe80:3::ffff")));
+        assertEquals(r3, table.getRowByDestinationAddress(IPAddress.parse("fe80:3::ffff:ffff:ffff:ffff")));
     }
 }

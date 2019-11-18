@@ -1,6 +1,7 @@
 package fi.utu.protproc.group3.routing;
 
 import fi.utu.protproc.group3.utils.IPAddress;
+import fi.utu.protproc.group3.utils.NetworkAddress;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,12 +29,16 @@ public class RoutingTableImpl implements RoutingTable {
 
     @Override
     public TableRow getRowByDestinationAddress(IPAddress destinationAddress) {
+        int longestMatch = -1;
+        TableRow routeRow = null;
         for(TableRow row: getRows()) {
-            if(destinationAddress.equals(row.getPrefix())) {
-                return row;
+            int matchLength = NetworkAddress.matchLength(row.getPrefix(), destinationAddress);
+            if(matchLength > longestMatch) {
+                longestMatch = matchLength;
+                routeRow = row;
             }
         }
-        return null;
+        return routeRow;
     }
 
     @Override
