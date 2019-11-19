@@ -13,7 +13,7 @@ public class IPv6PacketImpl implements IPv6Packet {
     private byte trafficClass;
     private int flowLabel;
     private short payloadLength;
-    byte nextHeader;
+    private byte nextHeader;
     private byte hopLimit;
     private IPAddress sourceIP;
     private IPAddress destinationIP;
@@ -97,7 +97,7 @@ public class IPv6PacketImpl implements IPv6Packet {
     }
 
     public byte[] serialize() {
-        int length = 16+16+1;
+        int length = 80; // 1+2+5+4+2+2+32+32
         if (payload != null) {
             length += payload.length;
         }
@@ -105,10 +105,19 @@ public class IPv6PacketImpl implements IPv6Packet {
         byte[] data = new byte[length];
         ByteBuffer bb = ByteBuffer.wrap(data);
 
+        byte firstByte = (byte) (((this.version & 0x0F) << 4) + (this.trafficClass & 0xF0));
+        byte secondByte = (byte) (((this.trafficClass & 0x0F) << 4) + (this.flowLabel & 0x000F0000));
+        short partialFlowLabel = (short) (this.flowLabel & 0x0000FFFF);
+        bb.put(firstByte);
+        bb.put(secondByte);
+        bb.putShort(partialFlowLabel);
+        bb.putShort(payloadLength);
+        bb.put(nextHeader);
+        bb.put(hopLimit);
         bb.put(sourceIP.toArray());
         bb.put(destinationIP.toArray());
-        bb.put(hopLimit);
-        if (payload != null){
+
+        if (payload != null) {
             bb.put(payload);
         }
 

@@ -5,6 +5,7 @@ import fi.utu.protproc.group3.utils.IPAddress;
 import org.junit.jupiter.api.Test;
 
 import java.net.UnknownHostException;
+import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -20,8 +21,8 @@ class IPv6PacketTest {
 
     @Test
     void createPacket() {
-        var packet = IPv6Packet.create((byte) 6, (byte) 0, 0, (short) 1,
-        (byte) 0, hopLimit, sourceIP, destinationIP, new byte[] { 0x01 });
+        var packet = IPv6Packet.create((byte) 6, (byte) 1, 2, (short) 1,
+        (byte) 4, hopLimit, sourceIP, destinationIP, new byte[] { 0x01 });
 
         assertNotNull(packet);
 
@@ -33,8 +34,8 @@ class IPv6PacketTest {
 
     @Test
     void reassemblePacket() {
-        var original = IPv6Packet.create((byte) 6, (byte) 0, 0, (short) 1,
-                (byte) 0, hopLimit, sourceIP, destinationIP, new byte[] { 0x01, 0x02 });
+        var original = IPv6Packet.create((byte) 6, (byte) 1, 2, (short) 3,
+                (byte) 4, hopLimit, sourceIP, destinationIP, new byte[] { 0x01, 0x02, 0x03 });
 
         assertNotNull(original);
 
