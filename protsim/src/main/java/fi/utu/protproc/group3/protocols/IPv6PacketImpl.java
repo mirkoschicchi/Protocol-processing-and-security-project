@@ -61,43 +61,43 @@ public class IPv6PacketImpl implements IPv6Packet {
     }
 
     public byte getVersion() {
-        return version;
+        return this.version;
     }
 
     public byte getTrafficClass() {
-        return trafficClass;
+        return this.trafficClass;
     }
 
     public int getFlowLabel() {
-        return flowLabel;
+        return this.flowLabel;
     }
 
     public short getPayloadLength() {
-        return payloadLength;
+        return this.payloadLength;
     }
 
     public byte getNextHeader() {
-        return nextHeader;
+        return this.nextHeader;
     }
 
     public byte getHopLimit() {
-        return hopLimit;
+        return this.hopLimit;
     }
 
     public IPAddress getSourceIP() {
-        return sourceIP;
+        return this.sourceIP;
     }
 
     public IPAddress getDestinationIP() {
-        return destinationIP;
+        return this.destinationIP;
     }
 
     public byte[] getPayload() {
-        return payload;
+        return this.payload;
     }
 
     public byte[] serialize() {
-        int length = 80; // 1+2+5+4+2+2+32+32
+        int length = 40; // IPv6 header length in bytes
         if (payload != null) {
             length += payload.length;
         }

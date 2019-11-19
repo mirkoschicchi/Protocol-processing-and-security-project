@@ -4,20 +4,12 @@ import fi.utu.protproc.group3.TestUtils;
 import fi.utu.protproc.group3.utils.IPAddress;
 import org.junit.jupiter.api.Test;
 
-import java.net.UnknownHostException;
-import java.util.Arrays;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 class IPv6PacketTest {
-    private static final String host = "localhost";
     private final IPAddress sourceIP = IPAddress.parse("fe80::1");
     private final IPAddress destinationIP = IPAddress.parse("fe80::2");
     private static final byte hopLimit = 8;
-
-    IPv6PacketTest() throws UnknownHostException {
-
-    }
 
     @Test
     void createPacket() {
@@ -40,6 +32,9 @@ class IPv6PacketTest {
         assertNotNull(original);
 
         var bytes = original.serialize();
+
+        assertEquals(bytes.length, 43); // IPv6 header + 3 bytes of payload
+
         var reassembled = IPv6Packet.parse(bytes);
 
         assertNotNull(reassembled);
