@@ -21,11 +21,12 @@ class TCPDatagramTest {
 
         assertNotNull(bytes);
         assertTrue(bytes.length > 0);
+        assertEquals(21, bytes.length);
     }
 
     @Test
     void reassembleDatagram() {
-        var original = TCPDatagram.create(sourcePort, destPort, 0, 0, dataOffset, flags, (short)1, (short)2, (short)3, new byte[0], new byte[] { 0x01, 0x02 });
+        var original = TCPDatagram.create(sourcePort, destPort, 5, 6, dataOffset, flags, (short)1, (short)2, (short)3, null, new byte[] { 0x01, 0x02 });
 
         assertNotNull(original);
 

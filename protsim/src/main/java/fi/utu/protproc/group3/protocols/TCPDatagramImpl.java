@@ -37,8 +37,8 @@ public class TCPDatagramImpl implements TCPDatagram {
         Objects.requireNonNull(pdu);
 
         ByteBuffer bb = ByteBuffer.wrap(pdu);
-        short sourcePort = bb.getShort();
-        short destinationPort = bb.getShort();
+        short sourcePort = (short) (bb.getShort() & 0xffff);
+        short destinationPort = (short) (bb.getShort() & 0xffff);
         int seqN = bb.getInt();
         int ackN = bb.getInt();
         short flags = bb.getShort(); // here we get also data off-set and reserved fields. Total 16 bits.
@@ -46,11 +46,11 @@ public class TCPDatagramImpl implements TCPDatagram {
         if (dataOffset < 5) {
             throw new IllegalArgumentException("Invalid tcp header length < 20");
         }
-        flags &= 0x1ff;
+        flags = (short) (flags & 0x1ff);
         short window = bb.getShort();
-        short checksum = bb.getShort(); // if it is 0 should be calculated
+        short checksum = bb.getShort();
         short urgentPointer = bb.getShort();
-        byte[] optionsAndPadding = new byte[0];
+        byte[] optionsAndPadding = null;
         if (dataOffset > 5) {
             int optLength = (dataOffset << 2) - 20;
             if (bb.limit() < bb.position()+optLength) {
@@ -60,7 +60,7 @@ public class TCPDatagramImpl implements TCPDatagram {
                 optionsAndPadding = new byte[optLength];
                 bb.get(optionsAndPadding, 0, optLength);
             } catch (IndexOutOfBoundsException e) {
-                optionsAndPadding = new byte[0];
+                optionsAndPadding = null;
             }
         }
 
@@ -116,10 +116,12 @@ public class TCPDatagramImpl implements TCPDatagram {
     }
 
     public byte[] serialize() {
-        int length = 20;
-        if (optionsAndPadding != null) {
-            length += optionsAndPadding.length;
-        }
+        int length;
+
+        if (dataOffset == 0)
+            dataOffset = 5;  // default header length
+        length = dataOffset << 2;
+
         if (payload != null) {
             length += payload.length;
         }
@@ -127,18 +129,42 @@ public class TCPDatagramImpl implements TCPDatagram {
         byte[] data = new byte[length];
         ByteBuffer bb = ByteBuffer.wrap(data);
 
-        bb.putShort(sourcePort);
-        bb.putShort(destinationPort);
-        bb.putInt(seqN);
-        bb.putInt(ackN);
-        bb.putShort((short) (flags | (dataOffset << 12)));
-        bb.putShort(window);
-        bb.putShort(checksum);
-        bb.putShort(urgentPointer);
-        bb.put(optionsAndPadding);
-        if (payload != null){
-            bb.put(payload);
+        bb.putShort(this.sourcePort);
+        bb.putShort(this.destinationPort);
+        bb.putInt(this.seqN);
+        bb.putInt(this.ackN);
+        bb.putShort((short) (this.flags | (dataOffset << 12)));
+        bb.putShort(this.window);
+        bb.putShort(this.checksum);
+        bb.putShort(this.urgentPointer);
+        if (dataOffset > 5) {
+            int padding;
+            bb.put(this.optionsAndPadding);
+            padding = (dataOffset << 2) - 20 - optionsAndPadding.length;
+            for (int i = 0; i < padding; i++)
+                bb.put((byte) 0);
         }
+        if (this.payload != null)
+            bb.put(this.payload);
+
+        // compute checksum if needed
+        if (this.checksum == 0) {
+            bb.rewind();
+            int accumulation = 0;
+            for (int i = 0; i < length / 2; ++i) {
+                accumulation += 0xffff & bb.getShort();
+            }
+            // pad to an even number of shorts
+            if (length % 2 > 0) {
+                accumulation += (bb.get() & 0xff) << 8;
+            }
+
+            accumulation = ((accumulation >> 16) & 0xffff)
+                    + (accumulation & 0xffff);
+            this.checksum = (short) (~accumulation & 0xffff);
+        }
+
+        bb.putShort(16, this.checksum);
 
         return data;
     }

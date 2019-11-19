@@ -22,6 +22,7 @@ class IPv6PacketTest {
 
         assertNotNull(bytes);
         assertTrue(bytes.length > 0);
+        assertEquals(bytes.length, 41); // IPv6 header + 1 byte of payload
     }
 
     @Test
@@ -32,9 +33,6 @@ class IPv6PacketTest {
         assertNotNull(original);
 
         var bytes = original.serialize();
-
-        assertEquals(bytes.length, 43); // IPv6 header + 3 bytes of payload
-
         var reassembled = IPv6Packet.parse(bytes);
 
         assertNotNull(reassembled);
