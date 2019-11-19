@@ -27,7 +27,7 @@ class IPv6PacketTest {
 
     @Test
     void reassemblePacket() {
-        var original = IPv6Packet.create((byte) 6, (byte) 1, 2, (short) 3,
+        var original = IPv6Packet.create((byte) 6, (byte) 15, 2, (short) 3,
                 (byte) 4, hopLimit, sourceIP, destinationIP, new byte[] { 0x01, 0x02, 0x03 });
 
         assertNotNull(original);
