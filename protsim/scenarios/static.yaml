@@ -1,0 +1,22 @@
+---
+name: Static routing scenario
+description: A simple scenario with static routing between two networks, good for testing IP and TCP implementations.
+networks:
+  - name: net1
+    address: "2001:1::0/64"
+    servers:
+      - hostname: server1
+        address: "2001:1::2"
+  - name: net2 # first tier 2 ISP
+    address: "2001:2::0/64"
+    clients:
+      - hostname: client1
+        address: "2001:2::2"
+routers:
+  - hostname: r1
+    interfaces:
+      - network: net1
+        address: "2001:1::1"
+      - network: net2
+        address: "2001:2::1"
+    staticRoutes: ['net1', 'net2']

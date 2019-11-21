@@ -8,14 +8,17 @@ import java.util.*;
 public class EthernetInterfaceImpl implements EthernetInterface {
     private final byte[] address;
     private final Network network;
-    private final List<IPAddress> ipAddresses = new ArrayList<>();
+    private final IPAddress ipAddress;
 
-    EthernetInterfaceImpl(byte[] address, Network network) {
+    public EthernetInterfaceImpl(byte[] address, Network network, IPAddress ipAddress) {
         Objects.requireNonNull(address);
         Objects.requireNonNull(network);
+        Objects.requireNonNull(ipAddress);
 
         this.address = address;
         this.network = network;
+        network.addDevice(this);
+        this.ipAddress = ipAddress;
     }
 
     @Override
@@ -24,18 +27,8 @@ public class EthernetInterfaceImpl implements EthernetInterface {
     }
 
     @Override
-    public void addIpAddress(IPAddress addr) {
-        ipAddresses.add(addr);
-    }
-
-    @Override
-    public Collection<IPAddress> getIpAddresses() {
-        return Collections.unmodifiableCollection(ipAddresses);
-    }
-
-    @Override
-    public void removeIpAddress(IPAddress addr) {
-        ipAddresses.remove(addr);
+    public IPAddress getIpAddress() {
+        return ipAddress;
     }
 
     @Override
@@ -43,7 +36,7 @@ public class EthernetInterfaceImpl implements EthernetInterface {
         Objects.requireNonNull(address);
 
         for (var dev : getNetwork().getDevices()) {
-            if (dev.getIpAddresses().contains(address)) {
+            if (dev.getIpAddress().equals(address)) {
                 return dev.getAddress();
             }
         }

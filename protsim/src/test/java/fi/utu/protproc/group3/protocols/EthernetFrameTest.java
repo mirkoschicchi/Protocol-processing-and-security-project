@@ -1,6 +1,6 @@
 package fi.utu.protproc.group3.protocols;
 
-import fi.utu.protproc.group3.TestUtils;
+import fi.utu.protproc.group3.utils.StringUtils;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -43,12 +43,12 @@ public class EthernetFrameTest {
 
     @Test
     public void parseFrame() {
-        var pdu = TestUtils.parseHexStream("3333ff000a4a6045cb9e8d8386dd6000000000203afffddf5af267a400000000000000000a4fff0200000000000000000001ff000a4a8700206700000000fddf5af267a400000000000000000a4a01016045cb9e8d83");
+        var pdu = StringUtils.parseHexStream("3333ff000a4a6045cb9e8d8386dd6000000000203afffddf5af267a400000000000000000a4fff0200000000000000000001ff000a4a8700206700000000fddf5af267a400000000000000000a4a01016045cb9e8d83");
 
         var frame = EthernetFrame.parse(pdu);
 
-        assertArrayEquals(TestUtils.parseHexStream("3333ff000a4a"), frame.getDestination());
-        assertArrayEquals(TestUtils.parseHexStream("6045cb9e8d83"), frame.getSource());
+        assertArrayEquals(StringUtils.parseHexStream("3333ff000a4a"), frame.getDestination());
+        assertArrayEquals(StringUtils.parseHexStream("6045cb9e8d83"), frame.getSource());
         assertEquals((short) 0x86dd, frame.getType());
         assertNotNull(frame.getPayload());
         assertEquals(72, frame.getPayload().length);

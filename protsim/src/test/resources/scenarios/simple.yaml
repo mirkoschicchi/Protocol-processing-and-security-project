@@ -1,0 +1,24 @@
+---
+name: Two networks
+description: Simple test scenario with two networks connected through an ISP (no BGP)
+networks:
+  - name: clientNet
+    autonomousSystem: 1
+    clients:
+      - name: client
+  - name: serverNet
+    autonomousSystem: 1
+    servers:
+      - name: server
+  - name: ispLink
+routers:
+  - name: clientRouter
+    autonomousSystem: 1
+    interfaces:
+      - network: clientNet
+      - network: ispLink
+  - name: serverRouter
+    autonomousSystem: 1
+    interfaces:
+      - network: serverNet
+      - network: ispLink

@@ -8,12 +8,8 @@ import java.util.Collection;
  * Base interface for simulated network devices or routers.
  */
 public interface NetworkNode {
-    /**
-     * Gets the hosts ethernet interfaces.
-     */
-    Collection<EthernetInterface> getInterfaces();
+    String getHostname();
 
     void start();
-
     void shutdown();
 }

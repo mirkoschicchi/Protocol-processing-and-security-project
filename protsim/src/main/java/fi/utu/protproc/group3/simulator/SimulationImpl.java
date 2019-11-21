@@ -1,9 +1,9 @@
 package fi.utu.protproc.group3.simulator;
 
-import fi.utu.protproc.group3.nodes.ClientNode;
-import fi.utu.protproc.group3.nodes.NetworkNode;
-import fi.utu.protproc.group3.nodes.RouterNode;
-import fi.utu.protproc.group3.nodes.ServerNode;
+import fi.utu.protproc.group3.configuration.SimulationConfiguration;
+import fi.utu.protproc.group3.nodes.*;
+import fi.utu.protproc.group3.routing.RoutingTableImpl;
+import fi.utu.protproc.group3.routing.TableRowImpl;
 import fi.utu.protproc.group3.utils.AddressGenerator;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
@@ -11,18 +11,19 @@ import reactor.core.scheduler.Schedulers;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-public class SimulationImpl implements Simulation {
+public class SimulationImpl implements SimulationBuilder, Simulation {
     private final Random random = new Random(1337);
     private final Logger rootLogger;
     private final AddressGenerator generator = new AddressGenerator(random);
-    private final List<Network> networks = new ArrayList<>();
-    private final List<NetworkNode> nodes = new ArrayList<>();
+    private final Map<String, Network> networks = new HashMap<>();
+    private final Map<String, NetworkNode> nodes = new HashMap<>();
+    private String description;
+    private String name;
     private FileOutputStream pcapStream;
     private List<ServerNode> servers;
 
@@ -31,41 +32,68 @@ public class SimulationImpl implements Simulation {
     }
 
     @Override
-    public Network createNetwork() {
-        var result = Network.create(this, generator.networkAddress());
-        networks.add(result);
+    public Simulation load(SimulationConfiguration configuration) {
+        Objects.requireNonNull(configuration);
 
-        return result;
-    }
+        var generator = new AddressGenerator(new Random(1337L));
+        var simulation = this;
 
-    @Override
-    public RouterNode createRouter(Network... networks) {
-        var result = RouterNode.create(this, generator, networks);
-        nodes.add(result);
+        var context = new SimulationBuilderContext() {
+            @Override
+            public AddressGenerator generator() {
+                return generator;
+            }
 
-        return result;
-    }
+            @Override
+            public Network network(String name) {
+                return networks.get(name);
+            }
 
-    @Override
-    public ClientNode createClient(Network network) {
-        try {
-            var result = ClientNode.create(this, generator, network);
-            nodes.add(result);
+            @Override
+            public <T extends NetworkNode> T node(String name) {
+                return (T) nodes.get(name);
+            }
 
-            return result;
-        } catch (UnknownHostException e) {
-            rootLogger.severe("Error while creating client: " + e);
+            @Override
+            public Simulation simulation() {
+                return simulation;
+            }
+        };
 
-            return null;
+        name = configuration.getName();
+        description = configuration.getDescription();
+
+        var networksByGroup = new HashMap<Integer, List<NetworkImpl>>();
+        for (var netConf : configuration.getNetworks()) {
+            var net = new NetworkImpl(context, netConf);
+            if (netConf.getAutonomousSystem() != 0) {
+                networksByGroup.putIfAbsent(netConf.getAutonomousSystem(), new ArrayList<>()).add(net);
+            }
+
+            networks.put(netConf.getName(), net);
+
+            netConf.getActualServers()
+                    .map(conf -> new ServerNodeImpl(context, conf, net))
+                    .forEach(s -> nodes.put(s.getHostname(), s));
+
+            netConf.getActualClients()
+                    .map(conf -> new ClientNodeImpl(context, conf, net))
+                    .forEach(s -> nodes.put(s.getHostname(), s));
         }
-    }
 
-    @Override
-    public ServerNode createServer(Network network) {
-        var result = ServerNode.create(this, generator, network);
-        nodes.add(result);
+        var routersByGroup = new HashMap<Integer, List<RouterNodeImpl>>();
+        for (var routerConf : configuration.getRouters()) {
+            var node = new RouterNodeImpl(context, routerConf);
+            if (routerConf.getAutonomousSystem() != 0) {
+                routersByGroup.putIfAbsent(routerConf.getAutonomousSystem(), new ArrayList<>()).add(node);
+            }
 
-        return result;
+            nodes.put(node.getHostname(), node);
+        }
+
+        // TODO : Set up static routing within all AS
+
+        return simulation;
     }
 
     @Override
@@ -74,19 +102,29 @@ public class SimulationImpl implements Simulation {
     }
 
     @Override
+    public <T extends NetworkNode> T getNode(String name) {
+        return (T) nodes.get(name);
+    }
+
+    @Override
     public Collection<NetworkNode> getNodes() {
-        return Collections.unmodifiableCollection(nodes);
+        return nodes.values();
+    }
+
+    @Override
+    public Network getNetwork(String name) {
+        return networks.get(name);
     }
 
     @Override
     public Collection<Network> getNetworks() {
-        return Collections.unmodifiableCollection(networks);
+        return networks.values();
     }
 
     @Override
     public ServerNode getRandomServer() {
         if (servers == null) {
-            servers = nodes.stream()
+            servers = nodes.values().stream()
                     .filter(n -> n instanceof ServerNode)
                     .map(n -> (ServerNode) n)
                     .collect(Collectors.toList());
@@ -111,7 +149,7 @@ public class SimulationImpl implements Simulation {
 
                 pcapStream.write(buf.array());
 
-                recording = Flux.merge((Iterable<Flux<byte[]>>) networks.stream().map(n -> n.getFlux())::iterator)
+                recording = Flux.merge((Iterable<Flux<byte[]>>) networks.values().stream().map(Network::getFlux)::iterator)
                         .subscribe(this::recordPacket);
             } catch (IOException e) {
                 rootLogger.severe("Error while opening PCAP file: " + e);
@@ -119,14 +157,14 @@ public class SimulationImpl implements Simulation {
             }
         }
 
-        for (var node : nodes) {
+        for (var node : nodes.values()) {
             node.start();
         }
     }
 
     @Override
     public void stop() {
-        for (var node : nodes) {
+        for (var node : nodes.values()) {
             node.shutdown();
         }
 

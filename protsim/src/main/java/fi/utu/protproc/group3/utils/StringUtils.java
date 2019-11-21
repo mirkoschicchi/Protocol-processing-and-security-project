@@ -1,9 +1,9 @@
-package fi.utu.protproc.group3;
+package fi.utu.protproc.group3.utils;
 
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
-public class TestUtils {
+public class StringUtils {
     public static byte[] parseHexStream(String hexStream) {
         Objects.requireNonNull(hexStream);
 
