@@ -2,8 +2,6 @@ package fi.utu.protproc.group3.simulator;
 
 import fi.utu.protproc.group3.configuration.SimulationConfiguration;
 import fi.utu.protproc.group3.nodes.*;
-import fi.utu.protproc.group3.routing.RoutingTableImpl;
-import fi.utu.protproc.group3.routing.TableRowImpl;
 import fi.utu.protproc.group3.utils.AddressGenerator;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
@@ -63,13 +61,8 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
         name = configuration.getName();
         description = configuration.getDescription();
 
-        var networksByGroup = new HashMap<Integer, List<NetworkImpl>>();
         for (var netConf : configuration.getNetworks()) {
             var net = new NetworkImpl(context, netConf);
-            if (netConf.getAutonomousSystem() != 0) {
-                networksByGroup.putIfAbsent(netConf.getAutonomousSystem(), new ArrayList<>()).add(net);
-            }
-
             networks.put(netConf.getName(), net);
 
             netConf.getActualServers()
@@ -81,17 +74,10 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
                     .forEach(s -> nodes.put(s.getHostname(), s));
         }
 
-        var routersByGroup = new HashMap<Integer, List<RouterNodeImpl>>();
         for (var routerConf : configuration.getRouters()) {
             var node = new RouterNodeImpl(context, routerConf);
-            if (routerConf.getAutonomousSystem() != 0) {
-                routersByGroup.putIfAbsent(routerConf.getAutonomousSystem(), new ArrayList<>()).add(node);
-            }
-
             nodes.put(node.getHostname(), node);
         }
-
-        // TODO : Set up static routing within all AS
 
         return simulation;
     }

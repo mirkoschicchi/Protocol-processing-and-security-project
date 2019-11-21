@@ -25,6 +25,7 @@ public abstract class NetworkNodeImpl implements SimpleNode, MultiInterfaceNode 
 
         AddressGenerator generator = context.generator();
         interfaces.add(new EthernetInterfaceImpl(
+                        this,
                         generator.ethernetAddress(null),
                         network,
                         generator.ipAddress(network.getNetworkAddress(), configuration.getAddress())

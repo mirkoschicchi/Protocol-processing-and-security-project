@@ -20,6 +20,7 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
             var network = context.network(intf.getNetwork());
             interfaces.add(
                     new EthernetInterfaceImpl(
+                            this,
                             context.generator().ethernetAddress(null),
                             network,
                             context.generator().ipAddress(network.getNetworkAddress(), intf.getAddress())

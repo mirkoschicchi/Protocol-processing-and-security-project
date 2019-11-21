@@ -1,5 +1,6 @@
 package fi.utu.protproc.group3.simulator;
 
+import fi.utu.protproc.group3.nodes.NetworkNode;
 import fi.utu.protproc.group3.utils.IPAddress;
 import reactor.core.publisher.Flux;
 
@@ -9,12 +10,15 @@ public class EthernetInterfaceImpl implements EthernetInterface {
     private final byte[] address;
     private final Network network;
     private final IPAddress ipAddress;
+    private final NetworkNode host;
 
-    public EthernetInterfaceImpl(byte[] address, Network network, IPAddress ipAddress) {
+    public EthernetInterfaceImpl(NetworkNode host, byte[] address, Network network, IPAddress ipAddress) {
+        Objects.requireNonNull(host);
         Objects.requireNonNull(address);
         Objects.requireNonNull(network);
         Objects.requireNonNull(ipAddress);
 
+        this.host = host;
         this.address = address;
         this.network = network;
         network.addDevice(this);
@@ -61,5 +65,10 @@ public class EthernetInterfaceImpl implements EthernetInterface {
     @Override
     public Network getNetwork() {
         return network;
+    }
+
+    @Override
+    public NetworkNode getHost() {
+        return host;
     }
 }

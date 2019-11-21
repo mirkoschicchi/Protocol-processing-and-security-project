@@ -1,5 +1,6 @@
 package fi.utu.protproc.group3.simulator;
 
+import fi.utu.protproc.group3.nodes.NetworkNode;
 import fi.utu.protproc.group3.utils.IPAddress;
 import reactor.core.publisher.Flux;
 
@@ -42,4 +43,6 @@ public interface EthernetInterface {
      * Gets the underlying network connection.
      */
     Network getNetwork();
+
+    NetworkNode getHost();
 }
