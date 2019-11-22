@@ -10,7 +10,7 @@ import java.net.UnknownHostException;
 
 public class ServerNodeImpl extends NetworkNodeImpl implements ServerNode {
     public ServerNodeImpl(SimulationBuilderContext context, NodeConfiguration conf, NetworkImpl net) {
-        super(context, conf);
+        super(context, conf, net);
     }
 
     @Override

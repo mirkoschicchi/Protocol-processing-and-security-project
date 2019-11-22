@@ -20,7 +20,6 @@ import org.graphstream.graph.implementations.MultiGraph;
 public class SimulationImpl implements SimulationBuilder, Simulation {
     private final Random random = new Random(1337);
     private final Logger rootLogger;
-    private final AddressGenerator generator = new AddressGenerator(random);
     private final Map<String, Network> networks = new HashMap<>();
     private final Map<String, NetworkNode> nodes = new HashMap<>();
     private String description;
@@ -36,7 +35,7 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
     public Simulation load(SimulationConfiguration configuration) {
         Objects.requireNonNull(configuration);
 
-        var generator = new AddressGenerator(new Random(1337L));
+        var generator = new AddressGenerator(random);
         var simulation = this;
 
         var context = new SimulationBuilderContext() {
@@ -101,37 +100,41 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
                         "}";
         graph.addAttribute("ui.stylesheet", styleSheet);
 
-        for (var netConf : configuration.getNetworks()) {
-            var net = new NetworkImpl(context, netConf);
-            networks.put(netConf.getName(), net);
-            graph.addNode(netConf.getName()).addAttribute("ui.class", "networks");
+        if (configuration.getNetworks() != null) {
+            for (var netConf : configuration.getNetworks()) {
+                var net = new NetworkImpl(context, netConf);
+                networks.put(netConf.getName(), net);
+                graph.addNode(netConf.getName()).addAttribute("ui.class", "networks");
 
-            netConf.getActualServers()
-                    .map(conf -> new ServerNodeImpl(context, conf, net))
-                    .forEach(s -> {
-                        nodes.put(s.getHostname(), s);
-                        graph.addNode(s.getHostname()).addAttribute("ui.class", "servers");
-                        graph.addEdge(s.getHostname() + netConf.getName(), s.getHostname(), netConf.getName());
-                    });
+                netConf.getActualServers()
+                        .map(conf -> new ServerNodeImpl(context, conf, net))
+                        .forEach(s -> {
+                            nodes.put(s.getHostname(), s);
+                            graph.addNode(s.getHostname()).addAttribute("ui.class", "servers");
+                            graph.addEdge(s.getHostname() + netConf.getName(), s.getHostname(), netConf.getName());
+                        });
 
-            netConf.getActualClients()
-                    .map(conf -> new ClientNodeImpl(context, conf, net))
-                    .forEach(s -> {
-                        nodes.put(s.getHostname(), s);
-                        graph.addNode(s.getHostname()).addAttribute("ui.class", "clients");
-                        graph.addEdge(s.getHostname() + netConf.getName(), s.getHostname(), netConf.getName());
-                    });
+                netConf.getActualClients()
+                        .map(conf -> new ClientNodeImpl(context, conf, net))
+                        .forEach(s -> {
+                            nodes.put(s.getHostname(), s);
+                            graph.addNode(s.getHostname()).addAttribute("ui.class", "clients");
+                            graph.addEdge(s.getHostname() + netConf.getName(), s.getHostname(), netConf.getName());
+                        });
+            }
         }
 
-        for (var routerConf : configuration.getRouters()) {
-            var node = new RouterNodeImpl(context, routerConf);
-            nodes.put(node.getHostname(), node);
-            graph.addNode(node.getHostname()).addAttribute("ui.class", "routers");
+        if (configuration.getRouters() != null) {
+            for (var routerConf : configuration.getRouters()) {
+                var node = new RouterNodeImpl(context, routerConf);
+                nodes.put(node.getHostname(), node);
+                graph.addNode(node.getHostname()).addAttribute("ui.class", "routers");
 
-            node.getInterfaces().forEach(ethernetInterface -> {
-                var networkName = ethernetInterface.getNetwork().getNetworkName();
-                graph.addEdge(node.getHostname() + networkName, node.getHostname(), networkName);
-            });
+                node.getInterfaces().forEach(ethernetInterface -> {
+                    var networkName = ethernetInterface.getNetwork().getNetworkName();
+                    graph.addEdge(node.getHostname() + networkName, node.getHostname(), networkName);
+                });
+            }
         }
 
         graph.display();

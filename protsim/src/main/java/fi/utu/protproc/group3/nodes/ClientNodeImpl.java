@@ -3,7 +3,7 @@ package fi.utu.protproc.group3.nodes;
 import fi.utu.protproc.group3.configuration.NodeConfiguration;
 import fi.utu.protproc.group3.protocols.EthernetFrame;
 import fi.utu.protproc.group3.protocols.IPv6Packet;
-import fi.utu.protproc.group3.protocols.TCPDatagram;
+import fi.utu.protproc.group3.protocols.tcp.TCPDatagram;
 import fi.utu.protproc.group3.simulator.*;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
@@ -53,7 +53,7 @@ public class ClientNodeImpl extends NetworkNodeImpl implements ClientNode {
                 dest.getInterface().getAddress(),
                 intf.getAddress(),
                 EthernetFrame.TYPE_IPV6,
-                IPv6Packet.create((byte) 6, (byte) 0, 0, (short) 0, (byte) 6, (byte) 128,
+                IPv6Packet.create((byte) 6, (byte) 0, 0, (byte) 6, (byte) 128,
                         getIpAddress(), dest.getIpAddress(),
                         TCPDatagram.create((short) 12345, (short) 80, 123784523, 0, (byte) 0,
                                 (short) 0, (short) 0, (short) 0, (short) 0, new byte[0], "GET / HTTP/1.0".getBytes()

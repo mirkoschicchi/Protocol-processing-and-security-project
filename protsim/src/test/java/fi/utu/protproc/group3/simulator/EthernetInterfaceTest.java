@@ -16,7 +16,7 @@ public class EthernetInterfaceTest extends SimpleScenarioTest {
         var frame = EthernetFrame.create(
                 client.getInterface().getAddress(),
                 client.getInterface().getAddress(),
-                EthernetFrame.TYPE_IPV6, new byte[]{0x00});
+                (short) 0x00, new byte[]{0x00});
 
         var buf = frame.serialize();
         var flux = client.getInterface().getFlux();

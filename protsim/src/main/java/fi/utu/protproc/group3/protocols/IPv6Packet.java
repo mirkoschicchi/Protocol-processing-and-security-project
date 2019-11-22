@@ -8,9 +8,9 @@ import java.util.Objects;
  * Represents an IPv6 Packet
  */
 public interface IPv6Packet {
-    static IPv6Packet create(byte version, byte trafficClass, int flowLabel, short payloadLength,
+    static IPv6Packet create(byte version, byte trafficClass, int flowLabel,
                              byte nextHeader, byte hopLimit, IPAddress sourceIP, IPAddress destinationIP, byte[] payload) {
-        return new IPv6PacketImpl(version, trafficClass, flowLabel, payloadLength,
+        return new IPv6PacketImpl(version, trafficClass, flowLabel,
                 nextHeader, hopLimit, sourceIP, destinationIP, payload);
     }
 

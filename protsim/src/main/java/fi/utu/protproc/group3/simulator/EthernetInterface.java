@@ -1,10 +1,9 @@
 package fi.utu.protproc.group3.simulator;
 
 import fi.utu.protproc.group3.nodes.NetworkNode;
+import fi.utu.protproc.group3.protocols.tcp.DatagramHandler;
 import fi.utu.protproc.group3.utils.IPAddress;
 import reactor.core.publisher.Flux;
-
-import java.util.Collection;
 
 /**
  * Simulates an IEEE 802.3 ethernet interface as well as supporting protocols such as ARP.
@@ -45,4 +44,6 @@ public interface EthernetInterface {
     Network getNetwork();
 
     NetworkNode getHost();
+
+    DatagramHandler getTCPHandler();
 }

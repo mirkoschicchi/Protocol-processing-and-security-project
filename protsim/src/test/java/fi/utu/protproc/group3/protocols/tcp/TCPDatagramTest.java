@@ -1,5 +1,8 @@
-package fi.utu.protproc.group3.protocols;
+package fi.utu.protproc.group3.protocols.tcp;
 
+import fi.utu.protproc.group3.protocols.EthernetFrame;
+import fi.utu.protproc.group3.protocols.IPv6Packet;
+import fi.utu.protproc.group3.protocols.tcp.TCPDatagram;
 import fi.utu.protproc.group3.utils.StringUtils;
 import org.junit.jupiter.api.Test;
 
@@ -71,7 +74,7 @@ class TCPDatagramTest {
         var rebuilt = EthernetFrame.create(
                 frame.getDestination(), frame.getSource(), frame.getType(),
                 IPv6Packet.create(packet.getVersion(), packet.getTrafficClass(), packet.getFlowLabel(),
-                        packet.getPayloadLength(), packet.getNextHeader(), packet.getHopLimit(),
+                        packet.getNextHeader(), packet.getHopLimit(),
                         packet.getSourceIP(), packet.getDestinationIP(),
                         TCPDatagram.create(datagram.getSourcePort(), datagram.getDestinationPort(), datagram.getSeqN(),
                                 datagram.getAckN(), datagram.getDataOffset(), datagram.getFlags(), datagram.getWindow(),

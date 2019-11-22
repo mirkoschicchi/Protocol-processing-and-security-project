@@ -88,10 +88,14 @@ public abstract class NetworkNodeImpl implements SimpleNode, MultiInterfaceNode 
                                 }))::iterator
                 )
                 .subscribe();
+
+        interfaces.forEach(i -> i.getTCPHandler().start());
     }
 
     @Override
     public void shutdown() {
+        interfaces.forEach(i -> i.getTCPHandler().stop());
+
         if (messageListener != null) {
             messageListener.dispose();
             messageListener = null;

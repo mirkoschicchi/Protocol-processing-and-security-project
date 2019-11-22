@@ -69,7 +69,7 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
 
                 // Reassemble the IPv6 packet
                 IPv6Packet newPacket = IPv6Packet.create(packet.getVersion(), packet.getTrafficClass(), packet.getFlowLabel(),
-                        packet.getPayloadLength(), packet.getNextHeader(), (byte) (packet.getHopLimit() - 1),
+                        packet.getNextHeader(), (byte) (packet.getHopLimit() - 1),
                         packet.getSourceIP(), packet.getDestinationIP(), packet.getPayload());
 
                 EthernetFrame newFrame = EthernetFrame.create(nextHopMac, exitIntf.getAddress(), frame.getType(), newPacket.serialize());
