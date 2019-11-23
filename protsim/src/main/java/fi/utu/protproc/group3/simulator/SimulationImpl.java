@@ -105,27 +105,35 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
                         "size: 3px;"+
                         "}";
         graph.addAttribute("ui.stylesheet", styleSheet);
+        String ispLinkName = "ispLink";
 
         for (var netConf : configuration.getNetworks()) {
             var net = new NetworkImpl(context, netConf);
             networks.put(netConf.getName(), net);
-
-            if (netConf.getName() == "ispLink") {
-                graph.addNode("ispLink").addAttribute("ui.class", "isp");
+            if (netConf.getName().contains("isp")) {
+                graph.addNode(ispLinkName).addAttribute("ui.class", "isp");
+            }
+            if (netConf.getName().contains("client")) {
+                graph.addNode(netConf.getName()).addAttribute("ui.class", "clients");
+            }
+            if (netConf.getName().contains("server")) {
+                graph.addNode(netConf.getName()).addAttribute("ui.class", "servers");
             }
 
             netConf.getActualServers()
                     .map(conf -> new ServerNodeImpl(context, conf, net))
                     .forEach(s -> {
                         nodes.put(s.getHostname(), s);
-                        graph.addNode(s.getHostname()).addAttribute("ui.class", "servers");
+//                        graph.addNode(s.getHostname()).addAttribute("ui.class", "servers");
+//                        System.out.println("Servers:" + s.getHostname());
                     });
 
             netConf.getActualClients()
                     .map(conf -> new ClientNodeImpl(context, conf, net))
                     .forEach(s -> {
                         nodes.put(s.getHostname(), s);
-                        graph.addNode(s.getHostname()).addAttribute("ui.class", "clients");
+//                        graph.addNode(s.getHostname()).addAttribute("ui.class", "clients");
+//                        System.out.println("Clients:" + s.getHostname());
                     });
         }
 
@@ -133,6 +141,11 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
             var node = new RouterNodeImpl(context, routerConf);
             nodes.put(node.getHostname(), node);
             graph.addNode(node.getHostname()).addAttribute("ui.class", "routers");
+
+            node.getInterfaces().forEach(ethernetInterface -> {
+                var networkName = ethernetInterface.getNetwork().getNetworkName();
+                graph.addEdge(node.getHostname() + networkName, node.getHostname(), networkName);
+            });
         }
 
         graph.display();

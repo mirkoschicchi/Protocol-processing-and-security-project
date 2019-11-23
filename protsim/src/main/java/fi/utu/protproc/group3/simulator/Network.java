@@ -19,6 +19,11 @@ public interface Network {
     Collection<EthernetInterface> getDevices();
 
     /**
+     * Gets network name
+     */
+    String getNetworkName();
+
+    /**
      * Gets the flux for the traffic on this network.
      *
      * @return

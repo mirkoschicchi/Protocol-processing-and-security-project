@@ -14,6 +14,7 @@ public class NetworkImpl implements Network {
     private final List<EthernetInterface> interfaces = new ArrayList<>();
     private final Simulation simulation;
     private final NetworkAddress networkAddress;
+    private final String networkName;
 
     NetworkImpl(SimulationBuilderContext context, NetworkConfiguration configuration) {
         Objects.requireNonNull(context);
@@ -21,6 +22,7 @@ public class NetworkImpl implements Network {
 
         this.simulation = context.simulation();
         this.networkAddress = context.generator().networkAddress(configuration.getAddress());
+        this.networkName = context.generator().hostName(configuration.getName());
 
         var processor = DirectProcessor.<byte[]>create().serialize();
         input = processor.sink(FluxSink.OverflowStrategy.DROP);
@@ -53,6 +55,10 @@ public class NetworkImpl implements Network {
     @Override
     public Collection<EthernetInterface> getDevices() {
         return Collections.unmodifiableCollection(interfaces);
+    }
+
+    public String getNetworkName() {
+        return networkName;
     }
 
     @Override
