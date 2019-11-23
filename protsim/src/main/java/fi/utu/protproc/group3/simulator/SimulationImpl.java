@@ -14,6 +14,10 @@ import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import org.graphstream.graph.Graph;
+//import org.graphstream.graph.Node;
+import org.graphstream.graph.implementations.MultiGraph;
+
 public class SimulationImpl implements SimulationBuilder, Simulation {
     private final Random random = new Random(1337);
     private final Logger rootLogger;
@@ -60,25 +64,78 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
 
         name = configuration.getName();
         description = configuration.getDescription();
+        System.setProperty("org.graphstream.ui.renderer", "org.graphstream.ui.j2dviewer.J2DGraphRenderer");
+
+        Graph graph = new MultiGraph(name);
+        graph.setAttribute( "ui.antialias" );
+        String path = System.getProperty("user.dir") + "/src/main/java/fi/utu/protproc/group3/images/";
+        String styleSheet =
+                "graph {"+
+                        "fill-mode: plain;"+
+                        "fill-color: white, gray;"+
+                        "padding: 60px;"+
+                        "}"+
+                        "node {"+
+                        "shape: box;"+
+                        "fill-mode: image-scaled;"+
+                        "}"+
+                        "node.isp {"+
+                        "size: 100px;"+
+                        "fill-image: url('" + path + "kisspng-internet-cloud.png" + "');" +
+                        "}"+
+                        "node.routers {"+
+                        "size: 60px;"+
+                        "fill-image: url('" + path + "kisspng-wireless-router.png" + "');" +
+                        "}"+
+                        "node.localNets {"+
+                        "size: 60px;"+
+                        "fill-image: url('" + path + "kisspng-intranet.png" + "');" +
+                        "}"+
+                        "node.clients {"+
+                        "size: 60px;"+
+                        "fill-image: url('" + path + "kisspng-computer.png" + "');" +
+                        "}"+
+                        "node.servers {"+
+                        "size: 40px, 60px;"+
+                        "fill-image: url('" + path + "kisspng-server.png" + "');" +
+                        "}"+
+                        "edge {"+
+                        "shape: cubic-curve;"+
+                        "arrow-shape: none;"+
+                        "size: 3px;"+
+                        "}";
+        graph.addAttribute("ui.stylesheet", styleSheet);
 
         for (var netConf : configuration.getNetworks()) {
             var net = new NetworkImpl(context, netConf);
             networks.put(netConf.getName(), net);
 
+            if (netConf.getName() == "ispLink") {
+                graph.addNode("ispLink").addAttribute("ui.class", "isp");
+            }
+
             netConf.getActualServers()
                     .map(conf -> new ServerNodeImpl(context, conf, net))
-                    .forEach(s -> nodes.put(s.getHostname(), s));
+                    .forEach(s -> {
+                        nodes.put(s.getHostname(), s);
+                        graph.addNode(s.getHostname()).addAttribute("ui.class", "servers");
+                    });
 
             netConf.getActualClients()
                     .map(conf -> new ClientNodeImpl(context, conf, net))
-                    .forEach(s -> nodes.put(s.getHostname(), s));
+                    .forEach(s -> {
+                        nodes.put(s.getHostname(), s);
+                        graph.addNode(s.getHostname()).addAttribute("ui.class", "clients");
+                    });
         }
 
         for (var routerConf : configuration.getRouters()) {
             var node = new RouterNodeImpl(context, routerConf);
             nodes.put(node.getHostname(), node);
+            graph.addNode(node.getHostname()).addAttribute("ui.class", "routers");
         }
 
+        graph.display();
         return simulation;
     }
 
