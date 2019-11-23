@@ -12,17 +12,17 @@ networks:
     address: "2002:3:ffff:ffff::0/64"
   - name: net1 # first test net (servers)
     address: "2003:1::0/64"
-    servers: 10
+    randomServers: 10
   - name: net2 # second test net (servers)
     address: "2003:2::0/64"
-    servers: 10
+    randomServers: 10
   - name: net3 # first test net (servers & clients)
     address: "2003:3::0/64"
-    servers: 5
-    clients: 5
+    randomServers: 5
+    randomClients: 5
   - name: net4 # fourth test net (clients only)
     address: "2003:4::0/64"
-    clients: 10
+    randomClients: 10
 routers:
   - name: t1_t2a
     interfaces:
