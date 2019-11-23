@@ -41,6 +41,9 @@ public class ClientNodeImpl extends NetworkNodeImpl implements ClientNode {
     private void sendMessage(long messageId) {
         var dest = simulation.getRandomServer();
 
+//        var tcpConn = TCPClient.connect(dest.getInterfaces().iterator().next().getIpAddresses().iterator().next(), 23);
+//
+//        tcpConn.send();
         // TODO: Remove code below and send correct TCP packet to the destination
 
         var srcIntf = getInterfaces().iterator().next();
