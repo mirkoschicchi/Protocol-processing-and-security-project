@@ -6,22 +6,9 @@ import fi.utu.protproc.group3.simulator.Network;
 import fi.utu.protproc.group3.simulator.Simulation;
 import fi.utu.protproc.group3.utils.AddressGenerator;
 
+import java.util.Collection;
 import java.util.Objects;
 
-public interface RouterNode extends NetworkNode {
-    static RouterNode create(Simulation simulation, AddressGenerator generator, Network[] networks) {
-        Objects.requireNonNull(simulation);
-        Objects.requireNonNull(generator);
-        Objects.requireNonNull(networks);
-
-        var intfs = new EthernetInterface[networks.length];
-        for (var i = 0; i < networks.length; i++) {
-            intfs[i] = EthernetInterface.create(generator.ethernetAddress(), networks[i]);
-            intfs[i].addIpAddress(generator.ipAddress(networks[i].getNetworkAddress()));
-        }
-
-        return new RouterNodeImpl(simulation, intfs);
-    }
-
+public interface RouterNode extends MultiInterfaceNode {
     RoutingTable getRoutingTable();
 }

@@ -1,8 +1,10 @@
 package fi.utu.protproc.group3.nodes;
 
+import fi.utu.protproc.group3.configuration.NodeConfiguration;
 import fi.utu.protproc.group3.protocols.EthernetFrame;
-import fi.utu.protproc.group3.simulator.EthernetInterface;
-import fi.utu.protproc.group3.simulator.Simulation;
+import fi.utu.protproc.group3.protocols.IPv6Packet;
+import fi.utu.protproc.group3.protocols.TCPDatagram;
+import fi.utu.protproc.group3.simulator.*;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 
@@ -10,8 +12,8 @@ import java.net.UnknownHostException;
 import java.time.Duration;
 
 public class ClientNodeImpl extends NetworkNodeImpl implements ClientNode {
-    ClientNodeImpl(Simulation simulation, EthernetInterface intf) {
-        super(simulation, new EthernetInterface[]{intf});
+    public ClientNodeImpl(SimulationBuilderContext context, NodeConfiguration configuration, Network network) {
+        super(context, configuration, network);
     }
 
     private Disposable messageFlux;
@@ -46,15 +48,20 @@ public class ClientNodeImpl extends NetworkNodeImpl implements ClientNode {
 //        tcpConn.send();
         // TODO: Remove code below and send correct TCP packet to the destination
 
-        var srcIntf = getInterfaces().iterator().next();
+        var intf = getInterface();
         var frame = EthernetFrame.create(
-                dest.getInterfaces().iterator().next().getAddress(),
-                srcIntf.getAddress(),
+                dest.getInterface().getAddress(),
+                intf.getAddress(),
                 EthernetFrame.TYPE_IPV6,
-                ("This is a test message to " + dest.getInterfaces().iterator().next().getIpAddresses().iterator().next()).getBytes()
+                IPv6Packet.create((byte) 6, (byte) 0, 0, (short) 0, (byte) 6, (byte) 128,
+                        getIpAddress(), dest.getIpAddress(),
+                        TCPDatagram.create((short) 12345, (short) 80, 123784523, 0, (byte) 0,
+                                (short) 0, (short) 0, (short) 0, (short) 0, new byte[0], "GET / HTTP/1.0".getBytes()
+                        ).serialize()
+                ).serialize()
         );
 
-        srcIntf.getNetwork().transmit(frame.serialize());
+        intf.getNetwork().transmit(frame.serialize());
     }
 
     @Override

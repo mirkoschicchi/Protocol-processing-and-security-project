@@ -14,7 +14,9 @@ public class AddressGenerator {
         this.random = random;
     }
 
-    public byte[] ethernetAddress() {
+    public byte[] ethernetAddress(String value) {
+        if (value != null) return StringUtils.parseHexStream(value);
+
         // See https://honeywellaidc.force.com/supportppr/s/article/Locally-Administered-MAC-addresses
         var buf = new byte[6];
         random.nextBytes(buf);
@@ -23,7 +25,9 @@ public class AddressGenerator {
         return buf;
     }
 
-    public NetworkAddress networkAddress() {
+    public NetworkAddress networkAddress(String value) {
+        if (value != null) return NetworkAddress.parse(value);
+
         // Generate random /56 network
         var netAddr = new byte[16];
         random.nextBytes(netAddr);
@@ -35,8 +39,10 @@ public class AddressGenerator {
         return new NetworkAddress(new IPAddress(netAddr), 7);
     }
 
-    public IPAddress ipAddress(NetworkAddress network) {
+    public IPAddress ipAddress(NetworkAddress network, String value) {
         Objects.requireNonNull(network);
+
+        if (value != null) return IPAddress.parse(value);
 
         var buf = network.getAddress().toArray();
         for (var i = network.getPrefixLength() / 8; i < buf.length; i++) {
@@ -44,5 +50,13 @@ public class AddressGenerator {
         }
 
         return new IPAddress(buf);
+    }
+
+    public String hostName(String value) {
+        if (value != null) return value;
+
+        var id = random.nextInt();
+
+        return "node-" + Integer.toHexString(id);
     }
 }

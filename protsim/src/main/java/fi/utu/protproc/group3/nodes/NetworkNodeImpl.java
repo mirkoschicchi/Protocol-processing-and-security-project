@@ -1,26 +1,51 @@
 package fi.utu.protproc.group3.nodes;
 
-import fi.utu.protproc.group3.simulator.EthernetInterface;
-import fi.utu.protproc.group3.simulator.Simulation;
+import fi.utu.protproc.group3.configuration.NodeConfiguration;
+import fi.utu.protproc.group3.simulator.*;
+import fi.utu.protproc.group3.utils.AddressGenerator;
+import fi.utu.protproc.group3.utils.IPAddress;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 
 import java.net.UnknownHostException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Objects;
+import java.util.*;
 
-public abstract class NetworkNodeImpl implements NetworkNode {
+
+public abstract class NetworkNodeImpl implements SimpleNode, MultiInterfaceNode {
     protected final Simulation simulation;
-    private final Collection<EthernetInterface> interfaces;
+    protected final String hostname;
+    protected final List<EthernetInterface> interfaces = new ArrayList<>();
 
-    protected NetworkNodeImpl(Simulation simulation, EthernetInterface[] interfaces) {
-        Objects.requireNonNull(simulation);
-        Objects.requireNonNull(interfaces);
+    protected NetworkNodeImpl(SimulationBuilderContext context, NodeConfiguration configuration, Network network) {
+        this(context, configuration);
 
-        this.simulation = simulation;
-        this.interfaces = Arrays.asList(interfaces);
+        Objects.requireNonNull(context);
+        Objects.requireNonNull(configuration);
+        Objects.requireNonNull(network);
+
+        AddressGenerator generator = context.generator();
+        interfaces.add(new EthernetInterfaceImpl(
+                        this,
+                        generator.ethernetAddress(null),
+                        network,
+                        generator.ipAddress(network.getNetworkAddress(), configuration.getAddress())
+                )
+        );
+    }
+
+    protected NetworkNodeImpl(SimulationBuilderContext context, NodeConfiguration configuration) {
+        Objects.requireNonNull(context);
+        Objects.requireNonNull(configuration);
+
+        this.simulation = context.simulation();
+        this.hostname = context.generator().hostName(configuration != null ? configuration.getName() : null);
+    }
+
+    private Disposable messageListener;
+
+    @Override
+    public String getHostname() {
+        return hostname;
     }
 
     @Override
@@ -28,7 +53,21 @@ public abstract class NetworkNodeImpl implements NetworkNode {
         return Collections.unmodifiableCollection(interfaces);
     }
 
-    private Disposable messageListener;
+    @Override
+    public EthernetInterface getInterface() {
+        var intfs = interfaces.iterator();
+        var result = intfs.next();
+
+        if (intfs.hasNext())
+            throw new UnsupportedOperationException("Cannot call getInterface() on multi-interface node.");
+
+        return result;
+    }
+
+    @Override
+    public IPAddress getIpAddress() {
+        return getInterface().getIpAddress();
+    }
 
     @Override
     public void start() {
