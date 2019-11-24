@@ -34,4 +34,6 @@ public interface Network {
      * Transmits a given frame via the network.
      */
     void transmit(byte[] pdu);
+
+    int getAutonomousSystem();
 }

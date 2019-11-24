@@ -4,6 +4,7 @@ import fi.utu.protproc.group3.configuration.RouterConfiguration;
 import fi.utu.protproc.group3.protocols.EthernetFrame;
 import fi.utu.protproc.group3.protocols.IPv6Packet;
 import fi.utu.protproc.group3.routing.RoutingTable;
+import fi.utu.protproc.group3.routing.RoutingTableImpl;
 import fi.utu.protproc.group3.routing.TableRow;
 import fi.utu.protproc.group3.simulator.*;
 import fi.utu.protproc.group3.utils.IPAddress;
@@ -13,8 +14,12 @@ import java.util.Collection;
 import java.util.Collections;
 
 public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
+    private final int autonomousSystem;
+
     public RouterNodeImpl(SimulationBuilderContext context, RouterConfiguration configuration) {
         super(context, configuration);
+        
+        this.autonomousSystem = configuration.getAutonomousSystem();
 
         for (var intf : configuration.getInterfaces()) {
             var network = context.network(intf.getNetwork());
@@ -29,7 +34,7 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
         }
     }
 
-    private RoutingTable routingTable;
+    private final RoutingTable routingTable = new RoutingTableImpl();
 
     @Override
     public Collection<EthernetInterface> getInterfaces() {
@@ -39,6 +44,11 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
     @Override
     public RoutingTable getRoutingTable() {
         return routingTable;
+    }
+
+    @Override
+    public int getAutonomousSystem() {
+        return autonomousSystem;
     }
 
     @Override

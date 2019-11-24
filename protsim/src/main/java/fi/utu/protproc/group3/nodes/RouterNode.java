@@ -11,4 +11,6 @@ import java.util.Objects;
 
 public interface RouterNode extends MultiInterfaceNode {
     RoutingTable getRoutingTable();
+
+    int getAutonomousSystem();
 }

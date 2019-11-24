@@ -1,9 +1,13 @@
 package fi.utu.protproc.group3.simulator;
 
 import fi.utu.protproc.group3.configuration.SimulationConfiguration;
+import fi.utu.protproc.group3.graph.GraphAttributes;
 import fi.utu.protproc.group3.nodes.*;
+import fi.utu.protproc.group3.routing.TableRow;
 import fi.utu.protproc.group3.utils.AddressGenerator;
-import org.graphstream.ui.util.swing.ImageCache;
+import org.graphstream.algorithm.APSP;
+import org.graphstream.graph.Node;
+import org.graphstream.graph.implementations.MultiGraph;
 import org.graphstream.ui.view.Viewer;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
@@ -12,11 +16,9 @@ import reactor.core.scheduler.Schedulers;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.*;
+import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-
-import org.graphstream.graph.Graph;
-import org.graphstream.graph.implementations.MultiGraph;
 
 public class SimulationImpl implements SimulationBuilder, Simulation {
     private final Random random = new Random(1337);
@@ -68,27 +70,42 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
         System.setProperty("org.graphstream.ui.renderer", "org.graphstream.ui.j2dviewer.J2DGraphRenderer");
 
         graph = new MultiGraph(name);
+
+        var autonomousSystems = new HashMap<Integer, AutonomousSystem>();
+
         if (configuration.getNetworks() != null) {
             for (var netConf : configuration.getNetworks()) {
                 var net = new NetworkImpl(context, netConf);
                 networks.put(netConf.getName(), net);
-                graph.addNode(netConf.getName()).addAttribute("ui.class", "networks");
+
+                var graphNode = graph.addNode(netConf.getName());
+                graphNode.addAttribute(GraphAttributes.CLASS, "networks");
+                graphNode.setAttribute(GraphAttributes.OBJECT, net);
+                graphNode.setAttribute(GraphAttributes.LABEL, net.getNetworkName() + " (" + net.getNetworkAddress() + ")");
+
+                if (netConf.getAutonomousSystem() != 0) {
+                    autonomousSystems.computeIfAbsent(netConf.getAutonomousSystem(), AutonomousSystem::new).networks.add(graphNode);
+                }
+
+                Function<NetworkNode, Node> registerNode = n -> {
+                    nodes.put(n.getHostname(), n);
+
+                    var result = graph.addNode(n.getHostname());
+                    result.setAttribute(GraphAttributes.OBJECT, n);
+                    result.setAttribute(GraphAttributes.LABEL, n.getHostname());
+
+                    graph.addEdge(n.getHostname() + netConf.getName(), n.getHostname(), netConf.getName());
+
+                    return result;
+                };
 
                 netConf.getActualServers()
                         .map(conf -> new ServerNodeImpl(context, conf, net))
-                        .forEach(s -> {
-                            nodes.put(s.getHostname(), s);
-                            graph.addNode(s.getHostname()).addAttribute("ui.class", "servers");
-                            graph.addEdge(s.getHostname() + netConf.getName(), s.getHostname(), netConf.getName());
-                        });
+                        .forEach(s -> registerNode.apply(s).addAttribute(GraphAttributes.CLASS, "servers"));
 
                 netConf.getActualClients()
                         .map(conf -> new ClientNodeImpl(context, conf, net))
-                        .forEach(s -> {
-                            nodes.put(s.getHostname(), s);
-                            graph.addNode(s.getHostname()).addAttribute("ui.class", "clients");
-                            graph.addEdge(s.getHostname() + netConf.getName(), s.getHostname(), netConf.getName());
-                        });
+                        .forEach(s -> registerNode.apply(s).addAttribute(GraphAttributes.CLASS, "clients"));
             }
         }
 
@@ -96,16 +113,72 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
             for (var routerConf : configuration.getRouters()) {
                 var node = new RouterNodeImpl(context, routerConf);
                 nodes.put(node.getHostname(), node);
-                graph.addNode(node.getHostname()).addAttribute("ui.class", "routers");
+                var gn = graph.addNode(node.getHostname());
+                gn.addAttributes(Map.of(
+                        GraphAttributes.CLASS, "routers",
+                        GraphAttributes.OBJECT, node,
+                        GraphAttributes.LABEL, node.getHostname()
+                ));
+
+                if (routerConf.getAutonomousSystem() != 0) {
+                    autonomousSystems.computeIfAbsent(routerConf.getAutonomousSystem(), AutonomousSystem::new).routers.add(gn);
+                }
 
                 node.getInterfaces().forEach(ethernetInterface -> {
                     var networkName = ethernetInterface.getNetwork().getNetworkName();
-                    graph.addEdge(node.getHostname() + networkName, node.getHostname(), networkName);
+                    graph.addEdge(node.getHostname() + networkName, node.getHostname(), networkName).addAttributes(Map.of(
+                            GraphAttributes.Edges.METRIC, ethernetInterface.getNetwork().getAutonomousSystem() == routerConf.getAutonomousSystem() ? 10.0 : 100.0
+                    ));
                 });
             }
         }
 
+        generateStaticRoutes(autonomousSystems);
+
         return simulation;
+    }
+
+    private void generateStaticRoutes(HashMap<Integer, AutonomousSystem> autonomousSystems) {
+        var apsp = new APSP(graph);
+        apsp.setDirected(false);
+        apsp.setWeightAttributeName(GraphAttributes.Edges.METRIC);
+        apsp.compute();
+
+        autonomousSystems.values().stream()
+                .filter(as -> as.networks.size() >= 2 && as.routers.size() >= 1)
+                .forEach(as -> {
+                    as.routers.stream().forEach(r -> {
+                        var router = (RouterNode) r.getAttribute(GraphAttributes.OBJECT);
+                        var apspInfo = (APSP.APSPInfo) r.getAttribute(APSP.APSPInfo.ATTRIBUTE_NAME);
+                        as.networks.stream().forEach(net -> {
+                            var target = (Network) net.getAttribute(GraphAttributes.OBJECT);
+                            var path = apspInfo.getShortestPathTo(net.getId());
+                            var nodePath = path.getNodePath();
+                            var network = (Network) nodePath.get(1).getAttribute(GraphAttributes.OBJECT);
+                            var outIntf = router.getInterfaces().stream().filter(i -> i.getNetwork() == network).findAny();
+                            var metric = (int) Math.ceil(path.getPathWeight(GraphAttributes.Edges.METRIC));
+                            RouterNode nextHop = null;
+                            Optional<EthernetInterface> nextHopIntf = Optional.empty();
+                            if (nodePath.size() > 2) {
+                                nextHop = nodePath.get(2).getAttribute(GraphAttributes.OBJECT);
+                                nextHopIntf = nextHop.getInterfaces().stream().filter(i -> i.getNetwork() == network).findAny();
+                                if (nextHop.getAutonomousSystem() != router.getAutonomousSystem() || network.getAutonomousSystem() != router.getAutonomousSystem()) {
+                                    System.out.println("Route from " + router.getHostname() + " to network " + network.getNetworkName() + " goes across AS boundaries. No static routes generated.");
+                                } else if (outIntf.isPresent() && nextHopIntf.isPresent()) {
+                                    router.getRoutingTable().insertRow(TableRow.create(
+                                            target.getNetworkAddress(),
+                                            nextHopIntf.get().getIpAddress(),
+                                            metric, (short) 0, (short) 0, outIntf.get()
+                                    ));
+                                }
+                            } else {
+                                router.getRoutingTable().insertRow(TableRow.create(
+                                        target.getNetworkAddress(), null, metric, (short) 0, (short) 0, outIntf.get()
+                                ));
+                            }
+                        });
+                    });
+                });
     }
 
     @Override
@@ -242,6 +315,16 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
                     rootLogger.severe("Error while recording packet: " + e);
                 }
             }
+        }
+    }
+
+    class AutonomousSystem {
+        public final int id;
+        public final Set<Node> routers = new HashSet<>();
+        public final Set<Node> networks = new HashSet<>();
+
+        public AutonomousSystem(int id) {
+            this.id = id;
         }
     }
 }

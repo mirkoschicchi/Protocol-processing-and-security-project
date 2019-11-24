@@ -9,6 +9,7 @@ import reactor.core.publisher.FluxSink;
 import java.util.*;
 
 public class NetworkImpl implements Network {
+    private final int autonomousSystem;
     private FluxSink<byte[]> input;
     private final Flux<byte[]> output;
     private final List<EthernetInterface> interfaces = new ArrayList<>();
@@ -23,6 +24,7 @@ public class NetworkImpl implements Network {
         this.simulation = context.simulation();
         this.networkAddress = context.generator().networkAddress(configuration.getAddress());
         this.networkName = context.generator().hostName(configuration.getName());
+        this.autonomousSystem = configuration.getAutonomousSystem();
 
         var processor = DirectProcessor.<byte[]>create().serialize();
         input = processor.sink(FluxSink.OverflowStrategy.DROP);
@@ -69,5 +71,10 @@ public class NetworkImpl implements Network {
     @Override
     public void transmit(byte[] pdu) {
         input.next(pdu);
+    }
+
+    @Override
+    public int getAutonomousSystem() {
+        return autonomousSystem;
     }
 }

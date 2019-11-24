@@ -4,6 +4,6 @@ import fi.utu.protproc.group3.simulator.EthernetInterface;
 
 import java.util.Collection;
 
-public interface MultiInterfaceNode {
+public interface MultiInterfaceNode extends NetworkNode {
     Collection<EthernetInterface> getInterfaces();
 }
