@@ -36,16 +36,16 @@ routers:
     interfaces:
       - network: t1
       - network: t2c
-  - name: t2a
+  - name: t2a_net
     interfaces:
       - network: t2a
       - network: net1
       - network: net4
-  - name: t2b
+  - name: t2b_net
     interfaces:
       - network: t2b
       - network: net2
-  - name: t2c
+  - name: t2c_net
     interfaces:
       - network: t2c
       - network: net3

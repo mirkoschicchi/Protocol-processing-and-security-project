@@ -15,7 +15,6 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.graphstream.graph.Graph;
-//import org.graphstream.graph.Node;
 import org.graphstream.graph.implementations.MultiGraph;
 
 public class SimulationImpl implements SimulationBuilder, Simulation {
@@ -79,24 +78,20 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
                         "shape: box;"+
                         "fill-mode: image-scaled;"+
                         "}"+
-                        "node.isp {"+
-                        "size: 100px;"+
-                        "fill-image: url('" + path + "kisspng-internet-cloud.png" + "');" +
+                        "node.networks {"+
+                        "size: 60px;"+
+                        "fill-image: url('" + path + "kisspng-cloud.png" + "');" +
                         "}"+
                         "node.routers {"+
-                        "size: 60px;"+
+                        "size: 40px, 30px;"+
                         "fill-image: url('" + path + "kisspng-wireless-router.png" + "');" +
                         "}"+
-                        "node.localNets {"+
-                        "size: 60px;"+
-                        "fill-image: url('" + path + "kisspng-intranet.png" + "');" +
-                        "}"+
                         "node.clients {"+
-                        "size: 60px;"+
+                        "size: 30px;"+
                         "fill-image: url('" + path + "kisspng-computer.png" + "');" +
                         "}"+
                         "node.servers {"+
-                        "size: 40px, 60px;"+
+                        "size: 20px, 30px;"+
                         "fill-image: url('" + path + "kisspng-server.png" + "');" +
                         "}"+
                         "edge {"+
@@ -105,35 +100,26 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
                         "size: 3px;"+
                         "}";
         graph.addAttribute("ui.stylesheet", styleSheet);
-        String ispLinkName = "ispLink";
 
         for (var netConf : configuration.getNetworks()) {
             var net = new NetworkImpl(context, netConf);
             networks.put(netConf.getName(), net);
-            if (netConf.getName().contains("isp")) {
-                graph.addNode(ispLinkName).addAttribute("ui.class", "isp");
-            }
-            if (netConf.getName().contains("client")) {
-                graph.addNode(netConf.getName()).addAttribute("ui.class", "clients");
-            }
-            if (netConf.getName().contains("server")) {
-                graph.addNode(netConf.getName()).addAttribute("ui.class", "servers");
-            }
+            graph.addNode(netConf.getName()).addAttribute("ui.class", "networks");
 
             netConf.getActualServers()
                     .map(conf -> new ServerNodeImpl(context, conf, net))
                     .forEach(s -> {
                         nodes.put(s.getHostname(), s);
-//                        graph.addNode(s.getHostname()).addAttribute("ui.class", "servers");
-//                        System.out.println("Servers:" + s.getHostname());
+                        graph.addNode(s.getHostname()).addAttribute("ui.class", "servers");
+                        graph.addEdge(s.getHostname() + netConf.getName(), s.getHostname(), netConf.getName());
                     });
 
             netConf.getActualClients()
                     .map(conf -> new ClientNodeImpl(context, conf, net))
                     .forEach(s -> {
                         nodes.put(s.getHostname(), s);
-//                        graph.addNode(s.getHostname()).addAttribute("ui.class", "clients");
-//                        System.out.println("Clients:" + s.getHostname());
+                        graph.addNode(s.getHostname()).addAttribute("ui.class", "clients");
+                        graph.addEdge(s.getHostname() + netConf.getName(), s.getHostname(), netConf.getName());
                     });
         }
 
