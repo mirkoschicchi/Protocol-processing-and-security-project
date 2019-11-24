@@ -15,8 +15,8 @@ node.networks {
 }
 
 node.routers {
-    size: 40px, 30px;
-    fill-image: url('./images/kisspng-wireless-router.png');
+    size: 60px, 50px;
+    fill-image: url('./images/router.png');
 }
 
 node.clients {
@@ -26,7 +26,7 @@ node.clients {
 
 node.servers {
     size: 20px, 30px;
-    fill-image: url('./images/kisspng-server.png');
+    fill-image: url('./images/server.png');
 }
 
 edge {
