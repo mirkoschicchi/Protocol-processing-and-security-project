@@ -37,6 +37,8 @@ public class Simulator implements Callable<Integer> {
             sim.start(null);
         }
 
+        sim.show();
+
         System.out.println("Simulation running. Press enter to stop simulation.");
         System.in.read();
 

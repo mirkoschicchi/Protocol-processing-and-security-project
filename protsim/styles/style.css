@@ -1,0 +1,36 @@
+graph {
+    fill-mode: plain;
+    fill-color: white, gray;
+    padding: 60px;
+}
+
+node {
+    shape: box;
+    fill-mode: image-scaled;
+}
+
+node.networks {
+    size: 60px;
+    fill-image: url('./images/kisspng-cloud.png');
+}
+
+node.routers {
+    size: 40px, 30px;
+    fill-image: url('./images/kisspng-wireless-router.png');
+}
+
+node.clients {
+    size: 30px;
+    fill-image: url('./images/kisspng-computer.png');
+}
+
+node.servers {
+    size: 20px, 30px;
+    fill-image: url('./images/kisspng-server.png');
+}
+
+edge {
+    shape: cubic-curve;
+    arrow-shape: none;
+    size: 3px;
+}

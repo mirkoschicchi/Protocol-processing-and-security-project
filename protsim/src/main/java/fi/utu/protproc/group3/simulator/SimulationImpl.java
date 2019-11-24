@@ -3,12 +3,13 @@ package fi.utu.protproc.group3.simulator;
 import fi.utu.protproc.group3.configuration.SimulationConfiguration;
 import fi.utu.protproc.group3.nodes.*;
 import fi.utu.protproc.group3.utils.AddressGenerator;
+import org.graphstream.ui.util.swing.ImageCache;
+import org.graphstream.ui.view.Viewer;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.logging.Logger;
@@ -26,6 +27,8 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
     private String name;
     private FileOutputStream pcapStream;
     private List<ServerNode> servers;
+    private MultiGraph graph;
+    private Viewer viewer;
 
     public SimulationImpl() {
         this.rootLogger = Logger.getAnonymousLogger();
@@ -64,42 +67,7 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
         description = configuration.getDescription();
         System.setProperty("org.graphstream.ui.renderer", "org.graphstream.ui.j2dviewer.J2DGraphRenderer");
 
-        Graph graph = new MultiGraph(name);
-        graph.setAttribute( "ui.antialias" );
-        String path = System.getProperty("user.dir") + "/src/main/java/fi/utu/protproc/group3/images/";
-        String styleSheet =
-                "graph {"+
-                        "fill-mode: plain;"+
-                        "fill-color: white, gray;"+
-                        "padding: 60px;"+
-                        "}"+
-                        "node {"+
-                        "shape: box;"+
-                        "fill-mode: image-scaled;"+
-                        "}"+
-                        "node.networks {"+
-                        "size: 60px;"+
-                        "fill-image: url('" + path + "kisspng-cloud.png" + "');" +
-                        "}"+
-                        "node.routers {"+
-                        "size: 40px, 30px;"+
-                        "fill-image: url('" + path + "kisspng-wireless-router.png" + "');" +
-                        "}"+
-                        "node.clients {"+
-                        "size: 30px;"+
-                        "fill-image: url('" + path + "kisspng-computer.png" + "');" +
-                        "}"+
-                        "node.servers {"+
-                        "size: 20px, 30px;"+
-                        "fill-image: url('" + path + "kisspng-server.png" + "');" +
-                        "}"+
-                        "edge {"+
-                        "shape: cubic-curve;"+
-                        "arrow-shape: none;"+
-                        "size: 3px;"+
-                        "}";
-        graph.addAttribute("ui.stylesheet", styleSheet);
-
+        graph = new MultiGraph(name);
         if (configuration.getNetworks() != null) {
             for (var netConf : configuration.getNetworks()) {
                 var net = new NetworkImpl(context, netConf);
@@ -137,7 +105,6 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
             }
         }
 
-        graph.display();
         return simulation;
     }
 
@@ -204,6 +171,31 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
 
         for (var node : nodes.values()) {
             node.start();
+        }
+    }
+
+    @Override
+    public void show() {
+        if (viewer == null) {
+            graph.setAttribute("ui.antialias");
+
+            var stylePath = new File(System.getProperty("user.dir"), "styles");
+            try {
+                var styleSheet = new BufferedInputStream(new FileInputStream(new File(stylePath, "style.css")));
+                var css = new String(styleSheet.readAllBytes(), "UTF-8").replace("url('./", "url('" + stylePath.getAbsolutePath().replace('\\', '/') + "/");
+                graph.setAttribute("ui.stylesheet", css);
+
+                viewer = graph.display();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Override
+    public void close() {
+        if (viewer != null) {
+            viewer.close();
         }
     }
 
