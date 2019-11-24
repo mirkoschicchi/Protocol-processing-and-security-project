@@ -2,8 +2,9 @@ package fi.utu.protproc.group3.protocols.bgp4;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.util.Arrays;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class BGP4MessageNotificationTest {
     @Test
@@ -17,5 +18,13 @@ public class BGP4MessageNotificationTest {
         assertNotNull(bytes);
         assertTrue(bytes.length == 25);
         assertTrue(bytes[22] == 2);
+
+        var parsedMsg = (BGP4MessageNotification) BGP4Message.parse(bytes);
+        assertTrue(Arrays.equals(message.getMarker(), parsedMsg.getMarker()));
+        assertSame(message.getType(), parsedMsg.getType());
+        assertSame(message.getLength(), parsedMsg.getLength());
+        assertSame(message.getErrorCode(), parsedMsg.getErrorCode());
+        assertSame(message.getErrorSubCode(), parsedMsg.getErrorSubCode());
+        assertSame(message.getData(), parsedMsg.getData());
     }
 }

@@ -1,15 +1,12 @@
 package fi.utu.protproc.group3.simulator;
 
+import fi.utu.protproc.group3.configuration.NetworkConfiguration;
 import fi.utu.protproc.group3.utils.NetworkAddress;
 import reactor.core.publisher.Flux;
 
 import java.util.Collection;
 
 public interface Network {
-    static Network create(Simulation simulation, NetworkAddress networkAddress) {
-        return new NetworkImpl(simulation, networkAddress);
-    }
-
     NetworkAddress getNetworkAddress();
 
     void addDevice(EthernetInterface intf);
@@ -20,6 +17,11 @@ public interface Network {
      * Gets all devices attached to the network (simulated ARP scan)
      */
     Collection<EthernetInterface> getDevices();
+
+    /**
+     * Gets network name
+     */
+    String getNetworkName();
 
     /**
      * Gets the flux for the traffic on this network.

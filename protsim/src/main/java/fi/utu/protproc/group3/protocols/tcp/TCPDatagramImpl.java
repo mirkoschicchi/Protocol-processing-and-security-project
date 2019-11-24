@@ -1,4 +1,4 @@
-package fi.utu.protproc.group3.protocols;
+package fi.utu.protproc.group3.protocols.tcp;
 
 import java.nio.ByteBuffer;
 import java.util.Objects;

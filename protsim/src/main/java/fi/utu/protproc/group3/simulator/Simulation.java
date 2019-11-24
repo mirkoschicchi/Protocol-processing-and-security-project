@@ -1,8 +1,7 @@
 package fi.utu.protproc.group3.simulator;
 
-import fi.utu.protproc.group3.nodes.ClientNode;
+import fi.utu.protproc.group3.configuration.*;
 import fi.utu.protproc.group3.nodes.NetworkNode;
-import fi.utu.protproc.group3.nodes.RouterNode;
 import fi.utu.protproc.group3.nodes.ServerNode;
 
 import java.util.Collection;
@@ -12,30 +11,30 @@ import java.util.logging.Logger;
  * Represents a running simulation.
  */
 public interface Simulation {
-    static Simulation create() {
-        return new SimulationImpl();
+    static Simulation create(SimulationConfiguration configuration) {
+        var result = new SimulationImpl();
+
+        return result.load(configuration);
     }
-
-    Network createNetwork();
-
-    RouterNode createRouter(Network... networks);
-
-    ClientNode createClient(Network network);
-
-    ServerNode createServer(Network network);
 
     /**
      * Gets the root logger used for this simulation.
      */
     Logger getRootLogger();
 
+    <T extends NetworkNode> T getNode(String name);
+
     /**
      * Gets all the nodes in the current simulation.
+     * @return
      */
     Collection<NetworkNode> getNodes();
 
+    Network getNetwork(String name);
+
     /**
      * Gets all the networks in the current simulation.
+     * @return
      */
     Collection<Network> getNetworks();
 
@@ -45,6 +44,7 @@ public interface Simulation {
     ServerNode getRandomServer();
 
     void start(String pcapFile);
-
+    void show();
+    void close();
     void stop();
 }

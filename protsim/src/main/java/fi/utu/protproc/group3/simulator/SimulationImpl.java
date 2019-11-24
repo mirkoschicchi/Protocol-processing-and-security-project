@@ -1,71 +1,111 @@
 package fi.utu.protproc.group3.simulator;
 
-import fi.utu.protproc.group3.nodes.ClientNode;
-import fi.utu.protproc.group3.nodes.NetworkNode;
-import fi.utu.protproc.group3.nodes.RouterNode;
-import fi.utu.protproc.group3.nodes.ServerNode;
+import fi.utu.protproc.group3.configuration.SimulationConfiguration;
+import fi.utu.protproc.group3.nodes.*;
 import fi.utu.protproc.group3.utils.AddressGenerator;
+import org.graphstream.ui.util.swing.ImageCache;
+import org.graphstream.ui.view.Viewer;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.net.UnknownHostException;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-public class SimulationImpl implements Simulation {
+import org.graphstream.graph.Graph;
+import org.graphstream.graph.implementations.MultiGraph;
+
+public class SimulationImpl implements SimulationBuilder, Simulation {
     private final Random random = new Random(1337);
     private final Logger rootLogger;
-    private final AddressGenerator generator = new AddressGenerator(random);
-    private final List<Network> networks = new ArrayList<>();
-    private final List<NetworkNode> nodes = new ArrayList<>();
+    private final Map<String, Network> networks = new HashMap<>();
+    private final Map<String, NetworkNode> nodes = new HashMap<>();
+    private String description;
+    private String name;
     private FileOutputStream pcapStream;
     private List<ServerNode> servers;
+    private MultiGraph graph;
+    private Viewer viewer;
 
     public SimulationImpl() {
         this.rootLogger = Logger.getAnonymousLogger();
     }
 
     @Override
-    public Network createNetwork() {
-        var result = Network.create(this, generator.networkAddress());
-        networks.add(result);
+    public Simulation load(SimulationConfiguration configuration) {
+        Objects.requireNonNull(configuration);
 
-        return result;
-    }
+        var generator = new AddressGenerator(random);
+        var simulation = this;
 
-    @Override
-    public RouterNode createRouter(Network... networks) {
-        var result = RouterNode.create(this, generator, networks);
-        nodes.add(result);
+        var context = new SimulationBuilderContext() {
+            @Override
+            public AddressGenerator generator() {
+                return generator;
+            }
 
-        return result;
-    }
+            @Override
+            public Network network(String name) {
+                return networks.get(name);
+            }
 
-    @Override
-    public ClientNode createClient(Network network) {
-        try {
-            var result = ClientNode.create(this, generator, network);
-            nodes.add(result);
+            @Override
+            public <T extends NetworkNode> T node(String name) {
+                return (T) nodes.get(name);
+            }
 
-            return result;
-        } catch (UnknownHostException e) {
-            rootLogger.severe("Error while creating client: " + e);
+            @Override
+            public Simulation simulation() {
+                return simulation;
+            }
+        };
 
-            return null;
+        name = configuration.getName();
+        description = configuration.getDescription();
+        System.setProperty("org.graphstream.ui.renderer", "org.graphstream.ui.j2dviewer.J2DGraphRenderer");
+
+        graph = new MultiGraph(name);
+        if (configuration.getNetworks() != null) {
+            for (var netConf : configuration.getNetworks()) {
+                var net = new NetworkImpl(context, netConf);
+                networks.put(netConf.getName(), net);
+                graph.addNode(netConf.getName()).addAttribute("ui.class", "networks");
+
+                netConf.getActualServers()
+                        .map(conf -> new ServerNodeImpl(context, conf, net))
+                        .forEach(s -> {
+                            nodes.put(s.getHostname(), s);
+                            graph.addNode(s.getHostname()).addAttribute("ui.class", "servers");
+                            graph.addEdge(s.getHostname() + netConf.getName(), s.getHostname(), netConf.getName());
+                        });
+
+                netConf.getActualClients()
+                        .map(conf -> new ClientNodeImpl(context, conf, net))
+                        .forEach(s -> {
+                            nodes.put(s.getHostname(), s);
+                            graph.addNode(s.getHostname()).addAttribute("ui.class", "clients");
+                            graph.addEdge(s.getHostname() + netConf.getName(), s.getHostname(), netConf.getName());
+                        });
+            }
         }
-    }
 
-    @Override
-    public ServerNode createServer(Network network) {
-        var result = ServerNode.create(this, generator, network);
-        nodes.add(result);
+        if (configuration.getRouters() != null) {
+            for (var routerConf : configuration.getRouters()) {
+                var node = new RouterNodeImpl(context, routerConf);
+                nodes.put(node.getHostname(), node);
+                graph.addNode(node.getHostname()).addAttribute("ui.class", "routers");
 
-        return result;
+                node.getInterfaces().forEach(ethernetInterface -> {
+                    var networkName = ethernetInterface.getNetwork().getNetworkName();
+                    graph.addEdge(node.getHostname() + networkName, node.getHostname(), networkName);
+                });
+            }
+        }
+
+        return simulation;
     }
 
     @Override
@@ -74,19 +114,29 @@ public class SimulationImpl implements Simulation {
     }
 
     @Override
+    public <T extends NetworkNode> T getNode(String name) {
+        return (T) nodes.get(name);
+    }
+
+    @Override
     public Collection<NetworkNode> getNodes() {
-        return Collections.unmodifiableCollection(nodes);
+        return nodes.values();
+    }
+
+    @Override
+    public Network getNetwork(String name) {
+        return networks.get(name);
     }
 
     @Override
     public Collection<Network> getNetworks() {
-        return Collections.unmodifiableCollection(networks);
+        return networks.values();
     }
 
     @Override
     public ServerNode getRandomServer() {
         if (servers == null) {
-            servers = nodes.stream()
+            servers = nodes.values().stream()
                     .filter(n -> n instanceof ServerNode)
                     .map(n -> (ServerNode) n)
                     .collect(Collectors.toList());
@@ -111,7 +161,7 @@ public class SimulationImpl implements Simulation {
 
                 pcapStream.write(buf.array());
 
-                recording = Flux.merge((Iterable<Flux<byte[]>>) networks.stream().map(n -> n.getFlux())::iterator)
+                recording = Flux.merge((Iterable<Flux<byte[]>>) networks.values().stream().map(Network::getFlux)::iterator)
                         .subscribe(this::recordPacket);
             } catch (IOException e) {
                 rootLogger.severe("Error while opening PCAP file: " + e);
@@ -119,14 +169,39 @@ public class SimulationImpl implements Simulation {
             }
         }
 
-        for (var node : nodes) {
+        for (var node : nodes.values()) {
             node.start();
         }
     }
 
     @Override
+    public void show() {
+        if (viewer == null) {
+            graph.setAttribute("ui.antialias");
+
+            var stylePath = new File(System.getProperty("user.dir"), "styles");
+            try {
+                var styleSheet = new BufferedInputStream(new FileInputStream(new File(stylePath, "style.css")));
+                var css = new String(styleSheet.readAllBytes(), "UTF-8").replace("url('./", "url('" + stylePath.getAbsolutePath().replace('\\', '/') + "/");
+                graph.setAttribute("ui.stylesheet", css);
+
+                viewer = graph.display();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Override
+    public void close() {
+        if (viewer != null) {
+            viewer.close();
+        }
+    }
+
+    @Override
     public void stop() {
-        for (var node : nodes) {
+        for (var node : nodes.values()) {
             node.shutdown();
         }
 

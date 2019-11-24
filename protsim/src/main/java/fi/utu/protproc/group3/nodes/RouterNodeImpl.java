@@ -1,21 +1,40 @@
 package fi.utu.protproc.group3.nodes;
 
+import fi.utu.protproc.group3.configuration.RouterConfiguration;
 import fi.utu.protproc.group3.protocols.EthernetFrame;
 import fi.utu.protproc.group3.protocols.IPv6Packet;
 import fi.utu.protproc.group3.routing.RoutingTable;
 import fi.utu.protproc.group3.routing.TableRow;
-import fi.utu.protproc.group3.simulator.EthernetInterface;
-import fi.utu.protproc.group3.simulator.Simulation;
+import fi.utu.protproc.group3.simulator.*;
 import fi.utu.protproc.group3.utils.IPAddress;
 
 import java.net.UnknownHostException;
+import java.util.Collection;
+import java.util.Collections;
 
 public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
-    RouterNodeImpl(Simulation simulation, EthernetInterface[] interfaces) {
-        super(simulation, interfaces);
+    public RouterNodeImpl(SimulationBuilderContext context, RouterConfiguration configuration) {
+        super(context, configuration);
+
+        for (var intf : configuration.getInterfaces()) {
+            var network = context.network(intf.getNetwork());
+            interfaces.add(
+                    new EthernetInterfaceImpl(
+                            this,
+                            context.generator().ethernetAddress(null),
+                            network,
+                            context.generator().ipAddress(network.getNetworkAddress(), intf.getAddress())
+                    )
+            );
+        }
     }
 
     private RoutingTable routingTable;
+
+    @Override
+    public Collection<EthernetInterface> getInterfaces() {
+        return Collections.unmodifiableCollection(interfaces);
+    }
 
     @Override
     public RoutingTable getRoutingTable() {
@@ -50,7 +69,7 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
 
                 // Reassemble the IPv6 packet
                 IPv6Packet newPacket = IPv6Packet.create(packet.getVersion(), packet.getTrafficClass(), packet.getFlowLabel(),
-                        packet.getPayloadLength(), packet.getNextHeader(), (byte) (packet.getHopLimit() - 1),
+                        packet.getNextHeader(), (byte) (packet.getHopLimit() - 1),
                         packet.getSourceIP(), packet.getDestinationIP(), packet.getPayload());
 
                 EthernetFrame newFrame = EthernetFrame.create(nextHopMac, exitIntf.getAddress(), frame.getType(), newPacket.serialize());

@@ -1,5 +1,7 @@
 package fi.utu.protproc.group3.simulator;
 
+import fi.utu.protproc.group3.nodes.NetworkNode;
+import fi.utu.protproc.group3.protocols.tcp.DatagramHandler;
 import fi.utu.protproc.group3.utils.IPAddress;
 import reactor.core.publisher.Flux;
 
@@ -8,14 +10,21 @@ import java.util.*;
 public class EthernetInterfaceImpl implements EthernetInterface {
     private final byte[] address;
     private final Network network;
-    private final List<IPAddress> ipAddresses = new ArrayList<>();
+    private final IPAddress ipAddress;
+    private final NetworkNode host;
+    private final DatagramHandler tcpHandler = new DatagramHandler(this);
 
-    EthernetInterfaceImpl(byte[] address, Network network) {
+    public EthernetInterfaceImpl(NetworkNode host, byte[] address, Network network, IPAddress ipAddress) {
+        Objects.requireNonNull(host);
         Objects.requireNonNull(address);
         Objects.requireNonNull(network);
+        Objects.requireNonNull(ipAddress);
 
+        this.host = host;
         this.address = address;
         this.network = network;
+        network.addDevice(this);
+        this.ipAddress = ipAddress;
     }
 
     @Override
@@ -24,18 +33,8 @@ public class EthernetInterfaceImpl implements EthernetInterface {
     }
 
     @Override
-    public void addIpAddress(IPAddress addr) {
-        ipAddresses.add(addr);
-    }
-
-    @Override
-    public Collection<IPAddress> getIpAddresses() {
-        return Collections.unmodifiableCollection(ipAddresses);
-    }
-
-    @Override
-    public void removeIpAddress(IPAddress addr) {
-        ipAddresses.remove(addr);
+    public IPAddress getIpAddress() {
+        return ipAddress;
     }
 
     @Override
@@ -43,7 +42,7 @@ public class EthernetInterfaceImpl implements EthernetInterface {
         Objects.requireNonNull(address);
 
         for (var dev : getNetwork().getDevices()) {
-            if (dev.getIpAddresses().contains(address)) {
+            if (dev.getIpAddress().equals(address)) {
                 return dev.getAddress();
             }
         }
@@ -68,5 +67,15 @@ public class EthernetInterfaceImpl implements EthernetInterface {
     @Override
     public Network getNetwork() {
         return network;
+    }
+
+    @Override
+    public NetworkNode getHost() {
+        return host;
+    }
+
+    @Override
+    public DatagramHandler getTCPHandler() {
+        return tcpHandler;
     }
 }

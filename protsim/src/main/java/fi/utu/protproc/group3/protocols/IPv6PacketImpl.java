@@ -12,19 +12,17 @@ public class IPv6PacketImpl implements IPv6Packet {
     private byte version;
     private byte trafficClass;
     private int flowLabel;
-    private short payloadLength;
     private byte nextHeader;
     private byte hopLimit;
     private IPAddress sourceIP;
     private IPAddress destinationIP;
     private byte[] payload;
 
-    IPv6PacketImpl(byte version, byte trafficClass, int flowLabel, short payloadLength,
+    IPv6PacketImpl(byte version, byte trafficClass, int flowLabel,
                    byte nextHeader, byte hopLimit, IPAddress sourceIP, IPAddress destinationIP, byte[] payload) {
         this.version = version;
         this.trafficClass = trafficClass;
         this.flowLabel = flowLabel;
-        this.payloadLength = payloadLength;
         this.nextHeader = nextHeader;
         this.hopLimit = hopLimit;
         this.sourceIP = sourceIP;
@@ -56,7 +54,7 @@ public class IPv6PacketImpl implements IPv6Packet {
         byte[] payload = new byte[payloadBytes];
         bb.get(payload, 0, payloadBytes);
 
-        return new IPv6PacketImpl(version, trafficClass, flowLabel, payloadLength,
+        return new IPv6PacketImpl(version, trafficClass, flowLabel,
                 nextHeader, hopLimit, new IPAddress(sourceIP), new IPAddress(destinationIP), payload);
     }
 
@@ -73,7 +71,9 @@ public class IPv6PacketImpl implements IPv6Packet {
     }
 
     public short getPayloadLength() {
-        return this.payloadLength;
+        if (this.payload == null) return 0;
+
+        return (short) this.payload.length;
     }
 
     public byte getNextHeader() {
@@ -112,7 +112,7 @@ public class IPv6PacketImpl implements IPv6Packet {
         bb.put(firstByte);
         bb.put(secondByte);
         bb.putShort(partialFlowLabel);
-        bb.putShort(payloadLength);
+        bb.putShort(getPayloadLength());
         bb.put(nextHeader);
         bb.put(hopLimit);
         bb.put(sourceIP.toArray());

@@ -1,0 +1,9 @@
+---
+name: Single LAN (no routing)
+description: A test scenario with a single LAN with one client and server
+networks:
+  - name: lan
+    servers:
+      - name: server
+    clients:
+      - name: client

@@ -1,57 +1,37 @@
 package fi.utu.protproc.group3.simulator;
 
+import fi.utu.protproc.group3.scenarios.SimpleScenarioTest;
 import fi.utu.protproc.group3.protocols.EthernetFrame;
 import org.junit.jupiter.api.Test;
 import reactor.test.StepVerifier;
 
+import java.io.IOException;
 import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
-public class EthernetInterfaceTest {
+public class EthernetInterfaceTest extends SimpleScenarioTest {
     @Test
-    public void transmitAndReceiveFrame() {
-        var sim = Simulation.create();
-        var net = sim.createNetwork();
-        var s1 = sim.createServer(net);
-        var i1 = s1.getInterfaces().iterator().next();
-        var s2 = sim.createServer(net);
-        var i2 = s2.getInterfaces().iterator().next();
+    public void transmitAndReceiveFrame() throws IOException {
+        var frame = EthernetFrame.create(
+                client.getInterface().getAddress(),
+                client.getInterface().getAddress(),
+                (short) 0x00, new byte[]{0x00});
 
-        sim.start(null);
-        try {
-            var frame = EthernetFrame.create(
-                    i1.getAddress(),
-                    i2.getAddress(),
-                    EthernetFrame.TYPE_IPV6, new byte[]{0x00});
+        var buf = frame.serialize();
+        var flux = client.getInterface().getFlux();
 
-            var buf = frame.serialize();
-            var flux = i1.getFlux();
-
-            StepVerifier.create(flux)
-                    .then(() -> net.transmit(buf))
-                    .assertNext(pdu -> assertArrayEquals(buf, pdu))
-                    .thenCancel()
-                    .verify(Duration.ofSeconds(1));
-        } finally {
-            sim.stop();
-        }
+        StepVerifier.create(flux)
+                .then(() -> clientNet.transmit(buf))
+                .assertNext(pdu -> assertArrayEquals(buf, pdu))
+                .thenCancel()
+                .verify(Duration.ofSeconds(1));
     }
 
     @Test
     public void resolveAddress() {
-        var sim = Simulation.create();
-        var net = sim.createNetwork();
+        var mac = client.getInterface().resolveIpAddress(client.getIpAddress());
 
-        var s1 = sim.createServer(net);
-        var i1 = s1.getInterfaces().iterator().next();
-
-        var s2 = sim.createServer(net);
-        var i2 = s2.getInterfaces().iterator().next();
-
-        var addr = i1.getIpAddresses().iterator().next();
-        var mac = i2.resolveIpAddress(addr);
-
-        assertArrayEquals(i1.getAddress(), mac);
+        assertArrayEquals(client.getInterface().getAddress(), mac);
     }
 }
