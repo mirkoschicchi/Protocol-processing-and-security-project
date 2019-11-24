@@ -83,9 +83,7 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
                 graphNode.setAttribute(GraphAttributes.OBJECT, net);
                 graphNode.setAttribute(GraphAttributes.LABEL, net.getNetworkName() + " (" + net.getNetworkAddress() + ")");
 
-                if (netConf.getAutonomousSystem() != 0) {
-                    autonomousSystems.computeIfAbsent(netConf.getAutonomousSystem(), AutonomousSystem::new).networks.add(graphNode);
-                }
+                autonomousSystems.computeIfAbsent(netConf.getAutonomousSystem(), AutonomousSystem::new).networks.add(graphNode);
 
                 Function<NetworkNode, Node> registerNode = n -> {
                     nodes.put(n.getHostname(), n);
@@ -120,9 +118,7 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
                         GraphAttributes.LABEL, node.getHostname()
                 ));
 
-                if (routerConf.getAutonomousSystem() != 0) {
-                    autonomousSystems.computeIfAbsent(routerConf.getAutonomousSystem(), AutonomousSystem::new).routers.add(gn);
-                }
+                autonomousSystems.computeIfAbsent(routerConf.getAutonomousSystem(), AutonomousSystem::new).routers.add(gn);
 
                 node.getInterfaces().forEach(ethernetInterface -> {
                     var networkName = ethernetInterface.getNetwork().getNetworkName();
@@ -138,14 +134,17 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
         return simulation;
     }
 
-    private void generateStaticRoutes(HashMap<Integer, AutonomousSystem> autonomousSystems) {
+    private void generateStaticRoutes(Map<Integer, AutonomousSystem> autonomousSystems) {
+        Objects.requireNonNull(autonomousSystems);
+
         var apsp = new APSP(graph);
+
         apsp.setDirected(false);
         apsp.setWeightAttributeName(GraphAttributes.Edges.METRIC);
         apsp.compute();
 
         autonomousSystems.values().stream()
-                .filter(as -> as.networks.size() >= 2 && as.routers.size() >= 1)
+                .filter(as -> as.id != 0 && as.networks.size() >= 1 && as.routers.size() >= 1)
                 .forEach(as -> {
                     as.routers.stream().forEach(r -> {
                         var router = (RouterNode) r.getAttribute(GraphAttributes.OBJECT);
@@ -157,11 +156,9 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
                             var network = (Network) nodePath.get(1).getAttribute(GraphAttributes.OBJECT);
                             var outIntf = router.getInterfaces().stream().filter(i -> i.getNetwork() == network).findAny();
                             var metric = (int) Math.ceil(path.getPathWeight(GraphAttributes.Edges.METRIC));
-                            RouterNode nextHop = null;
-                            Optional<EthernetInterface> nextHopIntf = Optional.empty();
                             if (nodePath.size() > 2) {
-                                nextHop = nodePath.get(2).getAttribute(GraphAttributes.OBJECT);
-                                nextHopIntf = nextHop.getInterfaces().stream().filter(i -> i.getNetwork() == network).findAny();
+                                RouterNode nextHop = nodePath.get(2).getAttribute(GraphAttributes.OBJECT);
+                                var nextHopIntf = nextHop.getInterfaces().stream().filter(i -> i.getNetwork() == network).findAny();
                                 if (nextHop.getAutonomousSystem() != router.getAutonomousSystem() || network.getAutonomousSystem() != router.getAutonomousSystem()) {
                                     System.out.println("Route from " + router.getHostname() + " to network " + network.getNetworkName() + " goes across AS boundaries. No static routes generated.");
                                 } else if (outIntf.isPresent() && nextHopIntf.isPresent()) {

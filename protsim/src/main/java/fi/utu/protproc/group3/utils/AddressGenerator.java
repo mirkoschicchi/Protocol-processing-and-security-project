@@ -32,11 +32,11 @@ public class AddressGenerator {
         var netAddr = new byte[16];
         random.nextBytes(netAddr);
 
-        for (var i = 7; i < 16; i++) {
+        for (var i = 6; i < 16; i++) {
             netAddr[i] = 0;
         }
 
-        return new NetworkAddress(new IPAddress(netAddr), 7);
+        return new NetworkAddress(new IPAddress(netAddr), 6 * 8);
     }
 
     public IPAddress ipAddress(NetworkAddress network, String value) {

@@ -1,4 +1,4 @@
-package fi.utu.protproc.group3;
+package fi.utu.protproc.group3.scenarios;
 
 import fi.utu.protproc.group3.configuration.SimulationConfiguration;
 import fi.utu.protproc.group3.nodes.NetworkNode;

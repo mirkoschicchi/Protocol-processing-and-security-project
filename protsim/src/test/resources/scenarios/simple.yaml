@@ -11,6 +11,7 @@ networks:
     servers:
       - name: server
   - name: ispLink
+    autonomousSystem: 1
 routers:
   - name: clientRouter
     autonomousSystem: 1

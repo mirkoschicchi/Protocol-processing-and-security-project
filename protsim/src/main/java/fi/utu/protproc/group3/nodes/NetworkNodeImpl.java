@@ -105,4 +105,9 @@ public abstract class NetworkNodeImpl implements SimpleNode, MultiInterfaceNode 
     protected void packetReceived(EthernetInterface intf, byte[] pdu) throws UnknownHostException {
         // NOP
     }
+
+    @Override
+    public String toString() {
+        return hostname;
+    }
 }

@@ -1,12 +1,9 @@
 package fi.utu.protproc.group3.scenarios;
 
-import fi.utu.protproc.group3.ScenarioBasedTest;
 import fi.utu.protproc.group3.nodes.ClientNode;
 import fi.utu.protproc.group3.nodes.RouterNode;
 import fi.utu.protproc.group3.nodes.ServerNode;
 import fi.utu.protproc.group3.simulator.Network;
-
-import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 

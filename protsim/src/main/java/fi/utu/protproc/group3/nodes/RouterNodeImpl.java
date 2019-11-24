@@ -75,7 +75,14 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
 
                 // Get the MAC address of the interface to which to forward the packet
                 IPAddress nextHop = row.getNextHop();
+                if (nextHop == null) nextHop = packet.getDestinationIP();
+
                 byte[] nextHopMac = exitIntf.resolveIpAddress(nextHop);
+
+                if (nextHopMac == null) {
+                    // TODO: Error handling
+                    return;
+                }
 
                 // Reassemble the IPv6 packet
                 IPv6Packet newPacket = IPv6Packet.create(packet.getVersion(), packet.getTrafficClass(), packet.getFlowLabel(),

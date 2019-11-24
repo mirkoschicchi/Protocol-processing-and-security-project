@@ -5,7 +5,7 @@ import fi.utu.protproc.group3.protocols.tcp.DatagramHandler;
 import fi.utu.protproc.group3.utils.IPAddress;
 import reactor.core.publisher.Flux;
 
-import java.util.*;
+import java.util.Objects;
 
 public class EthernetInterfaceImpl implements EthernetInterface {
     private final byte[] address;
@@ -77,5 +77,10 @@ public class EthernetInterfaceImpl implements EthernetInterface {
     @Override
     public DatagramHandler getTCPHandler() {
         return tcpHandler;
+    }
+
+    @Override
+    public String toString() {
+        return getIpAddress() + " on " + network.getNetworkName();
     }
 }

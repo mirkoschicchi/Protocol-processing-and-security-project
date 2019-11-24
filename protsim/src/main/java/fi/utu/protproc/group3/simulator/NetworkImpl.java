@@ -77,4 +77,9 @@ public class NetworkImpl implements Network {
     public int getAutonomousSystem() {
         return autonomousSystem;
     }
+
+    @Override
+    public String toString() {
+        return networkName + " (" + networkAddress + ')';
+    }
 }
