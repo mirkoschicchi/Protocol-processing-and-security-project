@@ -15,8 +15,8 @@ node.networks {
 }
 
 node.routers {
-    size: 60px, 50px;
-    fill-image: url('./images/router.png');
+    size: 40px, 30px;
+    fill-image: url('./images/router-icon.png');
 }
 
 node.clients {
