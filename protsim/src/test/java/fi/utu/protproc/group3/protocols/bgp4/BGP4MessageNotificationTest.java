@@ -25,6 +25,6 @@ public class BGP4MessageNotificationTest {
         assertSame(message.getLength(), parsedMsg.getLength());
         assertSame(message.getErrorCode(), parsedMsg.getErrorCode());
         assertSame(message.getErrorSubCode(), parsedMsg.getErrorSubCode());
-        assertSame(message.getData(), parsedMsg.getData());
+        assertArrayEquals(message.getData(), parsedMsg.getData());
     }
 }
