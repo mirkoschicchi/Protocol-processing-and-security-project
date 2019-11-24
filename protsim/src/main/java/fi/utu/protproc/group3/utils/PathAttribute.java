@@ -9,24 +9,58 @@ public final class PathAttribute {
     public static byte ATOMIC_AGGREGATE = 0x6;
     public static byte AGGREGATOR = 0x7;
 
-    private boolean optionalBit;
-    private boolean transitiveBit;
-    private boolean partialBit;
+    private byte optionalBit = (byte) (1 << 7);
+    private byte transitiveBit = (byte) (1 << 6);
+    private byte partialBit = (byte) (1 << 5);
+    private byte extendedLengthBit = (byte) (1 << 4);
 
-    /*
-        If set to 0 the third octet contains the length of the attribute data in octets
-        If set to 1 the third and fourth octets of the path attribute contain
-         the length of the attribute data in octets.
-     */
-    private boolean extendedLengthBit;
-
-    private short attributeType;
     private byte attributeFlags;
     private byte attributeTypeCode;
+    private short attributeDataLength;
+
+    public static byte[] create(byte attributeFlags, byte attributeTypeCode, short attributeDataLength) {
+        byte[] pathAttributeArray = null;
+
+        pathAttributeArray[0] = attributeFlags;
+        pathAttributeArray[1] = attributeTypeCode;
+
+        if((attributeFlags & (byte) 0x10) == 1) {
+            pathAttributeArray[3] = (byte) (attributeDataLength >> 8);
+            pathAttributeArray[4] = (byte) attributeDataLength;
+        } else {
+            pathAttributeArray[3] = (byte) attributeDataLength;
+        }
 
 
-    public short getAttributeType() {
-        return attributeType;
+
+        return pathAttributeArray;
     }
 
+
+    public PathAttribute (byte attributeFlags, byte attributeTypeCode, short attributeDataLength) {
+        this.attributeFlags = attributeFlags;
+        this.attributeTypeCode = attributeTypeCode;
+        this.attributeDataLength = attributeDataLength;
+
+        if((attributeFlags & (byte) 0x10) == 1) {
+
+        } else {
+
+        }
+
+    }
+
+
+
+    public byte getAttributeFlags() {
+        return attributeFlags;
+    }
+
+    public byte getAttributeTypeCode() {
+        return attributeTypeCode;
+    }
+
+    public short getAttributeDataLength() {
+        return attributeDataLength;
+    }
 }
