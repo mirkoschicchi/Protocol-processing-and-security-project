@@ -10,8 +10,13 @@ public interface BGP4Message {
     short getLength();
     byte getType();
 
+    /**
+     * Parse  a byte array into a BGP message
+     *
+     * @return BGP4Message object
+     */
     static BGP4Message parse(byte[] message) {
-        throw new UnsupportedOperationException();
+        return BGP4MessageImpl.parse(message);
     }
 
     /**
