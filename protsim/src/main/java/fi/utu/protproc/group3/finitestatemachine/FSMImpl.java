@@ -13,6 +13,8 @@ import java.util.TimerTask;
 import java.util.logging.Logger;
 
 public class FSMImpl {
+    private static final Logger LOGGER = Logger.getLogger(FSMImpl.class.getName());
+
     enum FSMEvent {
         ManualStart, ManualStop, AutomaticStart, ManualStart_with_PassiveTcpEstablishment,
         AutomaticStart_with_PassiveTcpEstablishment, AutomaticStart_with_DampPeerOscillations,
@@ -36,6 +38,7 @@ public class FSMImpl {
 
         // IDLE
         {
+            builder.onEntry("IDLE").callMethod("onIdle");
             builder.externalTransition().from("IDLE").to("CONNECT").on(FSMEvent.ManualStart).callMethod("onManualStart_AutomaticStartIdle");
             builder.externalTransition().from("IDLE").to("CONNECT").on(FSMEvent.AutomaticStart).callMethod("onManualStart_AutomaticStartIdle");
             builder.externalTransition().from("IDLE").to("ACTIVE").on(FSMEvent.ManualStart_with_PassiveTcpEstablishment).callMethod("onManualStart_with_PassiveTcpEstablishment_AutomaticStart_with_PassiveTcpEstablishmentIdle");
@@ -66,6 +69,7 @@ public class FSMImpl {
 
         // ACTIVE}
         {
+            builder.onEntry("ACTIVE").callMethod("onActive");
             builder.externalTransition().from("ACTIVE").to("IDLE").on(FSMEvent.ManualStop).callMethod("onManualStopActive");
             builder.externalTransition().from("ACTIVE").to("CONNECT").on(FSMEvent.ConnectRetryTimer_Expires).callMethod("onConnectRetryTimer_ExpiresActive");
             builder.externalTransition().from("ACTIVE").to("OPEN_SENT").on(FSMEvent.DelayOpenTimer_Expires).callMethod("onDelayOpenTimer_ExpiresActive");
@@ -90,6 +94,7 @@ public class FSMImpl {
 
         // OPEN_SENT
         {
+            builder.onEntry("OPEN_SENT").callMethod("onOpenSent");
             builder.externalTransition().from("OPEN_SENT").to("IDLE").on(FSMEvent.ManualStop).callMethod("onManualStopOpenSent");
             builder.externalTransition().from("OPEN_SENT").to("IDLE").on(FSMEvent.AutomaticStop).callMethod("onAutomaticStopOpenSent");
             builder.externalTransition().from("OPEN_SENT").to("IDLE").on(FSMEvent.HoldTimer_Expires).callMethod("onHoldTimer_ExpiresOpenSent");
@@ -112,6 +117,7 @@ public class FSMImpl {
 
         // OPEN_CONFIRM
         {
+            builder.onEntry("OPEN_CONFIRM").callMethod("onOpenConfirm");
             builder.externalTransition().from("OPEN_CONFIRM").to("IDLE").on(FSMEvent.ManualStop).callMethod("onManualStopOpenConfirm");
             builder.externalTransition().from("OPEN_CONFIRM").to("IDLE").on(FSMEvent.AutomaticStop).callMethod("onAutomaticStopOpenConfirm");
             builder.externalTransition().from("OPEN_CONFIRM").to("IDLE").on(FSMEvent.HoldTimer_Expires).callMethod("onHoldTimer_ExpiresOpenConfirm");
@@ -133,6 +139,7 @@ public class FSMImpl {
 
         // ESTABLISHED
         {
+            builder.onEntry("ESTABLISHED").callMethod("onEstablished");
             builder.externalTransition().from("ESTABLISHED").to("IDLE").on(FSMEvent.ManualStop).callMethod("onManualStopEstablished");
             builder.externalTransition().from("ESTABLISHED").to("IDLE").on(FSMEvent.AutomaticStop).callMethod("onAutomaticStopEstablished");
             builder.externalTransition().from("ESTABLISHED").to("IDLE").on(FSMEvent.HoldTimer_Expires).callMethod("onHoldTimer_ExpiresEstablished");
@@ -168,8 +175,8 @@ public class FSMImpl {
         // Optional attributes
         static int delayOpenTime = 120; // Not sure
         Timer delayOpenTimer = new Timer();
-        static boolean dampPeerOscillations;
-        static boolean sendNOTIFICATIONwithoutOPEN;
+        static boolean dampPeerOscillations = false;
+        static boolean sendNOTIFICATIONwithoutOPEN = false;
 
         private final InternalFSMCallbacks callbacks;
 
@@ -183,7 +190,6 @@ public class FSMImpl {
             @Override
             public void run() {
                 if (connectRetryTime > 0) {
-                    System.out.println("Seconds = " + connectRetryTime);
                     connectRetryTime--;
                 } else {
                     // stop the timer
@@ -196,7 +202,6 @@ public class FSMImpl {
             @Override
             public void run() {
                 if (delayOpenTime > 0) {
-                    System.out.println("Seconds = " + delayOpenTime);
                     delayOpenTime--;
                 } else {
                     // stop the timer
@@ -209,7 +214,6 @@ public class FSMImpl {
             @Override
             public void run() {
                 if (holdTime > 0) {
-                    System.out.println("Seconds = " + holdTime);
                     holdTime--;
                 } else {
                     // stop the timer
@@ -222,7 +226,6 @@ public class FSMImpl {
             @Override
             public void run() {
                 if (keepaliveTime > 0) {
-                    System.out.println("Seconds = " + keepaliveTime);
                     keepaliveTime--;
                 } else {
                     // stop the timer
@@ -230,6 +233,80 @@ public class FSMImpl {
                 }
             }
         };
+
+        void restartConnectRetryTimer() {
+            connectRetryTimer.cancel();
+            connectRetryTimer = new Timer();
+
+            connectRetryTime = 120;
+            connectRetryTimerTask = new TimerTask() {
+                @Override
+                public void run() {
+                    if (connectRetryTime > 0) {
+                        connectRetryTime--;
+                    } else {
+                        // stop the timer
+                        cancel();
+                    }
+                }
+            };
+        }
+
+        void restartDelayOpenTimer() {
+            delayOpenTimer.cancel();
+            delayOpenTimer = new Timer();
+
+            delayOpenTime = 120;
+            delayOpenTimerTask = new TimerTask() {
+                @Override
+                public void run() {
+                    if (delayOpenTime > 0) {
+                        delayOpenTime--;
+                    } else {
+                        // stop the timer
+                        cancel();
+                    }
+                }
+            };
+        }
+
+        void restartHoldTimer(int time) {
+            holdTimer.cancel();
+            holdTimer = new Timer();
+
+            holdTime = time;
+
+            holdTimerTask = new TimerTask() {
+                @Override
+                public void run() {
+                    if (holdTime > 0) {
+                        holdTime--;
+                    } else {
+                        // stop the timer
+                        cancel();
+                    }
+                }
+            };
+        }
+
+        void restartKeepaliveTimer() {
+            keepaliveTimer.cancel();
+            keepaliveTimer = new Timer();
+
+            keepaliveTime = 30;
+
+            keepaliveTimerTask = new TimerTask() {
+                @Override
+                public void run() {
+                    if (keepaliveTime > 0) {
+                        keepaliveTime--;
+                    } else {
+                        // stop the timer
+                        cancel();
+                    }
+                }
+            };
+        }
 
         // IDLE -------------------------------------------------------------------------------------------------------
         protected void onManualStart_AutomaticStartIdle(String from, String to, FSMEvent event, Integer context) {
@@ -240,7 +317,8 @@ public class FSMImpl {
             connectRetryCounter = 0;
 
             // starts the ConnectRetryTimer with the initial value
-            connectRetryTime = 120;
+            //if(connectRetryTimerTask.scheduledExecutionTime() > 0) {
+            restartConnectRetryTimer();
             connectRetryTimer.schedule(connectRetryTimerTask, 0, 1000);
 
             // initiates a TCP connection to the other BGP peer
@@ -250,7 +328,8 @@ public class FSMImpl {
             callbacks.listenForTCPConnection();
 
             // changes its state to Connect
-            System.out.println("Changing state from IDLE to CONNECT");
+            LOGGER.info("Changing state from IDLE to CONNECT");
+            //LOGGER.info("");
         }
 
         protected void onManualStart_with_PassiveTcpEstablishment_AutomaticStart_with_PassiveTcpEstablishmentIdle(String from, String to, FSMEvent event, Integer context) {
@@ -261,14 +340,14 @@ public class FSMImpl {
             connectRetryCounter = 0;
 
             // starts the ConnectRetryTimer with the initial value
-            connectRetryTime = 120;
+            restartConnectRetryTimer();
             connectRetryTimer.schedule(connectRetryTimerTask, 0, 1000);
 
             // listens for a connection that may be initiated by the remote peer
             callbacks.listenForTCPConnection();
 
             // changes its state to Active
-            System.out.println("Changing state from IDLE to ACTIVE");
+            LOGGER.info("Changing state from IDLE to ACTIVE");
         }
         // ------------------------------------------------------------------------------------------------------------
 
@@ -284,11 +363,13 @@ public class FSMImpl {
             connectRetryCounter = 0;
 
             // stops the ConnectRetryTimer and sets ConnectRetryTimer to zero
-            connectRetryTimer.cancel();
-            connectRetryTime = 0;
+            if(connectRetryTimerTask.scheduledExecutionTime() > 0 && connectRetryTime > 0) {
+                connectRetryTimerTask.cancel();
+                connectRetryTime = 0;
+            }
 
             // Change the state to IDLE
-            System.out.println("Changing state from CONNECT to IDLE");
+            LOGGER.info("Changing state from CONNECT to IDLE");
         }
 
         protected void onConnectRetryTimer_ExpiresConnect(String from, String to, FSMEvent event, Integer context) {
@@ -296,13 +377,16 @@ public class FSMImpl {
             callbacks.dropTCPConnection();
 
             // restarts the ConnectRetryTimer
-            connectRetryTimer.cancel();
-            connectRetryTime = 120;
-            connectRetryTimer.schedule(connectRetryTimerTask, 0, 1000);
+            if(connectRetryTimerTask.scheduledExecutionTime() > 0 && connectRetryTime > 0) {
+                restartConnectRetryTimer();
+                connectRetryTimer.schedule(connectRetryTimerTask, 0, 1000);
+            }
 
-            // stops the DelayOpenTimer and resets the timer to zero
-            delayOpenTimer.cancel();
-            delayOpenTime = 0;
+            // stops the DelayOpenTimer and resets the timer to zero{
+            if(delayOpenTimerTask.scheduledExecutionTime() > 0 && delayOpenTime > 0) {
+                delayOpenTimerTask.cancel();
+                delayOpenTime = 0;
+            }
 
             // initiates a TCP connection to the other BGP peer
             callbacks.connectRemotePeer();
@@ -311,7 +395,7 @@ public class FSMImpl {
             callbacks.listenForTCPConnection();
 
             // stays in the Connect state
-            System.out.println("Remaining in CONNECT state");
+            LOGGER.info("Remaining in CONNECT state");
         }
 
         protected void onDelayOpenTimer_ExpiresConnect(String from, String to, FSMEvent event, Integer context) {
@@ -319,12 +403,13 @@ public class FSMImpl {
             callbacks.sendOpenMessage();
 
             // sets the HoldTimer to a large value
-            holdTimer.cancel();
-            holdTime = 240;
-            holdTimer.schedule(holdTimerTask, 0, 1000);
+            if(holdTimerTask.scheduledExecutionTime() > 0 && holdTime > 0) {
+                restartHoldTimer(240);
+                holdTimer.schedule(holdTimerTask, 0, 1000);
+            }
 
             // changes its state to OpenSent
-            System.out.println("Changing state from CONNECT to OPEN_SENT");
+            LOGGER.info("Changing state from CONNECT to OPEN_SENT");
         }
 
         // TODO: If the TCP connection succeeds (Event 16 or Event 17), the local
@@ -359,8 +444,8 @@ public class FSMImpl {
 
         protected void onBGPOpen_with_DelayOpenTimer_runningConnect(String from, String to, FSMEvent event, Integer context) {
             // stops the ConnectRetryTimer (if running) and sets the ConnectRetryTimer to zero
-            if(connectRetryTimerTask.scheduledExecutionTime() > 0) {
-                connectRetryTimer.cancel();
+            if(connectRetryTimerTask.scheduledExecutionTime() > 0 && connectRetryTime > 0) {
+                connectRetryTimerTask.cancel();
                 connectRetryTime = 0;
             }
 
@@ -368,8 +453,10 @@ public class FSMImpl {
             callbacks.completeBGPPeerInitialization();
 
             // stops and clears the DelayOpenTimer (sets the value to zero)
-            delayOpenTimer.cancel();
-            delayOpenTime = 0;
+            if(delayOpenTimerTask.scheduledExecutionTime() > 0 && delayOpenTime > 0) {
+                delayOpenTimerTask.cancel();
+                delayOpenTime = 0;
+            }
 
             // sends an OPEN message
             callbacks.sendOpenMessage();
@@ -379,25 +466,26 @@ public class FSMImpl {
 
             if(holdTimerTask.scheduledExecutionTime() > 0 && holdTime != 0) {
                 // starts the KeepaliveTimer with the initial value
-                keepaliveTime = 30;
+                restartKeepaliveTimer();
                 keepaliveTimer.schedule(keepaliveTimerTask, 0, 1000);
 
                 // resets the HoldTimer to the negotiated value
-                holdTimer.cancel();
-                holdTime = 90;
+               restartHoldTimer(90);
                 holdTimer.schedule(holdTimerTask, 0, 1000);
             } else {
                 // resets the KeepaliveTimer
-                keepaliveTimer.cancel();
-                keepaliveTime = 0;
+                if(keepaliveTimerTask.scheduledExecutionTime() > 0 && keepaliveTime > 0) {
+                    keepaliveTimerTask.cancel();
+                    keepaliveTime = 0;
+                }
 
                 // resets the HoldTimer value to zero
-                holdTimer.cancel();
+                // holdTimerTask.cancel();
                 holdTime = 0;
             }
 
             // and changes its state to OpenConfirm
-            System.out.println("Changing state from CONNECT to OPEN_CONFIRM");
+            LOGGER.info("Changing state from CONNECT to OPEN_CONFIRM");
         }
 
         protected void onBGPHeaderErrConnect(String from, String to, FSMEvent event, Integer context) {
@@ -410,7 +498,7 @@ public class FSMImpl {
 
             // stops the ConnectRetryTimer (if running) and sets the ConnectRetryTimer to zero
             if(connectRetryTimerTask.scheduledExecutionTime() > 0 && connectRetryTime > 0) {
-                connectRetryTimer.cancel();
+                connectRetryTimerTask.cancel();
                 connectRetryTime = 0;
             }
 
@@ -429,7 +517,7 @@ public class FSMImpl {
             }
 
             // changes its state to Idle
-            System.out.println("Changing state from CONNECT to IDLE");
+            LOGGER.info("Changing state from CONNECT to IDLE");
         }
 
         protected void onBGPOpenMsgErrConnect(String from, String to, FSMEvent event, Integer context) {
@@ -442,7 +530,7 @@ public class FSMImpl {
 
             // stops the ConnectRetryTimer (if running) and sets the ConnectRetryTimer to zero
             if(connectRetryTimerTask.scheduledExecutionTime() > 0 && connectRetryTime > 0) {
-                connectRetryTimer.cancel();
+                connectRetryTimerTask.cancel();
                 connectRetryTime = 0;
             }
 
@@ -461,20 +549,22 @@ public class FSMImpl {
             }
 
             // changes its state to Idle
-            System.out.println("Changing state from CONNECT to IDLE");
+            LOGGER.info("Changing state from CONNECT to IDLE");
         }
 
         protected void onNotifMsgVerErrConnect(String from, String to, FSMEvent event, Integer context) {
             if(delayOpenTimerTask.scheduledExecutionTime() > 0 && delayOpenTime > 0) {
                 // stops the ConnectRetryTimer (if running) and sets the ConnectRetryTimer to zero
                 if(connectRetryTimerTask.scheduledExecutionTime() > 0 && connectRetryTime > 0) {
-                    connectRetryTimer.cancel();
+                    connectRetryTimerTask.cancel();
                     connectRetryTime = 0;
                 }
 
                 // stops and resets the DelayOpenTimer (sets to zero)
-                delayOpenTimer.cancel();
-                delayOpenTime = 0;
+                if(delayOpenTimerTask.scheduledExecutionTime() > 0 && delayOpenTime > 0) {
+                    delayOpenTimerTask.cancel();
+                    delayOpenTime = 0;
+                }
 
                 // releases all BGP resources
                 callbacks.releaseBGPResources();
@@ -483,11 +573,13 @@ public class FSMImpl {
                 callbacks.dropTCPConnection();
 
                 // changes its state to Idle
-                System.out.println("Changing state from CONNECT to IDLE");
+                LOGGER.info("Changing state from CONNECT to IDLE");
             } else {
                 // stops the ConnectRetryTimer and sets the ConnectRetryTimer to zero
-                connectRetryTimer.cancel();
-                connectRetryTime = 0;
+                if(connectRetryTimerTask.scheduledExecutionTime() > 0 && connectRetryTime > 0) {
+                    connectRetryTimerTask.cancel();
+                    connectRetryTime = 0;
+                }
 
                 // releases all BGP resources
                 callbacks.releaseBGPResources();
@@ -504,20 +596,20 @@ public class FSMImpl {
                 }
 
                 // changes its state to Idle
-                System.out.println("Changing state from CONNECT to IDLE");
+                LOGGER.info("Changing state from CONNECT to IDLE");
             }
         }
 
         protected void onAnyOtherEventConnect(String from, String to, FSMEvent event, Integer context) {
             // if the ConnectRetryTimer is running, stops and resets the ConnectRetryTimer (sets to zero)
             if(connectRetryTimerTask.scheduledExecutionTime() > 0 && connectRetryTime > 0) {
-                connectRetryTimer.cancel();
+                connectRetryTimerTask.cancel();
                 connectRetryTime = 0;
             }
 
             // if the DelayOpenTimer is running, stops and resets the DelayOpenTimer (sets to zero)
             if(delayOpenTimerTask.scheduledExecutionTime() > 0 && delayOpenTime > 0) {
-                delayOpenTimer.cancel();
+                delayOpenTimerTask.cancel();
                 delayOpenTime = 0;
             }
 
@@ -536,7 +628,7 @@ public class FSMImpl {
             }
 
             // changes its state to Idle
-            System.out.println("Changing state from CONNECT to IDLE");
+            LOGGER.info("Changing state from CONNECT to IDLE");
         }
         // ------------------------------------------------------------------------------------------------------------
 
@@ -551,8 +643,10 @@ public class FSMImpl {
 
             // releases all BGP resources including stopping the DelayOpenTimer
             callbacks.releaseBGPResources();
-            delayOpenTimer.cancel();
-            delayOpenTime = 0;
+            if(delayOpenTimerTask.scheduledExecutionTime() > 0 && delayOpenTime > 0) {
+                delayOpenTimerTask.cancel();
+                delayOpenTime = 0;
+            }
 
             // drops the TCP connection
             callbacks.dropTCPConnection();
@@ -561,18 +655,21 @@ public class FSMImpl {
             connectRetryCounter = 0;
 
             // stops the ConnectRetryTimer and sets the ConnectRetryTimer to zero
-            connectRetryTimer.cancel();
-            connectRetryTime = 0;
+            if(connectRetryTimerTask.scheduledExecutionTime() > 0 && connectRetryTime > 0) {
+                connectRetryTimerTask.cancel();
+                connectRetryTime = 0;
+            }
 
             // changes its state to Idle
-            System.out.println("Changing state from ACTIVE to IDLE");
+            LOGGER.info("Changing state from ACTIVE to IDLE");
         }
 
         protected void onConnectRetryTimer_ExpiresActive(String from, String to, FSMEvent event, Integer context) {
             // restarts the ConnectRetryTimer (with initial value)
-            connectRetryTimer.cancel();
-            connectRetryTime = 120;
-            connectRetryTimer.schedule(connectRetryTimerTask, 0, 1000);
+            if(connectRetryTimerTask.scheduledExecutionTime() > 0 && connectRetryTime > 0) {
+                restartConnectRetryTimer();
+                connectRetryTimer.schedule(connectRetryTimerTask, 0, 1000);
+            }
 
             // initiates a TCP connection to the other BGP peer
             callbacks.connectRemotePeer();
@@ -581,17 +678,21 @@ public class FSMImpl {
             callbacks.listenForTCPConnection();
 
             // changes its state to Connect
-            System.out.println("Changing state from ACTIVE to CONNECT");
+            LOGGER.info("Changing state from ACTIVE to CONNECT");
         }
 
         protected void onDelayOpenTimer_ExpiresActive(String from, String to, FSMEvent event, Integer context) {
             // sets the ConnectRetryTimer to zero
-            connectRetryTimer.cancel();
-            connectRetryTime = 0;
+            if(connectRetryTimerTask.scheduledExecutionTime() > 0 && connectRetryTime > 0) {
+                connectRetryTimerTask.cancel();
+                connectRetryTime = 0;
+            }
 
             // stops and clears the DelayOpenTimer (set to zero)
-            delayOpenTimer.cancel();
-            delayOpenTime = 0;
+            if(delayOpenTimerTask.scheduledExecutionTime() > 0 && delayOpenTime > 0) {
+                delayOpenTimerTask.cancel();
+                delayOpenTime = 0;
+            }
 
             // completes the BGP initialization
             callbacks.completeBGPPeerInitialization();
@@ -600,12 +701,13 @@ public class FSMImpl {
             callbacks.sendOpenMessage();
 
             // sets its hold timer to a large value, and
-            holdTimer.cancel();
-            holdTime = 240;
-            holdTimer.schedule(holdTimerTask, 0, 1000);
+            if(holdTimerTask.scheduledExecutionTime() > 0 && holdTime > 0) {
+                restartHoldTimer(240);
+                holdTimer.schedule(holdTimerTask, 0, 1000);
+            }
 
             // changes its state to OpenSent
-            System.out.println("Changing state from ACTIVE to OPEN_SENT");
+            LOGGER.info("Changing state from ACTIVE to OPEN_SENT");
         }
 
         protected void onTcpConnection_ValidActive(String from, String to, FSMEvent event, Integer context) {
@@ -613,7 +715,7 @@ public class FSMImpl {
             callbacks.processTCPConnection();
 
             // Remain in ACTIVE state
-            System.out.println("Remaining in ACTIVE state");
+            LOGGER.info("Remaining in ACTIVE state");
         }
 
         protected void onTcp_CR_InvalidActive(String from, String to, FSMEvent event, Integer context) {
@@ -621,7 +723,7 @@ public class FSMImpl {
             callbacks.rejectTCPConnection();
 
             // stays in the Active State
-            System.out.println("Remaining in ACTIVE state");
+            LOGGER.info("Remaining in ACTIVE state");
         }
 
         // TODO: In response to the success of a TCP connection (Event 16 or Event
@@ -644,13 +746,16 @@ public class FSMImpl {
 
         protected void onTcpConnectionFailsActive(String from, String to, FSMEvent event, Integer context) {
             // restarts the ConnectRetryTimer (with the initial value)
-            connectRetryTimer.cancel();
-            connectRetryTime = 120;
-            connectRetryTimer.schedule(connectRetryTimerTask, 0, 1000);
+            if(connectRetryTimerTask.scheduledExecutionTime() > 0 && connectRetryTime > 0) {
+                restartConnectRetryTimer();
+                connectRetryTimer.schedule(connectRetryTimerTask, 0, 1000);
+            }
 
             // stops and clears the DelayOpenTimer (sets the value to zero)
-            delayOpenTimer.cancel();
-            delayOpenTime = 0;
+            if(delayOpenTimerTask.scheduledExecutionTime() > 0 && delayOpenTime > 0) {
+                delayOpenTimerTask.cancel();
+                delayOpenTime = 0;
+            }
 
             // releases all BGP resource
             callbacks.releaseBGPResources();
@@ -664,19 +769,21 @@ public class FSMImpl {
             }
 
             // changes its state to Idle
-            System.out.println("Changing state from ACTIVE to IDLE");
+            LOGGER.info("Changing state from ACTIVE to IDLE");
         }
 
         protected void onBGPOpen_with_DelayOpenTimer_runningActive(String from, String to, FSMEvent event, Integer context) {
             // stops the ConnectRetryTimer (if running) and sets the ConnectRetryTimer to zero
             if(connectRetryTimerTask.scheduledExecutionTime() > 0) {
-                connectRetryTimer.cancel();
+                connectRetryTimerTask.cancel();
                 connectRetryTime = 0;
             }
 
-            // stops and clears the DelayOpenTimer (sets to zero),
-            delayOpenTimer.cancel();
-            delayOpenTime = 0;
+            // stops and clears the DelayOpenTimer (sets to zero)
+            if(delayOpenTimerTask.scheduledExecutionTime() > 0 && delayOpenTime > 0) {
+                delayOpenTimerTask.cancel();
+                delayOpenTime = 0;
+            }
 
             // completes the BGP initialization
             callbacks.completeBGPPeerInitialization();
@@ -689,24 +796,27 @@ public class FSMImpl {
 
             if(holdTime > 0 && holdTimerTask.scheduledExecutionTime() > 0) {
                 // starts the KeepaliveTimer to initial value
-                keepaliveTimer.cancel();
-                keepaliveTime = 30;
+                if(keepaliveTimerTask.scheduledExecutionTime() > 0)
+                    restartKeepaliveTimer();
                 keepaliveTimer.schedule(keepaliveTimerTask, 0, 1000);
 
                 // resets the HoldTimer to the negotiated value
                 holdTime = 90;
             } else {
                 // resets the KeepaliveTimer (set to zero)
-                keepaliveTimer.cancel();
-                keepaliveTime = 0;
+                if(keepaliveTimerTask.scheduledExecutionTime() > 0) {
+                    keepaliveTimerTask.cancel();
+                    keepaliveTime = 0;
+                }
 
                 // resets the HoldTimer to zero
-                holdTimer.cancel();
+                if(holdTimerTask.scheduledExecutionTime() > 0)
+                    holdTimerTask.cancel();
                 holdTime = 0;
             }
 
             // changes its state to OpenConfirm
-            System.out.println("Changing state from ACTIVE to OPEN_CONFIRM");
+            LOGGER.info("Changing state from ACTIVE to OPEN_CONFIRM");
         }
 
         protected void onBGPHeaderErrActive(String from, String to, FSMEvent event, Integer context) {
@@ -716,7 +826,8 @@ public class FSMImpl {
             }
 
             // sets the ConnectRetryTimer to zero
-            connectRetryTimer.cancel();
+            if(connectRetryTimerTask.scheduledExecutionTime() > 0)
+                connectRetryTimerTask.cancel();
             connectRetryTime = 0;
 
             // releases all BGP resources
@@ -734,7 +845,7 @@ public class FSMImpl {
             }
 
             // changes its state to Idle
-            System.out.println("Changing state from ACTIVE to IDLE");
+            LOGGER.info("Changing state from ACTIVE to IDLE");
         }
 
         protected void onBGPOpenMsgErrActive(String from, String to, FSMEvent event, Integer context) {
@@ -744,7 +855,8 @@ public class FSMImpl {
             }
 
             // sets the ConnectRetryTimer to zero
-            connectRetryTimer.cancel();
+            if(connectRetryTimerTask.scheduledExecutionTime() > 0)
+                connectRetryTimerTask.cancel();
             connectRetryTime = 0;
 
             // releases all BGP resources
@@ -762,19 +874,20 @@ public class FSMImpl {
             }
 
             // changes its state to Idle
-            System.out.println("Changing state from ACTIVE to IDLE");
+            LOGGER.info("Changing state from ACTIVE to IDLE");
         }
 
         protected void onNotifMsgVerErrActive(String from, String to, FSMEvent event, Integer context) {
             if(delayOpenTimerTask.scheduledExecutionTime() > 0 && delayOpenTime > 0) {
                 // stops the ConnectRetryTimer (if running) and sets the ConnectRetryTimer to zero
                 if(connectRetryTimerTask.scheduledExecutionTime() > 0) {
-                    connectRetryTimer.cancel();
-                    connectRetryTime = 0;
+                    connectRetryTimerTask.cancel();
                 }
+                connectRetryTime = 0;
 
                 // stops and resets the DelayOpenTimer (sets to zero)
-                delayOpenTimer.cancel();
+                if(delayOpenTimerTask.scheduledExecutionTime() > 0)
+                    delayOpenTimerTask.cancel();
                 delayOpenTime = 0;
 
                 // releases all BGP resources
@@ -784,10 +897,11 @@ public class FSMImpl {
                 callbacks.dropTCPConnection();
 
                 // changes its state to Idle
-                System.out.println("Changing state from ACTIVE to IDLE");
+                LOGGER.info("Changing state from ACTIVE to IDLE");
             } else {
                 // sets the ConnectRetryTimer to zero
-                connectRetryTimer.cancel();
+                if(connectRetryTimerTask.scheduledExecutionTime() > 0)
+                    connectRetryTimerTask.cancel();
                 connectRetryTime = 0;
 
                 // releases all BGP resources
@@ -805,13 +919,14 @@ public class FSMImpl {
                 }
 
                 // changes its state to Idle
-                System.out.println("Changing state from ACTIVE to IDLE");
+                LOGGER.info("Changing state from ACTIVE to IDLE");
             }
         }
 
         protected void onAnyOtherEventActive(String from, String to, FSMEvent event, Integer context) {
             // sets the ConnectRetryTimer to zero
-            connectRetryTimer.cancel();
+            if(connectRetryTimerTask.scheduledExecutionTime() > 0)
+                connectRetryTimerTask.cancel();
             connectRetryTime = 0;
 
             // releases all BGP resources
@@ -829,7 +944,7 @@ public class FSMImpl {
             }
 
             // changes its state to Idle
-            System.out.println("Changing state from ACTIVE to IDLE");
+            LOGGER.info("Changing state from ACTIVE to IDLE");
 
         }
         // ------------------------------------------------------------------------------------------------------------
@@ -840,7 +955,8 @@ public class FSMImpl {
             callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_CAESE);
 
             // sets the ConnectRetryTimer to zero
-            connectRetryTimer.cancel();
+            if(connectRetryTimerTask.scheduledExecutionTime() > 0)
+                connectRetryTimerTask.cancel();
             connectRetryTime = 0;
 
             // releases all BGP resources
@@ -853,7 +969,7 @@ public class FSMImpl {
             connectRetryCounter = 0;
 
             // changes its state to Idle
-            System.out.println("Changing state from OPEN_SENT to IDLE");
+            LOGGER.info("Changing state from OPEN_SENT to IDLE");
         }
 
         protected void onAutomaticStopOpenSent(String from, String to, FSMEvent event, Integer context) {
@@ -861,7 +977,8 @@ public class FSMImpl {
             callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_CAESE);
 
             // sets the ConnectRetryTimer to zero
-            connectRetryTimer.cancel();
+            if(connectRetryTimerTask.scheduledExecutionTime() > 0)
+                connectRetryTimerTask.cancel();
             connectRetryTime = 0;
 
             // releases all the BGP resources
@@ -879,7 +996,7 @@ public class FSMImpl {
             }
 
             // changes its state to Idle
-            System.out.println("Changing state from OPEN_SENT to IDLE");
+            LOGGER.info("Changing state from OPEN_SENT to IDLE");
         }
 
         protected void onHoldTimer_ExpiresOpenSent(String from, String to, FSMEvent event, Integer context) {
@@ -887,7 +1004,8 @@ public class FSMImpl {
             callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_HOLD_TIMER_EXPIRED);
 
             // sets the ConnectRetryTimer to zero
-            connectRetryTimer.cancel();
+            if(connectRetryTimerTask.scheduledExecutionTime() > 0)
+                connectRetryTimerTask.cancel();
             connectRetryTime = 0;
 
             // releases all BGP resources
@@ -905,7 +1023,7 @@ public class FSMImpl {
             }
 
             // changes its state to Idle
-            System.out.println("Changing state from OPEN_SENT to IDLE");
+            LOGGER.info("Changing state from OPEN_SENT to IDLE");
 
         }
 
@@ -914,41 +1032,43 @@ public class FSMImpl {
             callbacks.closeBGPConnection();
 
             // restarts the ConnectRetryTimer
-            connectRetryTimer.cancel();
-            connectRetryTime = 120;
+            if(connectRetryTimerTask.scheduledExecutionTime() > 0)
+                restartConnectRetryTimer();
             connectRetryTimer.schedule(connectRetryTimerTask, 0, 1000);
 
             // continues to listen for a connection that may be initiated by the remote BGP peer
             // TODO: Understand what does it mean
 
             // changes its state to Active
-            System.out.println("Changing state from OPEN_SENT to ACTIVE");
+            LOGGER.info("Changing state from OPEN_SENT to ACTIVE");
         }
 
         protected void onBGPOpenOpenSent(String from, String to, FSMEvent event, Integer context) {
             // resets the DelayOpenTimer to zero
-            delayOpenTimer.cancel();
+            if(delayOpenTimerTask.scheduledExecutionTime() > 0)
+                delayOpenTimerTask.cancel();
             delayOpenTime = 0;
 
             // sets the BGP ConnectRetryTimer to zero
-            connectRetryTimer.cancel();
+            if(connectRetryTimerTask.scheduledExecutionTime() > 0)
+                connectRetryTimerTask.cancel();
             connectRetryTime = 0;
 
             // sends a KEEPALIVE message
             callbacks.sendKeepaliveMessage();
 
             // sets a KeepaliveTimer
-            keepaliveTimer.cancel();
-            keepaliveTime = 30;
+            if(keepaliveTimerTask.scheduledExecutionTime() > 0)
+                restartKeepaliveTimer();
             keepaliveTimer.schedule(keepaliveTimerTask,0, 1000);
 
             // sets the HoldTimer according to the negotiated value
-            holdTimer.cancel();
-            holdTime = 90;
+            if(holdTimerTask.scheduledExecutionTime() > 0)
+                restartHoldTimer(90);
             holdTimer.schedule(holdTimerTask, 0, 1000);
 
             // changes its state to OpenConfirm
-            System.out.println("Changing state from OPEN_SENT to OPEN_CONFIRM");
+            LOGGER.info("Changing state from OPEN_SENT to OPEN_CONFIRM");
         }
 
         protected void onBGPHeaderErrOpenSent(String from, String to, FSMEvent event, Integer context) {
@@ -956,7 +1076,8 @@ public class FSMImpl {
             callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_MESSAGE_HEADER_ERROR);
 
             // sets the ConnectRetryTimer to zero
-            connectRetryTimer.cancel();
+            if(connectRetryTimerTask.scheduledExecutionTime() > 0)
+                connectRetryTimerTask.cancel();
             connectRetryTime = 0;
 
             // releases all BGP resources
@@ -974,7 +1095,7 @@ public class FSMImpl {
             }
 
             // changes its state to Idle
-            System.out.println("Changing state from OPEN_SENT to IDLE");
+            LOGGER.info("Changing state from OPEN_SENT to IDLE");
         }
 
         protected void onBGPOpenMsgErrOpenSent(String from, String to, FSMEvent event, Integer context) {
@@ -982,7 +1103,8 @@ public class FSMImpl {
             callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_OPEN_MESSAGE_ERROR);
 
             // sets the ConnectRetryTimer to zero
-            connectRetryTimer.cancel();
+            if(connectRetryTimerTask.scheduledExecutionTime() > 0)
+                connectRetryTimerTask.cancel();
             connectRetryTime = 0;
 
             // releases all BGP resources
@@ -1000,7 +1122,7 @@ public class FSMImpl {
             }
 
             // changes its state to Idle
-            System.out.println("Changing state from OPEN_SENT to IDLE");
+            LOGGER.info("Changing state from OPEN_SENT to IDLE");
         }
 
         protected void onOpenCollisionDumpOpenSent(String from, String to, FSMEvent event, Integer context) {
@@ -1008,7 +1130,8 @@ public class FSMImpl {
             callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_CAESE);
 
             // sets the ConnectRetryTimer to zero
-            connectRetryTimer.cancel();
+            if(connectRetryTimerTask.scheduledExecutionTime() > 0)
+                connectRetryTimerTask.cancel();
             connectRetryTime = 0;
 
             // releases all BGP resources
@@ -1026,12 +1149,13 @@ public class FSMImpl {
             }
 
             // changes its state to Idle
-            System.out.println("Changing state from OPEN_SENT to IDLE");
+            LOGGER.info("Changing state from OPEN_SENT to IDLE");
         }
 
         protected void onNotifMsgVerErrOpenSent(String from, String to, FSMEvent event, Integer context) {
             // sets the ConnectRetryTimer to zero
-            connectRetryTimer.cancel();
+            if(connectRetryTimerTask.scheduledExecutionTime() > 0)
+                connectRetryTimerTask.cancel();
             connectRetryTime = 0;
 
             // releases all BGP resources
@@ -1041,7 +1165,7 @@ public class FSMImpl {
             callbacks.dropTCPConnection();
 
             // changes its state to Idle
-            System.out.println("Changing state from OPEN_SENT to IDLE");
+            LOGGER.info("Changing state from OPEN_SENT to IDLE");
         }
 
         protected void onAnyOtherEventOpenSent(String from, String to, FSMEvent event, Integer context) {
@@ -1049,7 +1173,8 @@ public class FSMImpl {
             callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_FINITE_STATE_MACHINE_ERROR);
 
             // sets the ConnectRetryTimer to zero
-            connectRetryTimer.cancel();
+            if(connectRetryTimerTask.scheduledExecutionTime() > 0)
+                connectRetryTimerTask.cancel();
             connectRetryTime = 0;
 
             // releases all BGP resources
@@ -1067,7 +1192,7 @@ public class FSMImpl {
             }
 
             // changes its state to Idle
-            System.out.println("Changing state from OPEN_SENT to IDLE");
+            LOGGER.info("Changing state from OPEN_SENT to IDLE");
         }
         // ------------------------------------------------------------------------------------------------------------
 
@@ -1086,11 +1211,12 @@ public class FSMImpl {
             connectRetryCounter = 0;
 
             // sets the ConnectRetryTimer to zero
-            connectRetryTimer.cancel();
+            if(connectRetryTimerTask.scheduledExecutionTime() > 0)
+                connectRetryTimerTask.cancel();
             connectRetryTime = 0;
 
             // changes its state to Idle
-            System.out.println("Changing state from OPEN_CONFIRM to IDLE");
+            LOGGER.info("Changing state from OPEN_CONFIRM to IDLE");
         }
 
         protected void onAutomaticStopOpenConfirm(String from, String to, FSMEvent event, Integer context) {
@@ -1098,7 +1224,8 @@ public class FSMImpl {
             callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_CAESE);
 
             // sets the ConnectRetryTimer to zero
-            connectRetryTimer.cancel();
+            if(connectRetryTimerTask.scheduledExecutionTime() > 0)
+                connectRetryTimerTask.cancel();
             connectRetryTime = 0;
 
             // releases all BGP resources
@@ -1116,7 +1243,7 @@ public class FSMImpl {
             }
 
             // changes its state to Idle
-            System.out.println("Changing state from OPEN_CONFIRM to IDLE");
+            LOGGER.info("Changing state from OPEN_CONFIRM to IDLE");
         }
 
         protected void onHoldTimer_ExpiresOpenConfirm(String from, String to, FSMEvent event, Integer context) {
@@ -1124,7 +1251,8 @@ public class FSMImpl {
             callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_HOLD_TIMER_EXPIRED);
 
             // sets the ConnectRetryTimer to zero
-            connectRetryTimer.cancel();
+            if(connectRetryTimerTask.scheduledExecutionTime() > 0)
+                connectRetryTimerTask.cancel();
             connectRetryTime = 0;
 
             // releases all BGP resources
@@ -1142,7 +1270,7 @@ public class FSMImpl {
             }
 
             // changes its state to Idle
-            System.out.println("Changing state from OPEN_CONFIRM to IDLE");
+            LOGGER.info("Changing state from OPEN_CONFIRM to IDLE");
         }
 
         protected void onKeepaliveTimer_ExpiresOpenConfirm(String from, String to, FSMEvent event, Integer context) {
@@ -1150,17 +1278,18 @@ public class FSMImpl {
             callbacks.sendKeepaliveMessage();
 
             // restarts the KeepaliveTimer
-            keepaliveTimer.cancel();
-            keepaliveTime = 30;
+            if(keepaliveTimerTask.scheduledExecutionTime() > 0)
+                restartKeepaliveTimer();
             keepaliveTimer.schedule(keepaliveTimerTask, 0, 1000);
 
             // remains in the OpenConfirmed state
-            System.out.println("Remaining in the OPEN_CONFIRM state");
+            LOGGER.info("Remaining in the OPEN_CONFIRM state");
         }
 
         protected void onTcpConnectionFails_NotifMsgOpenConfirm(String from, String to, FSMEvent event, Integer context) {
             // sets the ConnectRetryTimer to zero
-            connectRetryTimer.cancel();
+            if(connectRetryTimerTask.scheduledExecutionTime() > 0)
+                connectRetryTimerTask.cancel();
             connectRetryTime = 0;
 
             // releases all BGP resources
@@ -1178,12 +1307,13 @@ public class FSMImpl {
             }
 
             // changes its state to Idle
-            System.out.println("Changing state from OPEN_CONFIRM to IDLE");
+            LOGGER.info("Changing state from OPEN_CONFIRM to IDLE");
         }
 
         protected void onNotifMsgVerErrOpenConfirm(String from, String to, FSMEvent event, Integer context) {
             // sets the ConnectRetryTimer to zero
-            connectRetryTimer.cancel();
+            if(connectRetryTimerTask.scheduledExecutionTime() > 0)
+                connectRetryTimerTask.cancel();
             connectRetryTime = 0;
 
             // releases all BGP resources
@@ -1193,7 +1323,7 @@ public class FSMImpl {
             callbacks.dropTCPConnection();
 
             // changes its state to Idle
-            System.out.println("Changing state from OPEN_CONFIRM to IDLE");
+            LOGGER.info("Changing state from OPEN_CONFIRM to IDLE");
         }
 
         protected void onBGPHeaderErrOpenConfirm(String from, String to, FSMEvent event, Integer context) {
@@ -1201,7 +1331,8 @@ public class FSMImpl {
             callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_MESSAGE_HEADER_ERROR);
 
             // sets the ConnectRetryTimer to zero
-            connectRetryTimer.cancel();
+            if(connectRetryTimerTask.scheduledExecutionTime() > 0)
+                connectRetryTimerTask.cancel();
             connectRetryTime = 0;
 
             // releases all BGP resources
@@ -1219,7 +1350,7 @@ public class FSMImpl {
             }
 
             // changes its state to Idle
-            System.out.println("Changing state from OPEN_CONFIRM to IDLE");
+            LOGGER.info("Changing state from OPEN_CONFIRM to IDLE");
         }
 
         protected void onBGPOpenMsgErrOpenConfirm(String from, String to, FSMEvent event, Integer context) {
@@ -1227,7 +1358,8 @@ public class FSMImpl {
             callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_OPEN_MESSAGE_ERROR);
 
             // sets the ConnectRetryTimer to zero
-            connectRetryTimer.cancel();
+            if(connectRetryTimerTask.scheduledExecutionTime() > 0)
+                connectRetryTimerTask.cancel();
             connectRetryTime = 0;
 
             // releases all BGP resources
@@ -1245,7 +1377,7 @@ public class FSMImpl {
             }
 
             // changes its state to Idle
-            System.out.println("Changing state from OPEN_CONFIRM to IDLE");
+            LOGGER.info("Changing state from OPEN_CONFIRM to IDLE");
         }
 
         protected void onOpenCollisionDumpOpenConfirm(String from, String to, FSMEvent event, Integer context) {
@@ -1253,7 +1385,8 @@ public class FSMImpl {
             callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_CAESE);
 
             // sets the ConnectRetryTimer to zero
-            connectRetryTimer.cancel();
+            if(connectRetryTimerTask.scheduledExecutionTime() > 0)
+                connectRetryTimerTask.cancel();
             connectRetryTime = 0;
 
             // releases all BGP resources
@@ -1271,17 +1404,17 @@ public class FSMImpl {
             }
 
             // changes its state to Idle
-            System.out.println("Changing state from OPEN_CONFIRM to IDLE");
+            LOGGER.info("Changing state from OPEN_CONFIRM to IDLE");
         }
 
         protected void onKeepAliveMsgOpenConfirm(String from, String to, FSMEvent event, Integer context) {
             // restarts the HoldTimer
-            holdTimer.cancel();
-            holdTime = 90;
+            if(holdTimerTask.scheduledExecutionTime() > 0)
+                restartHoldTimer(90);
             holdTimer.schedule(holdTimerTask, 0, 1000);
 
             // changes its state to Established
-            System.out.println("Changing state from OPEN_CONFIRM to ESTABLISHED");
+            LOGGER.info("Changing state from OPEN_CONFIRM to ESTABLISHED");
         }
 
         protected void onAnyOtherEventOpenConfirm(String from, String to, FSMEvent event, Integer context) {
@@ -1289,7 +1422,8 @@ public class FSMImpl {
             callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_FINITE_STATE_MACHINE_ERROR);
 
             // sets the ConnectRetryTimer to zero
-            connectRetryTimer.cancel();
+            if(connectRetryTimerTask.scheduledExecutionTime() > 0)
+                connectRetryTimerTask.cancel();
             connectRetryTime = 0;
 
             // releases all BGP resources
@@ -1307,7 +1441,7 @@ public class FSMImpl {
             }
 
             // changes its state to Idle
-            System.out.println("Changing state from OPEN_CONFIRM to IDLE");
+            LOGGER.info("Changing state from OPEN_CONFIRM to IDLE");
         }
         // ------------------------------------------------------------------------------------------------------------
 
@@ -1330,7 +1464,8 @@ public class FSMImpl {
             callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_CAESE);
 
             // sets the ConnectRetryTimer to zero
-            connectRetryTimer.cancel();
+            if(connectRetryTimerTask.scheduledExecutionTime() > 0)
+                connectRetryTimerTask.cancel();
             connectRetryTime = 0;
 
             // deletes all routes associated with this connection
@@ -1346,7 +1481,7 @@ public class FSMImpl {
             connectRetryCounter = 0;
 
             // changes its state to Idle
-            System.out.println("Changing state from ESTABLISHED to IDLE");
+            LOGGER.info("Changing state from ESTABLISHED to IDLE");
         }
 
         protected void onAutomaticStopEstablished(String from, String to, FSMEvent event, Integer context) {
@@ -1354,7 +1489,8 @@ public class FSMImpl {
             callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_CAESE);
 
             // sets the ConnectRetryTimer to zero
-            connectRetryTimer.cancel();
+            if(connectRetryTimerTask.scheduledExecutionTime() > 0)
+                connectRetryTimerTask.cancel();
             connectRetryTime = 0;
 
             // deletes all routes associated with this connection
@@ -1373,7 +1509,7 @@ public class FSMImpl {
             callbacks.performPeerOscillationDamping();
 
             // changes its state to Idle
-            System.out.println("Changing state from ESTABLISHED to IDLE");
+            LOGGER.info("Changing state from ESTABLISHED to IDLE");
         }
 
         protected void onHoldTimer_ExpiresEstablished(String from, String to, FSMEvent event, Integer context) {
@@ -1381,7 +1517,8 @@ public class FSMImpl {
             callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_HOLD_TIMER_EXPIRED);
 
             // sets the ConnectRetryTimer to zero
-            connectRetryTimer.cancel();
+            if(connectRetryTimerTask.scheduledExecutionTime() > 0)
+                connectRetryTimerTask.cancel();
             connectRetryTime = 0;
 
             // releases all BGP resources
@@ -1399,7 +1536,7 @@ public class FSMImpl {
             }
 
             // changes its state to Idle
-            System.out.println("Changing state from ESTABLISHED to IDLE");
+            LOGGER.info("Changing state from ESTABLISHED to IDLE");
         }
 
         protected void onKeepaliveTimer_ExpiresEstablished(String from, String to, FSMEvent event, Integer context) {
@@ -1408,8 +1545,8 @@ public class FSMImpl {
 
             // restarts its KeepaliveTimer, unless the negotiated HoldTime value is zero
             if(holdTime != 0) {
-                keepaliveTimer.cancel();
-                keepaliveTime = 30;
+                if(keepaliveTimerTask.scheduledExecutionTime() > 0)
+                    restartKeepaliveTimer();
                 keepaliveTimer.schedule(keepaliveTimerTask, 0, 1000);
             }
         }
@@ -1419,7 +1556,8 @@ public class FSMImpl {
             callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_CAESE);
 
             // sets the ConnectRetryTimer to zero
-            connectRetryTimer.cancel();
+            if(connectRetryTimerTask.scheduledExecutionTime() > 0)
+                connectRetryTimerTask.cancel();
             connectRetryTime = 0;
 
             // deletes all routes associated with this connection
@@ -1440,12 +1578,13 @@ public class FSMImpl {
             }
 
             // changes its state to Idle
-            System.out.println("Changing state from ESTABLISHED to IDLE");
+            LOGGER.info("Changing state from ESTABLISHED to IDLE");
         }
 
         protected void onTcpConnectionFails_NotifMsgVerErr_NotifMsgEstablished(String from, String to, FSMEvent event, Integer context) {
             // sets the ConnectRetryTimer to zero
-            connectRetryTimer.cancel();
+            if(connectRetryTimerTask.scheduledExecutionTime() > 0)
+                connectRetryTimerTask.cancel();
             connectRetryTime = 0;
 
             // deletes all routes associated with this connection
@@ -1461,17 +1600,17 @@ public class FSMImpl {
             connectRetryCounter++;
 
             // changes its state to Idle
-            System.out.println("Changing state from ESTABLISHED to IDLE");
+            LOGGER.info("Changing state from ESTABLISHED to IDLE");
         }
 
         protected void onKeepAliveMsgEstablished(String from, String to, FSMEvent event, Integer context) {
             // restarts its HoldTimer, if the negotiated HoldTime value is non-zero
-            holdTimer.cancel();
-            holdTime = 90;
+            if(holdTimerTask.scheduledExecutionTime() > 0)
+                restartHoldTimer(90);
             holdTimer.schedule(holdTimerTask, 0, 1000);
 
             // remains in the Established state
-            System.out.println("Remaining in ESTABLISHED state");
+            LOGGER.info("Remaining in ESTABLISHED state");
         }
 
         protected void onUpdateMsgEstablished(String from, String to, FSMEvent event, Integer context) {
@@ -1480,13 +1619,13 @@ public class FSMImpl {
 
             // restarts its HoldTimer, if the negotiated HoldTime value is non-zero
             if(holdTime != 0) {
-                holdTimer.cancel();
-                holdTime = 90;
+                if(holdTimerTask.scheduledExecutionTime() > 0)
+                    restartHoldTimer(90);
                 holdTimer.schedule(holdTimerTask, 0, 1000);
             }
 
             // remains in the Established state
-            System.out.println("Remaining in ESTABLISHED state");
+            LOGGER.info("Remaining in ESTABLISHED state");
         }
 
         protected void onUpdateMsgErrEstablished(String from, String to, FSMEvent event, Integer context) {
@@ -1494,7 +1633,8 @@ public class FSMImpl {
             callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_UPDATE_MESSAGE_ERROR);
 
             // sets the ConnectRetryTimer to zero
-            connectRetryTimer.cancel();
+            if(connectRetryTimerTask.scheduledExecutionTime() > 0)
+                connectRetryTimerTask.cancel();
             connectRetryTime = 0;
 
             // deletes all routes associated with this connection
@@ -1515,7 +1655,7 @@ public class FSMImpl {
             }
 
             // changes its state to Idle
-            System.out.println("Changing state from ESTABLISHED to IDLE");
+            LOGGER.info("Changing state from ESTABLISHED to IDLE");
         }
 
         protected void onAnyOtherEventEstablished(String from, String to, FSMEvent event, Integer context) {
@@ -1526,7 +1666,8 @@ public class FSMImpl {
             callbacks.deleteAllRoutes();
 
             // sets the ConnectRetryTimer to zero
-            connectRetryTimer.cancel();
+            if(connectRetryTimerTask.scheduledExecutionTime() > 0)
+                connectRetryTimerTask.cancel();
             connectRetryTime = 0;
 
             // releases all BGP resources
@@ -1544,12 +1685,32 @@ public class FSMImpl {
             }
 
             // changes its state to Idle
-            System.out.println("Changing state from ESTABLISHED to IDLE");
+            LOGGER.info("Changing state from ESTABLISHED to IDLE");
         }
         // ------------------------------------------------------------------------------------------------------------
 
+        protected void onIdle(String from, String to, FSMEvent event, Integer context) {
+            LOGGER.info("Now the state is IDLE");
+        }
+
         protected void onConnect(String from, String to, FSMEvent event, Integer context) {
-            System.out.println("Now the state is CONNECTED");
+            LOGGER.info("Now the state is CONNECTED");
+        }
+
+        protected void onActive(String from, String to, FSMEvent event, Integer context) {
+            LOGGER.info("Now the state is ACTIVE");
+        }
+
+        protected void onOpenSent(String from, String to, FSMEvent event, Integer context) {
+            LOGGER.info("Now the state is OPEN_SENT");
+        }
+
+        protected void onOpenConfirm(String from, String to, FSMEvent event, Integer context) {
+            LOGGER.info("Now the state is OPEN_CONFIRM");
+        }
+
+        protected void onEstablished(String from, String to, FSMEvent event, Integer context) {
+            LOGGER.info("Now the state is ESTABLISHED");
         }
     }
 }
