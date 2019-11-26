@@ -7,8 +7,10 @@ import org.squirrelframework.foundation.fsm.UntypedStateMachineBuilder;
 import org.squirrelframework.foundation.fsm.annotation.StateMachineParameters;
 import org.squirrelframework.foundation.fsm.impl.AbstractUntypedStateMachine;
 
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.logging.Logger;
 
 public class FSMImpl {
     enum FSMEvent {
@@ -23,10 +25,14 @@ public class FSMImpl {
     };
 
     public UntypedStateMachineBuilder builder;
-    public UntypedStateMachine fsm;
 
-    public FSMImpl() {
-        this.builder = StateMachineBuilderFactory.create(StateMachineSample.class);
+    private final static FSMImpl builderInstance = new FSMImpl();
+    public static UntypedStateMachine newInstance(InternalFSMCallbacks callbacks) {
+        return builderInstance.builder.newStateMachine("IDLE", callbacks);
+    }
+
+    private FSMImpl() {
+        this.builder = StateMachineBuilderFactory.create(StateMachineSample.class, new Class<?>[] { InternalFSMCallbacks.class });
 
         // IDLE
         {
@@ -145,8 +151,6 @@ public class FSMImpl {
             builder.externalTransition().from("ESTABLISHED").to("IDLE").on(FSMEvent.BGPHeaderErr).callMethod("onAnyOtherEventEstablished");
             builder.externalTransition().from("ESTABLISHED").to("IDLE").on(FSMEvent.BGPOpenMsgErr).callMethod("onAnyOtherEventEstablished");
         }
-
-        this.fsm = builder.newStateMachine("IDLE");
     }
 
 
@@ -167,7 +171,13 @@ public class FSMImpl {
         static boolean dampPeerOscillations;
         static boolean sendNOTIFICATIONwithoutOPEN;
 
-        InternalFSMCallbacks callbacks;
+        private final InternalFSMCallbacks callbacks;
+
+        public StateMachineSample(InternalFSMCallbacks callbacks) {
+            Objects.requireNonNull(callbacks);
+
+            this.callbacks = callbacks;
+        }
 
         TimerTask connectRetryTimerTask = new TimerTask() {
             @Override
