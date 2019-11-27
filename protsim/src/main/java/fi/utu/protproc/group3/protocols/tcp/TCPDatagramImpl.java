@@ -9,27 +9,20 @@ public class TCPDatagramImpl implements TCPDatagram {
     private short destinationPort;
     private int seqN;
     private int ackN;
-    private byte dataOffset;
     private short flags;
     private short window;
     private short checksum;
-    private short urgentPointer;
-    private byte[] optionsAndPadding;
     private byte[] payload;
 
     TCPDatagramImpl(short sourcePort, short destinationPort, int seqN, int ackN,
-                    byte dataOffset, short flags, short window, short checksum, short urgentPointer,
-                    byte[] optionsAndPadding, byte[] payload) {
+                    short flags, short window, short checksum, byte[] payload) {
         this.sourcePort = sourcePort;
         this.destinationPort = destinationPort;
         this.seqN = seqN;
         this.ackN = ackN;
-        this.dataOffset = dataOffset;
         this.flags = flags;
         this.window = window;
         this.checksum = checksum;
-        this.urgentPointer = urgentPointer;
-        this.optionsAndPadding = optionsAndPadding;
         this.payload = payload;
     }
 
@@ -49,26 +42,16 @@ public class TCPDatagramImpl implements TCPDatagram {
         flags = (short) (flags & 0x1ff);
         short window = bb.getShort();
         short checksum = bb.getShort();
-        short urgentPointer = bb.getShort();
-        byte[] optionsAndPadding = null;
-        if (dataOffset > 5) {
-            int optLength = (dataOffset << 2) - 20;
-            if (bb.limit() < bb.position()+optLength) {
-                optLength = bb.limit() - bb.position();
-            }
-            try {
-                optionsAndPadding = new byte[optLength];
-                bb.get(optionsAndPadding, 0, optLength);
-            } catch (IndexOutOfBoundsException e) {
-                optionsAndPadding = null;
-            }
-        }
+
+        bb.getShort(); // Skip urgent pointer
+
+        bb.position(bb.position() + (dataOffset - 5) * 4); // Skip options
 
         byte[] payload = new byte[bb.remaining()];
         bb.get(payload, 0, bb.remaining());
 
         return new TCPDatagramImpl(sourcePort, destinationPort, seqN, ackN,
-                dataOffset, flags, window, checksum, urgentPointer, optionsAndPadding, payload);
+                flags, window, checksum, payload);
     }
 
     public short getSourcePort() {
@@ -87,10 +70,6 @@ public class TCPDatagramImpl implements TCPDatagram {
         return this.ackN;
     }
 
-    public byte getDataOffset() {
-        return this.dataOffset;
-    }
-
     public short getFlags() {
         return this.flags;
     }
@@ -103,25 +82,12 @@ public class TCPDatagramImpl implements TCPDatagram {
         return this.checksum;
     }
 
-    public int getUrgentPointer() {
-        return this.urgentPointer;
-    }
-
-    public byte[] getOptionsAndPadding() {
-        return this.optionsAndPadding;
-    }
-
     public byte[] getPayload() {
         return this.payload;
     }
 
     public byte[] serialize() {
-        int length;
-
-        if (dataOffset == 0)
-            dataOffset = 5;  // default header length
-        length = dataOffset << 2;
-
+        int length = 20;
         if (payload != null) {
             length += payload.length;
         }
@@ -133,20 +99,16 @@ public class TCPDatagramImpl implements TCPDatagram {
         bb.putShort(this.destinationPort);
         bb.putInt(this.seqN);
         bb.putInt(this.ackN);
-        bb.putShort((short) (this.flags | (dataOffset << 12)));
+        bb.putShort((short) (this.flags | (5 << 12)));
         bb.putShort(this.window);
         bb.putShort(this.checksum);
-        bb.putShort(this.urgentPointer);
-        if (dataOffset > 5) {
-            int padding;
-            bb.put(this.optionsAndPadding);
-            padding = (dataOffset << 2) - 20 - optionsAndPadding.length;
-            for (int i = 0; i < padding; i++)
-                bb.put((byte) 0);
-        }
-        if (this.payload != null)
-            bb.put(this.payload);
+        bb.putShort((short) 0); // urgent pointer
 
+        if (this.payload != null) {
+            bb.put(this.payload);
+        }
+
+        // TODO : Fix this (includes IP)
         // compute checksum if needed
         if (this.checksum == 0) {
             bb.rewind();
@@ -163,6 +125,25 @@ public class TCPDatagramImpl implements TCPDatagram {
                     + (accumulation & 0xffff);
             this.checksum = (short) (~accumulation & 0xffff);
         }
+
+        // TODO: Add pseudo header to checksum
+        /*
+            The checksum also covers a 96 bit pseudo header conceptually
+            prefixed to the TCP header.  This pseudo header contains the Source
+            Address, the Destination Address, the Protocol, and TCP length.
+            This gives the TCP protection against misrouted segments.  This
+            information is carried in the Internet Protocol and is transferred
+            across the TCP/Network interface in the arguments or results of
+            calls by the TCP on the IP.
+
+                             +--------+--------+--------+--------+
+                             |           Source Address          |
+                             +--------+--------+--------+--------+
+                             |         Destination Address       |
+                             +--------+--------+--------+--------+
+                             |  zero  |  PTCL  |    TCP Length   |
+                             +--------+--------+--------+--------+
+         */
 
         bb.putShort(16, this.checksum);
 

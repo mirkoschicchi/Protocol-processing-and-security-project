@@ -29,10 +29,8 @@ public interface TCPDatagram {
     */
 
     static TCPDatagram create(short sourcePort, short destinationPort, int seqN, int ackN,
-                              byte dataOffset, short flags, short window, short checksum, short urgentPointer,
-                              byte[] optionsAndPadding, byte[] payload) {
-        return new TCPDatagramImpl(sourcePort, destinationPort, seqN, ackN,
-                dataOffset, flags, window, checksum, urgentPointer, optionsAndPadding, payload);
+                              short flags, short window, short checksum, byte[] payload) {
+        return new TCPDatagramImpl(sourcePort, destinationPort, seqN, ackN, flags, window, checksum, payload);
     }
 
     static TCPDatagram parse(byte[] pdu){
@@ -53,12 +51,11 @@ public interface TCPDatagram {
     short getSourcePort();
     int getSeqN();
     int getAckN();
-    byte getDataOffset();
+
     short getFlags();
     short getWindow();
     int getChecksum();
-    int getUrgentPointer();
-    byte[] getOptionsAndPadding();
+
     byte[] getPayload();
 
     byte[] serialize();

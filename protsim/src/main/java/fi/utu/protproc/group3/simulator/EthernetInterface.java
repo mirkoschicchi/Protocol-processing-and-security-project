@@ -26,6 +26,8 @@ public interface EthernetInterface {
      */
     byte[] resolveIpAddress(IPAddress address);
 
+    byte[] getDefaultRouter();
+
     /**
      * Transmits a PDU to the given MAC address
      * @param frame The frame to transmit
