@@ -7,8 +7,10 @@ import fi.utu.protproc.group3.utils.IPAddress;
 import reactor.core.Disposable;
 
 import java.util.*;
+import java.util.logging.Logger;
 
 public class DatagramHandler {
+    private static final Logger LOGGER = Logger.getLogger("DatagramHandler");
     private final Map<ConnectionDescriptor, ConnectionState> stateTable = new HashMap<>();
     private final Map<Short, Server> servers = new HashMap<>();
     private final EthernetInterface ethernetInterface;
@@ -89,25 +91,20 @@ public class DatagramHandler {
                         }
                     }
                 } else if (flags == (TCPDatagram.SYN | TCPDatagram.ACK) && state.status == ConnectionStatus.Setup) {
-                    // Connection is establishing
-                    if (state.seqN != (datagram.getAckN())) {
-                        // TODO : Clean up connection and drop packet
-                        throw new IllegalArgumentException("Invalid (SYN) ACK number!");
+                    if (datagram.getAckN() == state.seqN) {
+                        // Connection is establishing
+                        state.send(null, TCPDatagram.ACK);
+                        state.connection.connected(state);
+                    } else {
+                        LOGGER.warning("TCP connection in setup state has wrong ACKN. Closing.");
+                        state.connection.closed();
+                        stateTable.remove(state.descriptor);
                     }
-
-                    state.send(null, TCPDatagram.ACK);
-                    state.connection.connected(state);
                 } else if (flags == TCPDatagram.ACK) {
                     switch (state.status) {
                         case Setup:
-                            if (state.seqN != (datagram.getAckN())) {
-                                // TODO : Clean up connection and drop packet
-                                throw new IllegalArgumentException("Invalid ACK number!");
-                            }
-
                             state.status = ConnectionStatus.Established;
                             state.connection.connected(state);
-
                             break;
                         case Established:
                             if (datagram.getPayload() != null) {
@@ -116,37 +113,26 @@ public class DatagramHandler {
                             break;
                         case Closing:
                             if (state.seqN != datagram.getAckN()) {
-                                // TODO : Clean up connection and drop packet
-                                throw new IllegalArgumentException("Invalid ACK number on closing!");
+                                LOGGER.warning("TCP connection in closing state has wrong ACKN. Closing.");
                             }
-
                             state.connection.closed();
                             stateTable.remove(state.descriptor);
                             break;
                     }
-                } else if (flags == TCPDatagram.FIN && state.status == ConnectionStatus.Established) {
-                    // Closing connection
-                    if (state.seqN != datagram.getAckN()) {
-                        // TODO : Clean up connection and drop packet
-                        throw new IllegalArgumentException("Invalid (FIN) ACK number!");
+                } else if ((flags & TCPDatagram.FIN) == TCPDatagram.FIN) {
+                    switch (state.status) {
+                        case Established:
+                            state.status = ConnectionStatus.Closing;
+                            state.send(null, (short)(TCPDatagram.FIN | TCPDatagram.ACK));
+                            break;
+                        case Closing:
+                            state.status = ConnectionStatus.Closed;
+                            state.connection.closed();
+                            state.send(null, TCPDatagram.ACK);
+                            stateTable.remove(state.descriptor);
+                            break;
                     }
-
-                    state.status = ConnectionStatus.Closing;
-                    state.send(null, (short)(TCPDatagram.FIN | TCPDatagram.ACK));
-                } else if (flags == (TCPDatagram.FIN | TCPDatagram.ACK) && state.status == ConnectionStatus.Closing) {
-                    if (state.seqN != datagram.getAckN()){
-                        throw new IllegalArgumentException("Invalid ACK number!");
-                    }
-
-                    state.status = ConnectionStatus.Closed;
-                    state.connection.closed();
-                    state.send(null, TCPDatagram.ACK);
-                    stateTable.remove(state.descriptor);
                 } else if (flags == TCPDatagram.RST) {
-                    if (state.seqN != (datagram.getAckN())){
-                        throw new IllegalArgumentException("Invalid ACK number!");
-                    }
-
                     state.status = ConnectionStatus.Closed;
                     state.connection.closed();
                 }
@@ -229,7 +215,6 @@ public class DatagramHandler {
         }
 
         public void update(TCPDatagram datagram) {
-            // TODO: Error handling
             this.ackN = datagram.getSeqN();
 
             if (datagram.getPayload() == null || datagram.getPayload().length == 0) {
@@ -244,7 +229,7 @@ public class DatagramHandler {
         }
 
         public void send(byte[] message, short flags) {
-            if ((flags & (TCPDatagram.SYN | TCPDatagram.FIN | TCPDatagram.RST)) == 0) {
+            if ((flags & (TCPDatagram.SYN | TCPDatagram.RST)) == 0) {
                 flags |= TCPDatagram.ACK;
             }
 
@@ -262,7 +247,7 @@ public class DatagramHandler {
 
             if (message != null && message.length > 0) {
                 seqN += message.length;
-            } else {
+            } else if (flags != TCPDatagram.ACK) {
                 seqN++;
             }
 
