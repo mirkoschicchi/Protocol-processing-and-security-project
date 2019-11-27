@@ -1,5 +1,7 @@
 package fi.utu.protproc.group3.protocols.tcp;
 
+import fi.utu.protproc.group3.utils.IPAddress;
+
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
@@ -86,7 +88,7 @@ public class TCPDatagramImpl implements TCPDatagram {
         return this.payload;
     }
 
-    public byte[] serialize() {
+    public byte[] serialize(IPAddress sourceIP, IPAddress destinationIP, byte protocol, short tcpLength) {
         int length = 20;
         if (payload != null) {
             length += payload.length;
@@ -111,39 +113,33 @@ public class TCPDatagramImpl implements TCPDatagram {
         // TODO : Fix this (includes IP)
         // compute checksum if needed
         if (this.checksum == 0) {
-            bb.rewind();
-            int accumulation = 0;
-            for (int i = 0; i < length / 2; ++i) {
-                accumulation += 0xffff & bb.getShort();
-            }
-            // pad to an even number of shorts
-            if (length % 2 > 0) {
-                accumulation += (bb.get() & 0xff) << 8;
-            }
+            if (sourceIP != null && destinationIP != null
+                    && sourceIP.toArray().length != 0 && destinationIP.toArray().length != 0
+                    && sourceIP.toArray().length == destinationIP.toArray().length) {
+                int sumPseudoHeader = (protocol & 0xff) | (tcpLength & 0xff);
+                var sourceIParray = sourceIP.toArray();
+                var destinationIParray = destinationIP.toArray();
+                for (var i = 0; i < sourceIParray.length; i += 2) {
+                    sumPseudoHeader += (((sourceIParray[i] & 0xff) << 8) | (sourceIParray[i + 1] & 0xff))
+                            + (((destinationIParray[i] & 0xff) << 8) | (destinationIParray[i + 1] & 0xff));
+                }
 
-            accumulation = ((accumulation >> 16) & 0xffff)
-                    + (accumulation & 0xffff);
-            this.checksum = (short) (~accumulation & 0xffff);
+                bb.rewind();
+                int sumTCPHeaderAndPayload = 0;
+                for (int i = 0; i < length / 2; ++i) {
+                    sumTCPHeaderAndPayload += 0xffff & bb.getShort();
+                }
+                // pad to an even number of shorts
+                if (length % 2 > 0) {
+                    sumTCPHeaderAndPayload += (bb.get() & 0xff) << 8;
+                }
+
+                int totalSum = sumPseudoHeader + sumTCPHeaderAndPayload;
+                short totalSum16Bit = (short) (((totalSum >> 16) & 0xffff) + (totalSum & 0xffff));
+
+                this.checksum = (short) (~totalSum16Bit & 0xffff);
+            }
         }
-
-        // TODO: Add pseudo header to checksum
-        /*
-            The checksum also covers a 96 bit pseudo header conceptually
-            prefixed to the TCP header.  This pseudo header contains the Source
-            Address, the Destination Address, the Protocol, and TCP length.
-            This gives the TCP protection against misrouted segments.  This
-            information is carried in the Internet Protocol and is transferred
-            across the TCP/Network interface in the arguments or results of
-            calls by the TCP on the IP.
-
-                             +--------+--------+--------+--------+
-                             |           Source Address          |
-                             +--------+--------+--------+--------+
-                             |         Destination Address       |
-                             +--------+--------+--------+--------+
-                             |  zero  |  PTCL  |    TCP Length   |
-                             +--------+--------+--------+--------+
-         */
 
         bb.putShort(16, this.checksum);
 

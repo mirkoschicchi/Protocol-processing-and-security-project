@@ -1,5 +1,7 @@
 package fi.utu.protproc.group3.protocols.tcp;
 
+import fi.utu.protproc.group3.utils.IPAddress;
+
 import java.util.Objects;
 
 /**
@@ -58,5 +60,9 @@ public interface TCPDatagram {
 
     byte[] getPayload();
 
-    byte[] serialize();
+    // the TCP protocol hexadecimal representation is 0x6 and is found in the Next Header field of the IPv6 header
+    // https://en.wikipedia.org/wiki/List_of_IP_protocol_numbers
+    // Then it is needed the protocol length which is given by header + body
+    // https://stackoverflow.com/questions/30858973/udp-checksum-calculation-for-ipv6-packet
+    byte[] serialize(IPAddress sourceIP, IPAddress destinationIP, byte protocol, short tcpLength);
 }

@@ -28,7 +28,7 @@ public class RoutingTests extends SimpleScenarioTest {
                                 (short) 123, (short) 123, 0, 0, (short) 0,
                                 (short) 0, (short) 0,
                                 data
-                        ).serialize()
+                        ).serialize(client.getIpAddress(), server.getIpAddress(), IPv6Packet.NEXT_HEADER_TCP, (short)(40 + 20 + data.length))
                 ).serialize()
         ).serialize();
 

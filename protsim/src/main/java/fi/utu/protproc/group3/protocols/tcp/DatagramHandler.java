@@ -236,7 +236,9 @@ public class DatagramHandler {
             var datagram = TCPDatagram.create(descriptor.localPort, descriptor.remotePort, this.seqN, this.ackN, flags,
                     (short) 0xffff, (short) 0, message);
 
-            var packet = IPv6Packet.create((byte)0x6, descriptor.localIp, descriptor.remoteIp, datagram.serialize());
+            var payloadLength = datagram.getPayload() != null ? datagram.getPayload().length : 0;
+
+            var packet = IPv6Packet.create((byte)0x6, descriptor.localIp, descriptor.remoteIp, datagram.serialize(descriptor.localIp, descriptor.remoteIp, (byte)0x6, (short)(40 + 20 + payloadLength)));
 
             var destMac = handler.ethernetInterface.resolveIpAddress(descriptor.remoteIp);
             if (destMac == null) {

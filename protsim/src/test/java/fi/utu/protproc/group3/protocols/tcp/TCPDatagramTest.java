@@ -2,6 +2,7 @@ package fi.utu.protproc.group3.protocols.tcp;
 
 import fi.utu.protproc.group3.protocols.EthernetFrame;
 import fi.utu.protproc.group3.protocols.IPv6Packet;
+import fi.utu.protproc.group3.utils.IPAddress;
 import fi.utu.protproc.group3.utils.StringUtils;
 import org.junit.jupiter.api.Test;
 
@@ -10,16 +11,18 @@ import static org.junit.jupiter.api.Assertions.*;
 class TCPDatagramTest {
     private static final short sourcePort = 4444;
     private static final short destPort = 179;
-    private static final byte dataOffset = (byte)5;
     private static final short flags = (short) (TCPDatagram.SYN | TCPDatagram.ACK);
+    private static final IPAddress sourceIP = IPAddress.parse("fe80::1");
+    private static final IPAddress destinationIP = IPAddress.parse("fe80::2");
 
     @Test
     void createDatagram() {
-        var datagram = TCPDatagram.create(sourcePort, destPort, 0, 0, flags, (short)1, (short)2, new byte[] { 0x01 });
+        byte[] payload = { 0x01 };
+        var datagram = TCPDatagram.create(sourcePort, destPort, 0, 0, flags, (short)1, (short)2, payload);
 
         assertNotNull(datagram);
 
-        var bytes = datagram.serialize();
+        var bytes = datagram.serialize(sourceIP, destinationIP, (byte)0x6, (short)(40 + 20 + payload.length));
 
         assertNotNull(bytes);
         assertTrue(bytes.length > 0);
@@ -28,11 +31,12 @@ class TCPDatagramTest {
 
     @Test
     void reassembleDatagram() {
-        var original = TCPDatagram.create(sourcePort, destPort, 5, 6, flags, (short)1, (short)2, new byte[] { 0x01, 0x02 });
+        byte[] payload = { 0x01, 0x02 };
+        var original = TCPDatagram.create(sourcePort, destPort, 5, 6, flags, (short)1, (short)2, payload);
 
         assertNotNull(original);
 
-        var bytes = original.serialize();
+        var bytes = original.serialize(sourceIP, destinationIP, (byte)0x6, (short)(40 + 20 + payload.length));
         var reassembled = TCPDatagram.parse(bytes);
 
         assertNotNull(reassembled);
@@ -73,7 +77,7 @@ class TCPDatagramTest {
                         TCPDatagram.create(datagram.getSourcePort(), datagram.getDestinationPort(), datagram.getSeqN(),
                                 datagram.getAckN(), datagram.getFlags(), datagram.getWindow(),
                                 (short) datagram.getChecksum(), datagram.getPayload()
-                        ).serialize()
+                        ).serialize(packet.getSourceIP(),packet.getDestinationIP(), packet.getNextHeader(),(short)(40 + 20 + datagram.getPayload().length))
                 ).serialize()
         ).serialize();
 
