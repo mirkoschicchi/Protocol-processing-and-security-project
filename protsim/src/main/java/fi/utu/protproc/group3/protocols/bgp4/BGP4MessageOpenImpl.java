@@ -37,14 +37,20 @@ public class BGP4MessageOpenImpl extends BGP4MessageImpl implements BGP4MessageO
     }
 
     @Override
+    public byte getOptParmLen() {
+        return (byte) 0x00;
+    }
+
+    @Override
     public byte[] serialize() {
         byte[] serialized;
-        serialized = ByteBuffer.allocate(28)
+        serialized = ByteBuffer.allocate(29)
                 .put(super.serialize())
                 .put(getVersion())
                 .putShort(getMyAutonomousSystem())
                 .putShort(getHoldTime())
-                .putInt(getBGPIdentifier()).array();
+                .putInt(getBGPIdentifier())
+                .put(getOptParmLen()).array();
 
         return serialized;
     }
