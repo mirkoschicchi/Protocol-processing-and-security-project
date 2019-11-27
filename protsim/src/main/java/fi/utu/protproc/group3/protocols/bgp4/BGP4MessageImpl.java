@@ -8,7 +8,7 @@ import java.util.List;
 
 public abstract class BGP4MessageImpl implements BGP4Message {
     // Marker is set all to 1 following RFC-4271
-    private byte[] marker = {0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf, 0xf};
+    private byte[] marker = {(byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff};
     private short length;
     private byte type;
 
@@ -79,10 +79,30 @@ public abstract class BGP4MessageImpl implements BGP4Message {
                 List<NetworkAddress> networkLayerReachabilityInformation
                         = new ArrayList<NetworkAddress>();
                 for (short i=0; i < totalPathAttributeLength; i++) {
-                    buf.get(tmp);
-                    IPAddress addr = new IPAddress(tmp);
-                    int prefLen = buf.getInt();
-                    withdrawnRoutes.add(new NetworkAddress(addr, prefLen));
+                    var attrFlags = buf.get();
+                    var attrType = buf.get();
+
+                    var extended = (attrFlags & (1 << 4)) != 0;
+                    int attrLen = extended ? buf.getShort() : buf.get();
+
+                    var oldPos = buf.position();
+
+                    switch (attrType) {
+                        case 1: // ORIGIN
+                        {
+                            // TODO: Parse origin and set it on the update message
+                        }
+                        case 2: // AS_PATH
+                        {
+                            // TODO: Parse as path sequence and assign it
+                        }
+                        case 3: // NEXT_HOP
+                        {
+                            // TODO
+                        }
+                    }
+
+                    buf.position(oldPos + attrLen);
                 }
 
                 return BGP4MessageUpdate.create(withdrawnRoutesLength,
@@ -98,7 +118,7 @@ public abstract class BGP4MessageImpl implements BGP4Message {
                 return BGP4MessageNotification.create(errorCode, errorSubCode, data);
 
             case BGP4Message.TYPE_KEEPALIVE:
-                return BGP4MessageKeepalive.create(len, type);
+                return BGP4MessageKeepalive.create();
 
             default:
                 throw new UnsupportedOperationException();
