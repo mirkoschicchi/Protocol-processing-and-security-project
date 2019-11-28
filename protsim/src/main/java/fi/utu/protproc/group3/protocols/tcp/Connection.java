@@ -1,5 +1,6 @@
 package fi.utu.protproc.group3.protocols.tcp;
 
+import fi.utu.protproc.group3.protocols.IPv6Packet;
 import fi.utu.protproc.group3.simulator.EthernetInterface;
 import fi.utu.protproc.group3.utils.IPAddress;
 
@@ -19,7 +20,7 @@ public abstract class Connection {
      * Initiates the connection to the given target port.
      */
     public void connect(IPAddress ipAddress, short port) {
-        // TODO
+        ethernetInterface.getTCPHandler().connect(this, ipAddress, port);
     }
 
     /**
@@ -46,8 +47,8 @@ public abstract class Connection {
     /**
      * Closes the current TCP connection.
      */
-    public void close() {
-        // TODO
+    public final void close() {
+        this.connectionState.close();
     }
 
     /**

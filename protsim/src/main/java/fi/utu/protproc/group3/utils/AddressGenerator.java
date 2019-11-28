@@ -17,10 +17,9 @@ public class AddressGenerator {
     public byte[] ethernetAddress(String value) {
         if (value != null) return StringUtils.parseHexStream(value);
 
-        // See https://honeywellaidc.force.com/supportppr/s/article/Locally-Administered-MAC-addresses
         var buf = new byte[6];
         random.nextBytes(buf);
-        buf[0] = (byte) (buf[0] & 0x0f | 0x20);
+        buf[0] = (byte) ((buf[0] & 0x0c) | 0x22);
 
         return buf;
     }

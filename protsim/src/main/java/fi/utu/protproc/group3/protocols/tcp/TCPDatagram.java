@@ -1,5 +1,7 @@
 package fi.utu.protproc.group3.protocols.tcp;
 
+import fi.utu.protproc.group3.utils.IPAddress;
+
 import java.util.Objects;
 
 /**
@@ -29,10 +31,8 @@ public interface TCPDatagram {
     */
 
     static TCPDatagram create(short sourcePort, short destinationPort, int seqN, int ackN,
-                              byte dataOffset, short flags, short window, short checksum, short urgentPointer,
-                              byte[] optionsAndPadding, byte[] payload) {
-        return new TCPDatagramImpl(sourcePort, destinationPort, seqN, ackN,
-                dataOffset, flags, window, checksum, urgentPointer, optionsAndPadding, payload);
+                              short flags, short window, short checksum, byte[] payload) {
+        return new TCPDatagramImpl(sourcePort, destinationPort, seqN, ackN, flags, window, checksum, payload);
     }
 
     static TCPDatagram parse(byte[] pdu){
@@ -53,13 +53,16 @@ public interface TCPDatagram {
     short getSourcePort();
     int getSeqN();
     int getAckN();
-    byte getDataOffset();
+
     short getFlags();
     short getWindow();
     int getChecksum();
-    int getUrgentPointer();
-    byte[] getOptionsAndPadding();
+
     byte[] getPayload();
 
-    byte[] serialize();
+    // the TCP protocol hexadecimal representation is 0x6 and is found in the Next Header field of the IPv6 header
+    // https://en.wikipedia.org/wiki/List_of_IP_protocol_numbers
+    // Then it is needed the protocol length which is given by TCP header + payload
+    // https://stackoverflow.com/questions/30858973/udp-checksum-calculation-for-ipv6-packet
+    byte[] serialize(IPAddress sourceIP, IPAddress destinationIP, byte protocol, short tcpLength);
 }

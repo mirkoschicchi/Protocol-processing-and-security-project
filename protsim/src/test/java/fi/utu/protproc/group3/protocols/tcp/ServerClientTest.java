@@ -31,14 +31,14 @@ public class ServerClientTest extends LanScenarioTest {
             }
         };
 
-        assertNull(lastConnection);
+        assertNull(TestConnection.lastConnection);
 
         clientConnection.connect(server.getIpAddress(), (short) 80);
 
         try {
             assertTrue(connectedEvent.await(1, TimeUnit.SECONDS));
-            assertNotNull(lastConnection);
-            assertEquals(1, lastConnection.state);
+            assertNotNull(TestConnection.lastConnection);
+            assertEquals(1, TestConnection.lastConnection.state);
         } catch (InterruptedException e) {
             fail(e);
         }
@@ -56,18 +56,20 @@ public class ServerClientTest extends LanScenarioTest {
             @Override
             public void connected(DatagramHandler.ConnectionState connectionState) {
                 super.connected(connectionState);
+
+                connectedEvent.countDown();
                 send("Test".getBytes());
             }
         };
 
-        assertNull(lastConnection);
+        assertNull(TestConnection.lastConnection);
 
         clientConnection.connect(server.getIpAddress(), (short) 80);
 
         try {
             assertTrue(connectedEvent.await(1, TimeUnit.SECONDS));
-            assertNotNull(lastConnection);
-            assertEquals(1, lastConnection.state);
+            assertNotNull(TestConnection.lastConnection);
+            assertEquals(2, TestConnection.lastConnection.state);
         } catch (InterruptedException e) {
             fail(e);
         }
@@ -92,19 +94,19 @@ public class ServerClientTest extends LanScenarioTest {
             @Override
             public void messageReceived(byte[] message) {
                 assertArrayEquals("Reply".getBytes(), message);
-                repliedEvent.countDown();;
+                repliedEvent.countDown();
             }
         };
 
-        assertNull(lastConnection);
-        nextReply = "Reply".getBytes();
+        assertNull(TestConnection.lastConnection);
+        TestConnection.nextReply = "Reply".getBytes();
 
         clientConnection.connect(server.getIpAddress(), (short) 80);
 
         try {
             assertTrue(repliedEvent.await(1, TimeUnit.SECONDS));
-            assertNotNull(lastConnection);
-            assertEquals(1, lastConnection.state);
+            assertNotNull(TestConnection.lastConnection);
+            assertEquals(2, TestConnection.lastConnection.state);
         } catch (InterruptedException e) {
             fail(e);
         }
@@ -121,6 +123,13 @@ public class ServerClientTest extends LanScenarioTest {
 
         var clientConnection = new Connection(client.getInterface()) {
             @Override
+            public void connected(DatagramHandler.ConnectionState connectionState) {
+                super.connected(connectionState);
+
+                connectedEvent.countDown();
+            }
+
+            @Override
             public void closed() {
                 super.closed();
 
@@ -128,18 +137,19 @@ public class ServerClientTest extends LanScenarioTest {
             }
         };
 
-        assertNull(lastConnection);
+        assertNull(TestConnection.lastConnection);
 
         clientConnection.connect(server.getIpAddress(), (short) 80);
 
         try {
             assertTrue(connectedEvent.await(1, TimeUnit.SECONDS));
-            assertNotNull(lastConnection);
-            assertEquals(1, lastConnection.state);
+            assertNotNull(TestConnection.lastConnection);
+            assertEquals(1, TestConnection.lastConnection.state);
 
             clientConnection.close();
 
-            assertEquals(0, lastConnection.state);
+            assertTrue(disconnectedEvent.await(1, TimeUnit.SECONDS));
+            assertEquals(0, TestConnection.lastConnection.state);
         } catch (InterruptedException e) {
             fail(e);
         }
@@ -149,13 +159,13 @@ public class ServerClientTest extends LanScenarioTest {
 
     @BeforeEach
     public void clearConnection() {
-        lastConnection = null;
-        nextReply = null;
+        TestConnection.lastConnection = null;
+        TestConnection.nextReply = null;
     }
 
-    private TestConnection lastConnection;
-    private byte[] nextReply;
-    class TestConnection extends Connection {
+    static class TestConnection extends Connection {
+        private static TestConnection lastConnection;
+        private static byte[] nextReply;
         public int state;
         public byte[] lastMessage;
 

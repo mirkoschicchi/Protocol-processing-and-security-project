@@ -49,15 +49,17 @@ public class ClientNodeImpl extends NetworkNodeImpl implements ClientNode {
         // TODO: Remove code below and send correct TCP packet to the destination
 
         var intf = getInterface();
+        byte[] payload = "GET / HTTP/1.0".getBytes();
         var frame = EthernetFrame.create(
                 dest.getInterface().getAddress(),
                 intf.getAddress(),
                 EthernetFrame.TYPE_IPV6,
                 IPv6Packet.create((byte) 6, (byte) 0, 0, (byte) 6, (byte) 128,
                         getIpAddress(), dest.getIpAddress(),
-                        TCPDatagram.create((short) 12345, (short) 80, 123784523, 0, (byte) 0,
-                                (short) 0, (short) 0, (short) 0, (short) 0, new byte[0], "GET / HTTP/1.0".getBytes()
-                        ).serialize()
+                        TCPDatagram.create((short) 12345, (short) 80, 123784523, 0,
+                                (short) 0, (short) 0, (short) 0, payload
+                        ).serialize(getIpAddress(), dest.getIpAddress(), (byte)6, (short)(20 + payload.length))
+                        // TODO: create helpers to manage variables to put in the serialize
                 ).serialize()
         );
 

@@ -1,6 +1,7 @@
 package fi.utu.protproc.group3.simulator;
 
 import fi.utu.protproc.group3.nodes.NetworkNode;
+import fi.utu.protproc.group3.nodes.RouterNode;
 import fi.utu.protproc.group3.protocols.tcp.DatagramHandler;
 import fi.utu.protproc.group3.utils.IPAddress;
 import reactor.core.publisher.Flux;
@@ -48,6 +49,21 @@ public class EthernetInterfaceImpl implements EthernetInterface {
         }
 
         return null;
+    }
+
+    @Override
+    public byte[] getDefaultRouter() {
+        var it =getNetwork().getDevices().stream()
+                .filter(i -> i.getHost() instanceof RouterNode)
+                .iterator();
+
+        var result = it.next();
+
+        if (it.hasNext()) {
+            throw new UnsupportedOperationException("Network with multiple routers.");
+        }
+
+        return result.getAddress();
     }
 
     @Override

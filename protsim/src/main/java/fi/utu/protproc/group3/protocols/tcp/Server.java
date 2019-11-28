@@ -21,7 +21,7 @@ public class Server {
         this.connectionHandler = connectionHandler;
     }
 
-    public Connection accept(DatagramHandler.ConnectionState connectionState) {
+    public Connection accept(DatagramHandler.ConnectionDescriptor descriptor) {
         try {
             return connectionHandler.getConstructor(EthernetInterface.class).newInstance(ethernetInterface);
         } catch (Exception e) {
