@@ -36,7 +36,6 @@ public class FSMImpl {
 
     private FSMImpl() {
         this.builder = StateMachineBuilderFactory.create(StateMachineSample.class, new Class<?>[] { InternalFSMCallbacks.class });
-        boolean ciao = true;
         // IDLE
         {
             builder.onEntry("IDLE").callMethod("onIdle");
@@ -52,25 +51,7 @@ public class FSMImpl {
             builder.externalTransition().from("CONNECT").to("IDLE").on(FSMEvent.ManualStop).callMethod("onManualStopConnect");
             builder.internalTransition().within("CONNECT").on(FSMEvent.ConnectRetryTimer_Expires).callMethod("onConnectRetryTimer_ExpiresConnect");
             builder.externalTransition().from("CONNECT").to("OPEN_SENT").on(FSMEvent.DelayOpenTimer_Expires).callMethod("onDelayOpenTimer_ExpiresConnect");
-            builder.internalTransition().within("CONNECT").on(FSMEvent.Tcp_CR_Acked)
-                    .whenMvel("MyCondition:::(ciao == true)").callMethod("onTcp_CR_Acked_TcpConnectionConfirmed_DelayOpenConnect");
-            builder.internalTransition().within("CONNECT").on(FSMEvent.TcpConnectionConfirmed)
-                    .when(new Condition<>() {
 
-                        @Override
-                        public boolean isSatisfied(Object o) {
-                            return ciao;
-                        }
-
-                        @Override
-                        public String name() {
-                            return null;
-                        }
-                    }).callMethod("onTcp_CR_Acked_TcpConnectionConfirmed_DelayOpenConnect");
-            builder.externalTransition().from("CONNECT").to("OPEN_SENT").on(FSMEvent.Tcp_CR_Acked)
-                    .whenMvel("MyCondition:::(delayOpen != true)").callMethod("onTcp_CR_Acked_TcpConnectionConfirmed_Connect");
-            builder.externalTransition().from("CONNECT").to("OPEN_SENT").on(FSMEvent.TcpConnectionConfirmed)
-                    .whenMvel("MyCondition:::(delayOpen != true)").callMethod("onTcp_CR_Acked_TcpConnectionConfirmed_Connect");
             builder.externalTransition().from("CONNECT").to("OPEN_CONFIRM").on(FSMEvent.BGPOpen_with_DelayOpenTimer_running).callMethod("onBGPOpen_with_DelayOpenTimer_runningConnect");
             builder.externalTransition().from("CONNECT").to("IDLE").on(FSMEvent.BGPHeaderErr).callMethod("onBGPHeaderErrConnect");
             builder.externalTransition().from("CONNECT").to("IDLE").on(FSMEvent.BGPOpenMsgErr).callMethod("onBGPOpenMsgErrConnect");
@@ -87,7 +68,7 @@ public class FSMImpl {
             builder.externalTransition().from("CONNECT").to("IDLE").on(FSMEvent.UpdateMsgErr).callMethod("onAnyOtherEventConnect");
         }
 
-        // ACTIVE}
+        // ACTIVE
         {
             builder.onEntry("ACTIVE").callMethod("onActive");
             builder.externalTransition().from("ACTIVE").to("IDLE").on(FSMEvent.ManualStop).callMethod("onManualStopActive");
@@ -356,9 +337,10 @@ public class FSMImpl {
 
 
         fsm.fire(FSMImpl.FSMEvent.AutomaticStart);
-        //fsm.fire(FSMImpl.FSMEvent.TcpConnectionConfirmed);
+        fsm.fire(FSMImpl.FSMEvent.TcpConnectionConfirmed);
 
         fsm1.fire(FSMImpl.FSMEvent.AutomaticStart);
+        fsm.fire(FSMEvent.BGPOpen_with_DelayOpenTimer_running);
     }
 
     @StateMachineParameters(stateType=String.class, eventType=FSMEvent.class, contextType=Integer.class)
@@ -373,9 +355,9 @@ public class FSMImpl {
         Timer keepaliveTimer = new Timer();
 
         // Optional attributes
-        boolean delayOpen = true;
         int delayOpenTime = 120; // Not sure
         Timer delayOpenTimer = new Timer();
+        boolean delayOpen = true;
         boolean dampPeerOscillations = false;
         boolean sendNOTIFICATIONwithoutOPEN = false;
 
@@ -1160,7 +1142,7 @@ public class FSMImpl {
             restartConnectRetryTimer();
 
             // continues to listen for a connection that may be initiated by the remote BGP peer
-            // TODO: Understand what does it mean
+            callbacks.listenForTCPConnection();
 
             // changes its state to Active
             LOGGER.info("Changing state from OPEN_SENT to ACTIVE");
