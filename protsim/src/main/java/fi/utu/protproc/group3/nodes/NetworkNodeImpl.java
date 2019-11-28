@@ -102,6 +102,11 @@ public abstract class NetworkNodeImpl implements SimpleNode, MultiInterfaceNode 
         }
     }
 
+    @Override
+    public boolean nodeIsRunning() {
+        return messageListener != null;
+    }
+
     protected void packetReceived(EthernetInterface intf, byte[] pdu) throws UnknownHostException {
         // NOP
     }

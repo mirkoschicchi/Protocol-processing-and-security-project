@@ -1,31 +1,25 @@
 package fi.utu.protproc.group3.simulator;
 
+import fi.utu.protproc.group3.nodes.NetworkNode;
 import org.graphstream.graph.implementations.MultiGraph;
 import org.graphstream.ui.view.Viewer;
 import org.graphstream.ui.view.ViewerListener;
 import org.graphstream.ui.view.ViewerPipe;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Map;
 
 public class UserInterfaceManager implements ViewerListener {
     private boolean loop = true;
+    private Map<String, NetworkNode> nodes;
 
-    public UserInterfaceManager(Viewer viewer, MultiGraph graph) {
-        // The default action when closing the view is to quit
-        // the program.
+    public UserInterfaceManager(@NotNull Viewer viewer, MultiGraph graph, Map<String, NetworkNode> nodes) {
+        this.nodes = nodes;
         viewer.setCloseFramePolicy(Viewer.CloseFramePolicy.HIDE_ONLY);
 
-        // We connect back the viewer to the graph,
-        // the graph becomes a sink for the viewer.
-        // We also install us as a viewer listener to
-        // intercept the graphic events.
         ViewerPipe fromViewer = viewer.newViewerPipe();
         fromViewer.addViewerListener(this);
         fromViewer.addSink(graph);
-
-        // Then we need a loop to wait for events.
-        // In this loop we will need to call the
-        // pump() method to copy back events that have
-        // already occurred in the viewer thread inside
-        // our thread.
 
         while(loop) {
             fromViewer.pump();
@@ -39,11 +33,18 @@ public class UserInterfaceManager implements ViewerListener {
 
     @Override
     public void buttonPushed(String s) {
-        System.out.println("Button pushed on node " + s);
+        if (nodes.containsKey(s)) {
+            var node = nodes.get(s);
+            if (node.nodeIsRunning()) {
+                node.shutdown();
+                System.out.println("Node SHUTDOWN: " + s);
+            } else {
+                node.start();
+                System.out.println("Node START: " + s);
+            }
+        }
     }
 
     @Override
-    public void buttonReleased(String s) {
-        System.out.println("Button released on node " + s);
-    }
+    public void buttonReleased(String s) { }
 }

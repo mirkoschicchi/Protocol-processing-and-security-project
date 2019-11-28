@@ -19,6 +19,11 @@ public class ClientNodeImpl extends NetworkNodeImpl implements ClientNode {
     private Disposable messageFlux;
 
     @Override
+    public boolean nodeIsRunning() {
+        return messageFlux != null;
+    }
+
+    @Override
     public void start() {
         super.start();
 

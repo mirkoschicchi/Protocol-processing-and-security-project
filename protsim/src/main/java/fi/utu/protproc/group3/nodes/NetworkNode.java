@@ -10,6 +10,7 @@ import java.util.Collection;
 public interface NetworkNode {
     String getHostname();
 
+    boolean nodeIsRunning();
     void start();
     void shutdown();
 }

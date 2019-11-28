@@ -9,7 +9,6 @@ import org.graphstream.algorithm.APSP;
 import org.graphstream.graph.Node;
 import org.graphstream.graph.implementations.MultiGraph;
 import org.graphstream.ui.view.Viewer;
-import org.graphstream.ui.view.util.MouseManager;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
@@ -112,6 +111,7 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
             for (var routerConf : configuration.getRouters()) {
                 var node = new RouterNodeImpl(context, routerConf);
                 nodes.put(node.getHostname(), node);
+
                 var gn = graph.addNode(node.getHostname());
                 gn.addAttributes(Map.of(
                         GraphAttributes.CLASS, "routers",
@@ -258,7 +258,7 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
                 graph.setAttribute("ui.stylesheet", css);
 
                 viewer = graph.display();
-                new UserInterfaceManager(viewer, graph);
+                new UserInterfaceManager(viewer, graph, nodes);
             } catch (IOException e) {
                 e.printStackTrace();
             }
