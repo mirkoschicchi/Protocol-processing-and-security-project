@@ -43,7 +43,8 @@ public interface Simulation {
      */
     ServerNode getRandomServer();
 
-    void start(String pcapFile);
+    void start(String pcapFile, String network);
+    void start();
     void show();
     void close();
     void stop();

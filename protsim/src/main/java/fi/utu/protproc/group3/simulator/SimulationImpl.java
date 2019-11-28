@@ -218,7 +218,12 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
     }
 
     @Override
-    public void start(String pcapFile) {
+    public void start() {
+        start(null, null);
+    }
+
+    @Override
+    public void start(String pcapFile, String network) {
         if (pcapFile != null) {
             try {
                 this.pcapStream = new FileOutputStream(pcapFile);
@@ -232,32 +237,36 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
 
                 pcapInterfaces = new HashMap<>();
 
-                networks.values().stream()
-                        .forEach(n -> {
-                            int index = pcapInterfaces.size();
-                            pcapInterfaces.put(n, index);
+                var capture = new ArrayList<Network>();
+                if (network != null) {
+                    capture.add(getNetwork(network));
+                } else {
+                    capture.addAll(networks.values());
+                }
 
-                            var name = (n.getNetworkName()).getBytes();
-                            var block = ByteBuffer.allocate(44 + name.length)
-                                    .putShort((short) 1).putShort((short) 0) // link type (ethernet)
-                                    .putInt(0) // snap len (unlimited)
-                                    .putShort((short) 5).putShort((short) 17) // if_IPv6addr
-                                    .put(n.getNetworkAddress().getAddress().toArray())
-                                    .put((byte) n.getNetworkAddress().getPrefixLength()).put((byte) 0).put((byte) 0).put((byte) 0)
-                                    .putShort((short) 9).putShort((short) 1) // if_tsresol
-                                    .put((byte) 0x03).put((byte) 0).put((byte) 0).put((byte) 0)
+                capture.forEach(n -> {
+                    int index = pcapInterfaces.size();
+                    pcapInterfaces.put(n, index);
 
-                                    // Name last so we don't have to worry about padding here
-                                    .putShort((short) 2).putShort((short) name.length) // if_name
-                                    .put(name)
-                                    ;
+                    var name = (n.getNetworkName()).getBytes();
+                    var block = ByteBuffer.allocate(44 + name.length)
+                            .putShort((short) 1).putShort((short) 0) // link type (ethernet)
+                            .putInt(0) // snap len (unlimited)
+                            .putShort((short) 5).putShort((short) 17) // if_IPv6addr
+                            .put(n.getNetworkAddress().getAddress().toArray())
+                            .put((byte) n.getNetworkAddress().getPrefixLength()).put((byte) 0).put((byte) 0).put((byte) 0)
+                            .putShort((short) 9).putShort((short) 1) // if_tsresol
+                            .put((byte) 0x03).put((byte) 0).put((byte) 0).put((byte) 0)
 
-                            writeBlock(0x00000001, block);
-                        });
+                            // Name last so we don't have to worry about padding here
+                            .putShort((short) 2).putShort((short) name.length) // if_name
+                            .put(name);
+
+                    writeBlock(0x00000001, block);
+                });
 
                 recording = Flux.merge((Iterable<Flux<byte[]>>)
-                        (networks.values().stream()
-                                .map(n -> n.getFlux().doOnEach(pdu -> this.recordPacket(n, pdu.get()))))::iterator
+                        (capture.stream().map(n -> n.getFlux().doOnEach(pdu -> this.recordPacket(n, pdu.get()))))::iterator
                 ).subscribe();
             } catch (IOException e) {
                 rootLogger.severe("Error while opening PCAP file: " + e);
@@ -359,15 +368,6 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
                 writeBlock(6, buf);
             }
         }
-    }
-
-    private long convertMac(byte[] buf, int pos) {
-        return buf[pos] << 40
-                | buf[pos+1] << 32
-                | buf[pos+2] << 24
-                | buf[pos+3] << 16
-                | buf[pos+4] << 8
-                | buf[pos+5] << 0;
     }
 
     class AutonomousSystem {

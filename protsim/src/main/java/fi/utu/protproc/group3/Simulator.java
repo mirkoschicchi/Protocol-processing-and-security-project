@@ -18,6 +18,9 @@ public class Simulator implements Callable<Integer> {
     @CommandLine.Option(names = { "-w", "--write" }, description = "Write network traffic to file (ngpcap file format)")
     private File networkFile;
 
+    @CommandLine.Option(names = { "-n", "--network" }, description = "Limit traffic capture to the given network")
+    private String network;
+
     @Override
     public Integer call() throws Exception {
         SimulationConfiguration config = null;
@@ -32,9 +35,9 @@ public class Simulator implements Callable<Integer> {
         var sim = Simulation.create(config);
         if (networkFile != null) {
             System.out.println("Writing pcap dump to " + networkFile.getAbsolutePath());
-            sim.start(networkFile.getAbsolutePath());
+            sim.start(networkFile.getAbsolutePath(), network);
         } else {
-            sim.start(null);
+            sim.start();
         }
 
         sim.show();

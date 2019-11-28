@@ -67,7 +67,7 @@ public abstract class ScenarioBasedTest {
         assertNotNull(simulation, "Could not load simulation " + simulationName);
 
         simulationLoaded();
-        simulation.start(null);
+        simulation.start();
     }
 
     @AfterEach
