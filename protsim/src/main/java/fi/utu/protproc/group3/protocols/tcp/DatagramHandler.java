@@ -34,8 +34,10 @@ public class DatagramHandler {
 
         ConnectionState state = null;
         var valid = false;
-        for (var i = 32268; i < 65535; i++) {
-            var descriptor = new ConnectionDescriptor(ethernetInterface.getIpAddress(), ipAddress, (short) i, port);
+        var rnd = new Random();
+        for (var i = 0; i < 100; i++) {
+            var srcPort = (short) (rnd.nextLong() & 0x7fff | 0x8000);
+            var descriptor = new ConnectionDescriptor(ethernetInterface.getIpAddress(), ipAddress, srcPort, port);
             state = new ConnectionState(descriptor, this, connection);
             if (stateTable.putIfAbsent(descriptor, state) == null) {
                 // YAY, port is free
@@ -81,43 +83,26 @@ public class DatagramHandler {
                         var server = servers.get(datagram.getDestinationPort());
                         if (server != null) {
                             var connection = server.accept(descriptor);
+                            if (connection != null) {
+                                state = new ConnectionState(descriptor, this, connection);
+                                state.update(datagram);
 
-                            state = new ConnectionState(descriptor, this, connection);
-                            state.update(datagram);
+                                stateTable.put(descriptor, state);
 
-                            stateTable.put(descriptor, state);
-
-                            state.send(null, (short) (TCPDatagram.SYN | TCPDatagram.ACK));
+                                state.send(null, (short) (TCPDatagram.SYN | TCPDatagram.ACK));
+                            }
                         }
                     }
                 } else if (flags == (TCPDatagram.SYN | TCPDatagram.ACK) && state.status == ConnectionStatus.Setup) {
                     if (datagram.getAckN() == state.seqN) {
                         // Connection is establishing
                         state.send(null, TCPDatagram.ACK);
+                        state.status = ConnectionStatus.Established;
                         state.connection.connected(state);
                     } else {
                         LOGGER.warning("TCP connection in setup state has wrong ACKN. Closing.");
                         state.connection.closed();
                         stateTable.remove(state.descriptor);
-                    }
-                } else if (flags == TCPDatagram.ACK) {
-                    switch (state.status) {
-                        case Setup:
-                            state.status = ConnectionStatus.Established;
-                            state.connection.connected(state);
-                            break;
-                        case Established:
-                            if (datagram.getPayload() != null) {
-                                state.connection.messageReceived(datagram.getPayload());
-                            }
-                            break;
-                        case Closing:
-                            if (state.seqN != datagram.getAckN()) {
-                                LOGGER.warning("TCP connection in closing state has wrong ACKN. Closing.");
-                            }
-                            state.connection.closed();
-                            stateTable.remove(state.descriptor);
-                            break;
                     }
                 } else if ((flags & TCPDatagram.FIN) == TCPDatagram.FIN) {
                     switch (state.status) {
@@ -135,6 +120,24 @@ public class DatagramHandler {
                 } else if (flags == TCPDatagram.RST) {
                     state.status = ConnectionStatus.Closed;
                     state.connection.closed();
+                } else if (state.status == ConnectionStatus.Established) {
+                    if (datagram.getPayload() != null) {
+                        state.connection.messageReceived(datagram.getPayload());
+                    }
+                } else if (flags == TCPDatagram.ACK) {
+                    switch (state.status) {
+                        case Setup:
+                            state.status = ConnectionStatus.Established;
+                            state.connection.connected(state);
+                            break;
+                        case Closing:
+                            if (state.seqN != datagram.getAckN()) {
+                                LOGGER.warning("TCP connection in closing state has wrong ACKN. Closing.");
+                            }
+                            state.connection.closed();
+                            stateTable.remove(state.descriptor);
+                            break;
+                    }
                 }
             }
         }
@@ -192,12 +195,13 @@ public class DatagramHandler {
         Closing,
     }
 
-    class ConnectionState {
+    public class ConnectionState {
         private final ConnectionDescriptor descriptor;
         private final DatagramHandler handler;
         private final Connection connection;
         private ConnectionStatus status;
         private int seqN;
+        private int peerSeqN;
         private int ackN;
 
         public ConnectionState(ConnectionDescriptor descriptor, DatagramHandler handler, Connection connection) {
@@ -215,12 +219,12 @@ public class DatagramHandler {
         }
 
         public void update(TCPDatagram datagram) {
-            this.ackN = datagram.getSeqN();
+            this.peerSeqN = datagram.getSeqN();
 
             if (datagram.getPayload() == null || datagram.getPayload().length == 0) {
-                this.ackN++;
+                this.peerSeqN++;
             } else {
-                this.ackN += datagram.getPayload().length;
+                this.peerSeqN += datagram.getPayload().length;
             }
         }
 
@@ -229,11 +233,12 @@ public class DatagramHandler {
         }
 
         public void send(byte[] message, short flags) {
-            if ((flags & (TCPDatagram.SYN | TCPDatagram.RST)) == 0) {
+            if (this.ackN != this.peerSeqN &&  (flags & (TCPDatagram.SYN | TCPDatagram.RST)) == 0) {
                 flags |= TCPDatagram.ACK;
             }
 
-            var datagram = TCPDatagram.create(descriptor.localPort, descriptor.remotePort, this.seqN, this.ackN, flags,
+            var ackN = (flags & (TCPDatagram.ACK | TCPDatagram.SYN)) != 0 ? this.peerSeqN : 0;
+            var datagram = TCPDatagram.create(descriptor.localPort, descriptor.remotePort, this.seqN, ackN, flags,
                     (short) 0xffff, (short) 0, message);
 
             var payloadLength = datagram.getPayload() != null ? datagram.getPayload().length : 0;
@@ -244,6 +249,7 @@ public class DatagramHandler {
             if (destMac == null) {
                 destMac = handler.ethernetInterface.getDefaultRouter();
             }
+
             var frame = EthernetFrame.create(destMac, handler.ethernetInterface.getAddress(), EthernetFrame.TYPE_IPV6,
                     packet.serialize());
 

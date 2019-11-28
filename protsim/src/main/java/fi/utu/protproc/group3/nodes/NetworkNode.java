@@ -9,6 +9,7 @@ import java.util.Collection;
  */
 public interface NetworkNode {
     String getHostname();
+    Collection<EthernetInterface> getInterfaces();
 
     boolean nodeIsRunning();
     void start();

@@ -3,6 +3,8 @@ package fi.utu.protproc.group3.nodes;
 import fi.utu.protproc.group3.configuration.NodeConfiguration;
 import fi.utu.protproc.group3.protocols.EthernetFrame;
 import fi.utu.protproc.group3.protocols.IPv6Packet;
+import fi.utu.protproc.group3.protocols.tcp.Connection;
+import fi.utu.protproc.group3.protocols.tcp.DatagramHandler;
 import fi.utu.protproc.group3.protocols.tcp.TCPDatagram;
 import fi.utu.protproc.group3.simulator.*;
 import reactor.core.Disposable;
@@ -46,35 +48,31 @@ public class ClientNodeImpl extends NetworkNodeImpl implements ClientNode {
     }
 
     private void sendMessage(long messageId) {
-        var dest = simulation.getRandomServer();
-
-//        var tcpConn = TCPClient.connect(dest.getInterfaces().iterator().next().getIpAddresses().iterator().next(), 23);
-//
-//        tcpConn.send();
-        // TODO: Remove code below and send correct TCP packet to the destination
-
-        var intf = getInterface();
-        byte[] payload = "GET / HTTP/1.0".getBytes();
-        var frame = EthernetFrame.create(
-                dest.getInterface().getAddress(),
-                intf.getAddress(),
-                EthernetFrame.TYPE_IPV6,
-                IPv6Packet.create((byte) 6, (byte) 0, 0, (byte) 6, (byte) 128,
-                        getIpAddress(), dest.getIpAddress(),
-                        TCPDatagram.create((short) 12345, (short) 80, 123784523, 0,
-                                (short) 0, (short) 0, (short) 0, payload
-                        ).serialize(getIpAddress(), dest.getIpAddress(), (byte)6, (short)(20 + payload.length))
-                        // TODO: create helpers to manage variables to put in the serialize
-                ).serialize()
-        );
-
-        intf.getNetwork().transmit(frame.serialize());
+        if (nodeIsRunning()) {
+            var dest = simulation.getRandomServer();
+            if (dest != null) {
+                getInterface().getTCPHandler().connect(new SimpleHttpClientConnection(getInterface()), dest.getIpAddress(), (short) 80);
+            }
+        }
     }
 
-    @Override
-    protected void packetReceived(EthernetInterface intf, byte[] pdu) throws UnknownHostException {
-        super.packetReceived(intf, pdu);
+    static class SimpleHttpClientConnection extends Connection {
+        public SimpleHttpClientConnection(EthernetInterface ethernetInterface) {
+            super(ethernetInterface);
+        }
 
-        // TODO: Handle reply
+        @Override
+        public void connected(DatagramHandler.ConnectionState connectionState) {
+            super.connected(connectionState);
+
+            send("GET / HTTP/1.0".getBytes());
+        }
+
+        @Override
+        public void messageReceived(byte[] message) {
+            super.messageReceived(message);
+
+            close();
+        }
     }
 }

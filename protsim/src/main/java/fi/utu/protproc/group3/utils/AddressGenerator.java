@@ -27,15 +27,17 @@ public class AddressGenerator {
     public NetworkAddress networkAddress(String value) {
         if (value != null) return NetworkAddress.parse(value);
 
-        // Generate random /56 network
-        var netAddr = new byte[16];
-        random.nextBytes(netAddr);
+        var subnet = new byte[4];
+        random.nextBytes(subnet);
 
-        for (var i = 6; i < 16; i++) {
-            netAddr[i] = 0;
-        }
+        var result = new byte[] {
+                (byte) 0xfe, (byte) 0x80, // local address
+                (byte) 0xbe, (byte) 0xef, // our prefix
+                subnet[0], subnet[1], subnet[2], subnet[3],
+                0, 0, 0, 0, 0, 0, 0, 0
+        };
 
-        return new NetworkAddress(new IPAddress(netAddr), 6 * 8);
+        return new NetworkAddress(new IPAddress(result), 64);
     }
 
     public IPAddress ipAddress(NetworkAddress network, String value) {

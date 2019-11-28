@@ -9,7 +9,7 @@ import fi.utu.protproc.group3.utils.AddressGenerator;
 import java.util.Collection;
 import java.util.Objects;
 
-public interface RouterNode extends MultiInterfaceNode {
+public interface RouterNode extends NetworkNode {
     RoutingTable getRoutingTable();
 
     int getAutonomousSystem();

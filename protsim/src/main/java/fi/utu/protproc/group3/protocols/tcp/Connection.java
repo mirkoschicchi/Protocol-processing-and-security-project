@@ -7,7 +7,7 @@ import fi.utu.protproc.group3.utils.IPAddress;
 import java.util.Objects;
 
 public abstract class Connection {
-    private final EthernetInterface ethernetInterface;
+    protected final EthernetInterface ethernetInterface;
     protected DatagramHandler.ConnectionState connectionState;
 
     public Connection(EthernetInterface ethernetInterface) {

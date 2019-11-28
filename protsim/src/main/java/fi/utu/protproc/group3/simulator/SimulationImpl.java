@@ -28,6 +28,7 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
     private String description;
     private String name;
     private FileOutputStream pcapStream;
+    private Map<Network, Integer> pcapInterfaces;
     private List<ServerNode> servers;
     private MultiGraph graph;
     private Viewer viewer;
@@ -222,18 +223,42 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
             try {
                 this.pcapStream = new FileOutputStream(pcapFile);
 
-                var buf = ByteBuffer.allocate(24)
-                        .putInt(0xa1b2c3d4)
-                        .putShort((short) 2).putShort((short) 4)
-                        .putInt(0)
-                        .putInt(0)
-                        .putInt(65535)
-                        .putInt(1);
+                var shbContent = ByteBuffer.allocate(16)
+                        .putInt(0x1A2B3C4D)
+                        .putShort((short) 1).putShort((short) 0)
+                        .putLong(-1);
 
-                pcapStream.write(buf.array());
+                writeBlock(0x0A0D0D0A, shbContent);
 
-                recording = Flux.merge((Iterable<Flux<byte[]>>) networks.values().stream().map(Network::getFlux)::iterator)
-                        .subscribe(this::recordPacket);
+                pcapInterfaces = new HashMap<>();
+
+                networks.values().stream()
+                        .forEach(n -> {
+                            int index = pcapInterfaces.size();
+                            pcapInterfaces.put(n, index);
+
+                            var name = (n.getNetworkName()).getBytes();
+                            var block = ByteBuffer.allocate(44 + name.length)
+                                    .putShort((short) 1).putShort((short) 0) // link type (ethernet)
+                                    .putInt(0) // snap len (unlimited)
+                                    .putShort((short) 5).putShort((short) 17) // if_IPv6addr
+                                    .put(n.getNetworkAddress().getAddress().toArray())
+                                    .put((byte) n.getNetworkAddress().getPrefixLength()).put((byte) 0).put((byte) 0).put((byte) 0)
+                                    .putShort((short) 9).putShort((short) 1) // if_tsresol
+                                    .put((byte) 0x03).put((byte) 0).put((byte) 0).put((byte) 0)
+
+                                    // Name last so we don't have to worry about padding here
+                                    .putShort((short) 2).putShort((short) name.length) // if_name
+                                    .put(name)
+                                    ;
+
+                            writeBlock(0x00000001, block);
+                        });
+
+                recording = Flux.merge((Iterable<Flux<byte[]>>)
+                        (networks.values().stream()
+                                .map(n -> n.getFlux().doOnEach(pdu -> this.recordPacket(n, pdu.get()))))::iterator
+                ).subscribe();
             } catch (IOException e) {
                 rootLogger.severe("Error while opening PCAP file: " + e);
                 pcapStream = null;
@@ -262,6 +287,25 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    private void writeBlock(int type, ByteBuffer data) {
+        Objects.requireNonNull(data);
+
+        try {
+            var buf = ByteBuffer.allocate(12 + 4 * ((data.limit() + 3) / 4));
+            buf.putInt(type)
+                    .putInt(buf.limit())
+                    .put(data.array())
+                    .position(buf.limit() - 4)
+                    .putInt(buf.limit());
+
+            pcapStream.write(buf.array());
+        } catch (IOException e) {
+            e.printStackTrace();
+            pcapStream = null;
+            recording.dispose();
         }
     }
 
@@ -298,24 +342,32 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
 
     private Disposable recording;
 
-    private void recordPacket(byte[] pdu) {
+    private void recordPacket(Network network, byte[] pdu) {
         if (pcapStream != null) {
             long timeStamp = System.currentTimeMillis();
-            var buf = ByteBuffer.allocate(16 + pdu.length)
-                    .putInt((int) timeStamp / 1000)
-                    .putInt((int) ((timeStamp % 1000) * 1000))
+            var index = pcapInterfaces.get(network);
+
+            var buf = ByteBuffer.allocate(20 + pdu.length)
+                    .putInt(index)
+                    .putInt((int) (timeStamp >> 32))
+                    .putInt((int) (timeStamp & 0xffffffff))
                     .putInt(pdu.length)
                     .putInt(pdu.length)
                     .put(pdu);
 
             synchronized (pcapStream) {
-                try {
-                    pcapStream.write(buf.array());
-                } catch (IOException e) {
-                    rootLogger.severe("Error while recording packet: " + e);
-                }
+                writeBlock(6, buf);
             }
         }
+    }
+
+    private long convertMac(byte[] buf, int pos) {
+        return buf[pos] << 40
+                | buf[pos+1] << 32
+                | buf[pos+2] << 24
+                | buf[pos+3] << 16
+                | buf[pos+4] << 8
+                | buf[pos+5] << 0;
     }
 
     class AutonomousSystem {

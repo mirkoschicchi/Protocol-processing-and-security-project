@@ -11,7 +11,7 @@ import java.net.UnknownHostException;
 import java.util.*;
 
 
-public abstract class NetworkNodeImpl implements SimpleNode, MultiInterfaceNode {
+public abstract class NetworkNodeImpl implements NetworkNode, SimpleNode {
     protected final Simulation simulation;
     protected final String hostname;
     protected final List<EthernetInterface> interfaces = new ArrayList<>();
