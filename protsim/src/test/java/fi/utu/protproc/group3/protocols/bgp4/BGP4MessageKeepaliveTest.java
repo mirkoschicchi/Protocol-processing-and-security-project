@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class BGP4MessageKeepaliveTest {
     @Test
     public void createMessage() {
-        var message = BGP4MessageKeepalive.create((short) 19, BGP4Message.TYPE_KEEPALIVE);
+        var message = BGP4MessageKeepalive.create();
 
         assertNotNull(message);
 

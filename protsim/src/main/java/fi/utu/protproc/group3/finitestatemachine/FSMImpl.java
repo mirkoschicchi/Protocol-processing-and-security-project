@@ -1,6 +1,7 @@
 package fi.utu.protproc.group3.finitestatemachine;
 
 import fi.utu.protproc.group3.protocols.bgp4.BGP4MessageNotification;
+import org.squirrelframework.foundation.fsm.Condition;
 import org.squirrelframework.foundation.fsm.StateMachineBuilderFactory;
 import org.squirrelframework.foundation.fsm.UntypedStateMachine;
 import org.squirrelframework.foundation.fsm.UntypedStateMachineBuilder;
@@ -35,7 +36,7 @@ public class FSMImpl {
 
     private FSMImpl() {
         this.builder = StateMachineBuilderFactory.create(StateMachineSample.class, new Class<?>[] { InternalFSMCallbacks.class });
-
+        boolean ciao = true;
         // IDLE
         {
             builder.onEntry("IDLE").callMethod("onIdle");
@@ -51,6 +52,25 @@ public class FSMImpl {
             builder.externalTransition().from("CONNECT").to("IDLE").on(FSMEvent.ManualStop).callMethod("onManualStopConnect");
             builder.internalTransition().within("CONNECT").on(FSMEvent.ConnectRetryTimer_Expires).callMethod("onConnectRetryTimer_ExpiresConnect");
             builder.externalTransition().from("CONNECT").to("OPEN_SENT").on(FSMEvent.DelayOpenTimer_Expires).callMethod("onDelayOpenTimer_ExpiresConnect");
+            builder.internalTransition().within("CONNECT").on(FSMEvent.Tcp_CR_Acked)
+                    .whenMvel("MyCondition:::(ciao == true)").callMethod("onTcp_CR_Acked_TcpConnectionConfirmed_DelayOpenConnect");
+            builder.internalTransition().within("CONNECT").on(FSMEvent.TcpConnectionConfirmed)
+                    .when(new Condition<>() {
+
+                        @Override
+                        public boolean isSatisfied(Object o) {
+                            return ciao;
+                        }
+
+                        @Override
+                        public String name() {
+                            return null;
+                        }
+                    }).callMethod("onTcp_CR_Acked_TcpConnectionConfirmed_DelayOpenConnect");
+            builder.externalTransition().from("CONNECT").to("OPEN_SENT").on(FSMEvent.Tcp_CR_Acked)
+                    .whenMvel("MyCondition:::(delayOpen != true)").callMethod("onTcp_CR_Acked_TcpConnectionConfirmed_Connect");
+            builder.externalTransition().from("CONNECT").to("OPEN_SENT").on(FSMEvent.TcpConnectionConfirmed)
+                    .whenMvel("MyCondition:::(delayOpen != true)").callMethod("onTcp_CR_Acked_TcpConnectionConfirmed_Connect");
             builder.externalTransition().from("CONNECT").to("OPEN_CONFIRM").on(FSMEvent.BGPOpen_with_DelayOpenTimer_running).callMethod("onBGPOpen_with_DelayOpenTimer_runningConnect");
             builder.externalTransition().from("CONNECT").to("IDLE").on(FSMEvent.BGPHeaderErr).callMethod("onBGPHeaderErrConnect");
             builder.externalTransition().from("CONNECT").to("IDLE").on(FSMEvent.BGPOpenMsgErr).callMethod("onBGPOpenMsgErrConnect");
@@ -160,23 +180,204 @@ public class FSMImpl {
         }
     }
 
+    public static void main(String[] args) {
+        UntypedStateMachine fsm = FSMImpl.newInstance(new InternalFSMCallbacksImpl() {
+            @Override
+            public void connectRemotePeer() {
+
+            }
+
+            @Override
+            public void releaseBGPResources() {
+
+            }
+
+            @Override
+            public void completeBGPPeerInitialization() {
+
+            }
+
+            @Override
+            public void dropTCPConnection() {
+
+            }
+
+            @Override
+            public void sendOpenMessage() {
+
+            }
+
+            @Override
+            public void sendKeepaliveMessage() {
+
+            }
+
+            @Override
+            public void sendNotificationMessage(byte errorCode) {
+
+            }
+
+            @Override
+            public void performPeerOscillationDamping() {
+
+            }
+
+            @Override
+            public void closeBGPConnection() {
+
+            }
+
+            @Override
+            public void checkCollisionDetection() {
+
+            }
+
+            @Override
+            public void deleteAllRoutes() {
+
+            }
+
+            @Override
+            public void processUpdateMessage() {
+
+            }
+
+            @Override
+            public void initializeBGPResources() {
+
+            }
+
+            @Override
+            public void initiateTCPConnection() {
+
+            }
+
+            @Override
+            public void listenForTCPConnection() {
+
+            }
+
+            @Override
+            public void processTCPConnection() {
+
+            }
+
+            @Override
+            public void rejectTCPConnection() {
+
+            }
+        });
+        UntypedStateMachine fsm1 = FSMImpl.newInstance(new InternalFSMCallbacksImpl() {
+            @Override
+            public void connectRemotePeer() {
+
+            }
+
+            @Override
+            public void releaseBGPResources() {
+
+            }
+
+            @Override
+            public void completeBGPPeerInitialization() {
+
+            }
+
+            @Override
+            public void dropTCPConnection() {
+
+            }
+
+            @Override
+            public void sendOpenMessage() {
+
+            }
+
+            @Override
+            public void sendKeepaliveMessage() {
+
+            }
+
+            @Override
+            public void sendNotificationMessage(byte errorCode) {
+
+            }
+
+            @Override
+            public void performPeerOscillationDamping() {
+
+            }
+
+            @Override
+            public void closeBGPConnection() {
+
+            }
+
+            @Override
+            public void checkCollisionDetection() {
+
+            }
+
+            @Override
+            public void deleteAllRoutes() {
+
+            }
+
+            @Override
+            public void processUpdateMessage() {
+
+            }
+
+            @Override
+            public void initializeBGPResources() {
+
+            }
+
+            @Override
+            public void initiateTCPConnection() {
+
+            }
+
+            @Override
+            public void listenForTCPConnection() {
+
+            }
+
+            @Override
+            public void processTCPConnection() {
+
+            }
+
+            @Override
+            public void rejectTCPConnection() {
+
+            }
+        });
+
+
+        fsm.fire(FSMImpl.FSMEvent.AutomaticStart);
+        //fsm.fire(FSMImpl.FSMEvent.TcpConnectionConfirmed);
+
+        fsm1.fire(FSMImpl.FSMEvent.AutomaticStart);
+    }
 
     @StateMachineParameters(stateType=String.class, eventType=FSMEvent.class, contextType=Integer.class)
     static class StateMachineSample extends AbstractUntypedStateMachine {
-        static int connectRetryCounter = 0;
-        static int connectRetryTime = 120;
-        static int holdTime = 90;
-        static int keepaliveTime = 30;
+        int connectRetryCounter = 0;
+        int connectRetryTime = 120;
+        int holdTime = 90;
+        int keepaliveTime = 30;
 
         Timer connectRetryTimer = new Timer();
         Timer holdTimer = new Timer();
         Timer keepaliveTimer = new Timer();
 
         // Optional attributes
-        static int delayOpenTime = 120; // Not sure
+        boolean delayOpen = true;
+        int delayOpenTime = 120; // Not sure
         Timer delayOpenTimer = new Timer();
-        static boolean dampPeerOscillations = false;
-        static boolean sendNOTIFICATIONwithoutOPEN = false;
+        boolean dampPeerOscillations = false;
+        boolean sendNOTIFICATIONwithoutOPEN = false;
 
         private final InternalFSMCallbacks callbacks;
 
@@ -193,6 +394,7 @@ public class FSMImpl {
                     connectRetryTime--;
                 } else {
                     // stop the timer
+                    fire(FSMEvent.ConnectRetryTimer_Expires);
                     cancel();
                 }
             }
@@ -205,6 +407,7 @@ public class FSMImpl {
                     delayOpenTime--;
                 } else {
                     // stop the timer
+                    fire(FSMEvent.DelayOpenTimer_Expires);
                     cancel();
                 }
             }
@@ -217,6 +420,7 @@ public class FSMImpl {
                     holdTime--;
                 } else {
                     // stop the timer
+                    fire(FSMEvent.HoldTimer_Expires);
                     cancel();
                 }
             }
@@ -229,6 +433,7 @@ public class FSMImpl {
                     keepaliveTime--;
                 } else {
                     // stop the timer
+                    fire(FSMEvent.KeepaliveTimer_Expires);
                     cancel();
                 }
             }
@@ -244,12 +449,15 @@ public class FSMImpl {
                 public void run() {
                     if (connectRetryTime > 0) {
                         connectRetryTime--;
+                        LOGGER.info("Connect Retry Timer: " + connectRetryTime);
                     } else {
                         // stop the timer
-                        cancel();
+                        fire(FSMEvent.ConnectRetryTimer_Expires);
                     }
                 }
             };
+
+            connectRetryTimer.schedule(this.connectRetryTimerTask, 0, 1000);
         }
 
         void restartDelayOpenTimer() {
@@ -262,12 +470,15 @@ public class FSMImpl {
                 public void run() {
                     if (delayOpenTime > 0) {
                         delayOpenTime--;
+                        LOGGER.info("Delay Open Timer: " + delayOpenTime);
                     } else {
                         // stop the timer
-                        cancel();
+                        fire(FSMEvent.DelayOpenTimer_Expires);
                     }
                 }
             };
+
+            delayOpenTimer.schedule(this.delayOpenTimerTask, 0, 1000);
         }
 
         void restartHoldTimer(int time) {
@@ -281,12 +492,15 @@ public class FSMImpl {
                 public void run() {
                     if (holdTime > 0) {
                         holdTime--;
+                        LOGGER.info("Hold Timer: " + holdTime);
                     } else {
                         // stop the timer
-                        cancel();
+                        fire(FSMEvent.HoldTimer_Expires);
                     }
                 }
             };
+
+            holdTimer.schedule(this.holdTimerTask, 0, 1000);
         }
 
         void restartKeepaliveTimer() {
@@ -300,12 +514,15 @@ public class FSMImpl {
                 public void run() {
                     if (keepaliveTime > 0) {
                         keepaliveTime--;
+                        LOGGER.info("Keepalive Timer: " + keepaliveTime);
                     } else {
                         // stop the timer
-                        cancel();
+                        fire(FSMEvent.KeepaliveTimer_Expires);
                     }
                 }
             };
+
+            keepaliveTimer.schedule(this.keepaliveTimerTask, 0, 1000);
         }
 
         // IDLE -------------------------------------------------------------------------------------------------------
@@ -317,9 +534,7 @@ public class FSMImpl {
             connectRetryCounter = 0;
 
             // starts the ConnectRetryTimer with the initial value
-            //if(connectRetryTimerTask.scheduledExecutionTime() > 0) {
             restartConnectRetryTimer();
-            connectRetryTimer.schedule(connectRetryTimerTask, 0, 1000);
 
             // initiates a TCP connection to the other BGP peer
             callbacks.connectRemotePeer();
@@ -329,7 +544,6 @@ public class FSMImpl {
 
             // changes its state to Connect
             LOGGER.info("Changing state from IDLE to CONNECT");
-            //LOGGER.info("");
         }
 
         protected void onManualStart_with_PassiveTcpEstablishment_AutomaticStart_with_PassiveTcpEstablishmentIdle(String from, String to, FSMEvent event, Integer context) {
@@ -377,10 +591,7 @@ public class FSMImpl {
             callbacks.dropTCPConnection();
 
             // restarts the ConnectRetryTimer
-            if(connectRetryTimerTask.scheduledExecutionTime() > 0 && connectRetryTime > 0) {
-                restartConnectRetryTimer();
-                connectRetryTimer.schedule(connectRetryTimerTask, 0, 1000);
-            }
+            restartConnectRetryTimer();
 
             // stops the DelayOpenTimer and resets the timer to zero{
             if(delayOpenTimerTask.scheduledExecutionTime() > 0 && delayOpenTime > 0) {
@@ -403,15 +614,45 @@ public class FSMImpl {
             callbacks.sendOpenMessage();
 
             // sets the HoldTimer to a large value
-            if(holdTimerTask.scheduledExecutionTime() > 0 && holdTime > 0) {
-                restartHoldTimer(240);
-                holdTimer.schedule(holdTimerTask, 0, 1000);
-            }
+            restartHoldTimer(240);
 
             // changes its state to OpenSent
             LOGGER.info("Changing state from CONNECT to OPEN_SENT");
         }
 
+        public void onTcp_CR_Acked_TcpConnectionConfirmed_DelayOpenConnect(String from, String to, FSMEvent event, Integer context) {
+            // stops the ConnectRetryTimer (if running) and sets the ConnectRetryTimer to zero
+            if(connectRetryTimerTask.scheduledExecutionTime() > 0) {
+                connectRetryTimer.cancel();
+                connectRetryTime = 0;
+            }
+
+            // sets the DelayOpenTimer to the initial value
+            restartDelayOpenTimer();
+
+            // stays in the Connect state
+            LOGGER.info("Remaining in CONNECT state");
+        }
+
+        public void onTcp_CR_Acked_TcpConnectionConfirmedConnect(String from, String to, FSMEvent event, Integer context) {
+            // stops the ConnectRetryTimer (if running) and sets the ConnectRetryTimer to zero
+            if(connectRetryTimerTask.scheduledExecutionTime() > 0) {
+                connectRetryTimer.cancel();
+                connectRetryTime = 0;
+            }
+
+            // completes BGP initialization
+            callbacks.completeBGPPeerInitialization();
+
+            // sends an OPEN message to its peer
+            callbacks.sendOpenMessage();
+
+            // sets the HoldTimer to a large value
+            restartHoldTimer(240);
+
+            // changes its state to OpenSent
+            LOGGER.info("Changing state from CONNECT to OPEN_SENT");
+        }
         // TODO: If the TCP connection succeeds (Event 16 or Event 17), the local
         //      system checks the DelayOpen attribute prior to processing.  If the
         //      DelayOpen attribute is set to TRUE, the local system:
@@ -467,11 +708,9 @@ public class FSMImpl {
             if(holdTimerTask.scheduledExecutionTime() > 0 && holdTime != 0) {
                 // starts the KeepaliveTimer with the initial value
                 restartKeepaliveTimer();
-                keepaliveTimer.schedule(keepaliveTimerTask, 0, 1000);
 
                 // resets the HoldTimer to the negotiated value
                restartHoldTimer(90);
-                holdTimer.schedule(holdTimerTask, 0, 1000);
             } else {
                 // resets the KeepaliveTimer
                 if(keepaliveTimerTask.scheduledExecutionTime() > 0 && keepaliveTime > 0) {
@@ -666,10 +905,7 @@ public class FSMImpl {
 
         protected void onConnectRetryTimer_ExpiresActive(String from, String to, FSMEvent event, Integer context) {
             // restarts the ConnectRetryTimer (with initial value)
-            if(connectRetryTimerTask.scheduledExecutionTime() > 0 && connectRetryTime > 0) {
-                restartConnectRetryTimer();
-                connectRetryTimer.schedule(connectRetryTimerTask, 0, 1000);
-            }
+            restartConnectRetryTimer();
 
             // initiates a TCP connection to the other BGP peer
             callbacks.connectRemotePeer();
@@ -701,10 +937,8 @@ public class FSMImpl {
             callbacks.sendOpenMessage();
 
             // sets its hold timer to a large value, and
-            if(holdTimerTask.scheduledExecutionTime() > 0 && holdTime > 0) {
-                restartHoldTimer(240);
-                holdTimer.schedule(holdTimerTask, 0, 1000);
-            }
+            restartHoldTimer(240);
+            holdTimer.schedule(holdTimerTask, 0, 1000);
 
             // changes its state to OpenSent
             LOGGER.info("Changing state from ACTIVE to OPEN_SENT");
@@ -746,10 +980,7 @@ public class FSMImpl {
 
         protected void onTcpConnectionFailsActive(String from, String to, FSMEvent event, Integer context) {
             // restarts the ConnectRetryTimer (with the initial value)
-            if(connectRetryTimerTask.scheduledExecutionTime() > 0 && connectRetryTime > 0) {
-                restartConnectRetryTimer();
-                connectRetryTimer.schedule(connectRetryTimerTask, 0, 1000);
-            }
+            restartConnectRetryTimer();
 
             // stops and clears the DelayOpenTimer (sets the value to zero)
             if(delayOpenTimerTask.scheduledExecutionTime() > 0 && delayOpenTime > 0) {
@@ -796,12 +1027,11 @@ public class FSMImpl {
 
             if(holdTime > 0 && holdTimerTask.scheduledExecutionTime() > 0) {
                 // starts the KeepaliveTimer to initial value
-                if(keepaliveTimerTask.scheduledExecutionTime() > 0)
-                    restartKeepaliveTimer();
+                restartKeepaliveTimer();
                 keepaliveTimer.schedule(keepaliveTimerTask, 0, 1000);
 
                 // resets the HoldTimer to the negotiated value
-                holdTime = 90;
+                restartHoldTimer(90);
             } else {
                 // resets the KeepaliveTimer (set to zero)
                 if(keepaliveTimerTask.scheduledExecutionTime() > 0) {
@@ -1032,9 +1262,7 @@ public class FSMImpl {
             callbacks.closeBGPConnection();
 
             // restarts the ConnectRetryTimer
-            if(connectRetryTimerTask.scheduledExecutionTime() > 0)
-                restartConnectRetryTimer();
-            connectRetryTimer.schedule(connectRetryTimerTask, 0, 1000);
+            restartConnectRetryTimer();
 
             // continues to listen for a connection that may be initiated by the remote BGP peer
             // TODO: Understand what does it mean
@@ -1058,14 +1286,10 @@ public class FSMImpl {
             callbacks.sendKeepaliveMessage();
 
             // sets a KeepaliveTimer
-            if(keepaliveTimerTask.scheduledExecutionTime() > 0)
-                restartKeepaliveTimer();
-            keepaliveTimer.schedule(keepaliveTimerTask,0, 1000);
+            restartKeepaliveTimer();
 
             // sets the HoldTimer according to the negotiated value
-            if(holdTimerTask.scheduledExecutionTime() > 0)
-                restartHoldTimer(90);
-            holdTimer.schedule(holdTimerTask, 0, 1000);
+            restartHoldTimer(90);
 
             // changes its state to OpenConfirm
             LOGGER.info("Changing state from OPEN_SENT to OPEN_CONFIRM");
@@ -1278,9 +1502,7 @@ public class FSMImpl {
             callbacks.sendKeepaliveMessage();
 
             // restarts the KeepaliveTimer
-            if(keepaliveTimerTask.scheduledExecutionTime() > 0)
-                restartKeepaliveTimer();
-            keepaliveTimer.schedule(keepaliveTimerTask, 0, 1000);
+            restartKeepaliveTimer();
 
             // remains in the OpenConfirmed state
             LOGGER.info("Remaining in the OPEN_CONFIRM state");
@@ -1409,9 +1631,7 @@ public class FSMImpl {
 
         protected void onKeepAliveMsgOpenConfirm(String from, String to, FSMEvent event, Integer context) {
             // restarts the HoldTimer
-            if(holdTimerTask.scheduledExecutionTime() > 0)
-                restartHoldTimer(90);
-            holdTimer.schedule(holdTimerTask, 0, 1000);
+            restartHoldTimer(90);
 
             // changes its state to Established
             LOGGER.info("Changing state from OPEN_CONFIRM to ESTABLISHED");
@@ -1545,9 +1765,7 @@ public class FSMImpl {
 
             // restarts its KeepaliveTimer, unless the negotiated HoldTime value is zero
             if(holdTime != 0) {
-                if(keepaliveTimerTask.scheduledExecutionTime() > 0)
-                    restartKeepaliveTimer();
-                keepaliveTimer.schedule(keepaliveTimerTask, 0, 1000);
+                restartKeepaliveTimer();
             }
         }
 
@@ -1607,7 +1825,6 @@ public class FSMImpl {
             // restarts its HoldTimer, if the negotiated HoldTime value is non-zero
             if(holdTimerTask.scheduledExecutionTime() > 0)
                 restartHoldTimer(90);
-            holdTimer.schedule(holdTimerTask, 0, 1000);
 
             // remains in the Established state
             LOGGER.info("Remaining in ESTABLISHED state");
@@ -1619,9 +1836,7 @@ public class FSMImpl {
 
             // restarts its HoldTimer, if the negotiated HoldTime value is non-zero
             if(holdTime != 0) {
-                if(holdTimerTask.scheduledExecutionTime() > 0)
-                    restartHoldTimer(90);
-                holdTimer.schedule(holdTimerTask, 0, 1000);
+                restartHoldTimer(90);
             }
 
             // remains in the Established state
