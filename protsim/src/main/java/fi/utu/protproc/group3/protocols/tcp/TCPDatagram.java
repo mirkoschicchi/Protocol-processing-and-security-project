@@ -62,7 +62,7 @@ public interface TCPDatagram {
 
     // the TCP protocol hexadecimal representation is 0x6 and is found in the Next Header field of the IPv6 header
     // https://en.wikipedia.org/wiki/List_of_IP_protocol_numbers
-    // Then it is needed the protocol length which is given by header + body
+    // Then it is needed the protocol length which is given by TCP header + payload
     // https://stackoverflow.com/questions/30858973/udp-checksum-calculation-for-ipv6-packet
     byte[] serialize(IPAddress sourceIP, IPAddress destinationIP, byte protocol, short tcpLength);
 }

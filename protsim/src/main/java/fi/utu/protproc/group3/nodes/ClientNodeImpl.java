@@ -58,7 +58,8 @@ public class ClientNodeImpl extends NetworkNodeImpl implements ClientNode {
                         getIpAddress(), dest.getIpAddress(),
                         TCPDatagram.create((short) 12345, (short) 80, 123784523, 0,
                                 (short) 0, (short) 0, (short) 0, payload
-                        ).serialize(getIpAddress(), dest.getIpAddress(), (byte)6, (short)(40 + 20 + payload.length))
+                        ).serialize(getIpAddress(), dest.getIpAddress(), (byte)6, (short)(20 + payload.length))
+                        // TODO: create helpers to manage variables to put in the serialize
                 ).serialize()
         );
 

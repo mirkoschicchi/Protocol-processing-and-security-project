@@ -22,7 +22,7 @@ class TCPDatagramTest {
 
         assertNotNull(datagram);
 
-        var bytes = datagram.serialize(sourceIP, destinationIP, (byte)0x6, (short)(40 + 20 + payload.length));
+        var bytes = datagram.serialize(sourceIP, destinationIP, (byte)0x6, (short)(20 + payload.length));
 
         assertNotNull(bytes);
         assertTrue(bytes.length > 0);
@@ -36,7 +36,7 @@ class TCPDatagramTest {
 
         assertNotNull(original);
 
-        var bytes = original.serialize(sourceIP, destinationIP, (byte)0x6, (short)(40 + 20 + payload.length));
+        var bytes = original.serialize(sourceIP, destinationIP, (byte)0x6, (short)(20 + payload.length));
         var reassembled = TCPDatagram.parse(bytes);
 
         assertNotNull(reassembled);
@@ -77,10 +77,22 @@ class TCPDatagramTest {
                         TCPDatagram.create(datagram.getSourcePort(), datagram.getDestinationPort(), datagram.getSeqN(),
                                 datagram.getAckN(), datagram.getFlags(), datagram.getWindow(),
                                 (short) datagram.getChecksum(), datagram.getPayload()
-                        ).serialize(packet.getSourceIP(),packet.getDestinationIP(), packet.getNextHeader(),(short)(40 + 20 + datagram.getPayload().length))
+                        ).serialize(packet.getSourceIP(),packet.getDestinationIP(), packet.getNextHeader(),(short)(20 + datagram.getPayload().length))
                 ).serialize()
         ).serialize();
 
         assertArrayEquals(pdu, rebuilt);
+    }
+
+    @Test
+    void checksumIsCorrect() {
+        byte[] payload = { 0x47, 0x45, 0x54, 0x20, 0x2f, 0x20, 0x48, 0x54, 0x54, 0x50, 0x2f, 0x31, 0x2e, 0x30 };
+        var datagram = TCPDatagram.create(sourcePort, destPort, 324325, 99928, flags, (short)214, (short)0, payload);
+
+        assertNotNull(datagram);
+
+        datagram.serialize(sourceIP, destinationIP, (byte)0x6, (short)(20 + payload.length));
+
+        assertEquals(0x620C, datagram.getChecksum());
     }
 }
