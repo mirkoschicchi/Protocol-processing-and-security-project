@@ -113,32 +113,32 @@ public class TCPDatagramImpl implements TCPDatagram {
         // TODO : Fix this (includes IP)
         // compute checksum if needed
         if (this.checksum == 0) {
-            if (sourceIP != null && destinationIP != null
-                    && sourceIP.toArray().length != 0 && destinationIP.toArray().length != 0
-                    && sourceIP.toArray().length == destinationIP.toArray().length) {
-                int sumPseudoHeader = (protocol & 0xff) | (tcpLength & 0xff);
-                var sourceIParray = sourceIP.toArray();
-                var destinationIParray = destinationIP.toArray();
-                for (var i = 0; i < sourceIParray.length; i += 2) {
-                    sumPseudoHeader += (((sourceIParray[i] & 0xff) << 8) | (sourceIParray[i + 1] & 0xff))
-                            + (((destinationIParray[i] & 0xff) << 8) | (destinationIParray[i + 1] & 0xff));
-                }
+            Objects.requireNonNull(sourceIP);
+            Objects.requireNonNull(destinationIP);
 
-                bb.rewind();
-                int sumTCPHeaderAndPayload = 0;
-                for (int i = 0; i < length / 2; ++i) {
-                    sumTCPHeaderAndPayload += 0xffff & bb.getShort();
-                }
-                // pad to an even number of shorts
-                if (length % 2 > 0) {
-                    sumTCPHeaderAndPayload += (bb.get() & 0xff) << 8;
-                }
+            var sourceIParray = sourceIP.toArray();
+            var destinationIParray = destinationIP.toArray();
 
-                int totalSum = sumPseudoHeader + sumTCPHeaderAndPayload;
-                short totalSum16Bit = (short) (((totalSum >> 16) & 0xffff) + (totalSum & 0xffff));
-
-                this.checksum = (short) (~totalSum16Bit & 0xffff);
+            int sumPseudoHeader = (protocol & 0xff) + (tcpLength & 0xffff);
+            for (var i = 0; i < sourceIParray.length; i += 2) {
+                sumPseudoHeader += (((sourceIParray[i] & 0xff) << 8) | (sourceIParray[i + 1] & 0xff))
+                        + (((destinationIParray[i] & 0xff) << 8) | (destinationIParray[i + 1] & 0xff));
             }
+
+            bb.rewind();
+            int sumTCPHeaderAndPayload = 0;
+            for (int i = 0; i < length / 2; ++i) {
+                sumTCPHeaderAndPayload += 0xffff & bb.getShort();
+            }
+            // pad to an even number of shorts
+            if (length % 2 > 0) {
+                sumTCPHeaderAndPayload += (bb.get() & 0xff) << 8;
+            }
+
+            int totalSum = sumPseudoHeader + sumTCPHeaderAndPayload;
+            short totalSum16Bit = (short) (((totalSum >> 16) & 0xffff) + (totalSum & 0xffff));
+
+            this.checksum = (short) (~totalSum16Bit & 0xffff);
         }
 
         bb.putShort(16, this.checksum);
