@@ -15,7 +15,7 @@ public class Simulator implements Callable<Integer> {
     @CommandLine.Parameters(description = "The scenario file to load.")
     private File scenarioFile;
 
-    @CommandLine.Option(names = { "-w", "--write" }, description = "Write network traffic to file (pcap file format)")
+    @CommandLine.Option(names = { "-w", "--write" }, description = "Write network traffic to file (ngpcap file format)")
     private File networkFile;
 
     @Override
