@@ -9,6 +9,7 @@ import org.graphstream.algorithm.APSP;
 import org.graphstream.graph.Node;
 import org.graphstream.graph.implementations.MultiGraph;
 import org.graphstream.ui.view.Viewer;
+import org.graphstream.ui.view.util.MouseManager;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
@@ -247,6 +248,7 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
     @Override
     public void show() {
         if (viewer == null) {
+            graph.setAttribute("ui.quality");
             graph.setAttribute("ui.antialias");
 
             var stylePath = new File(System.getProperty("user.dir"), "styles");
@@ -256,6 +258,7 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
                 graph.setAttribute("ui.stylesheet", css);
 
                 viewer = graph.display();
+                new UserInterfaceManager(viewer, graph);
             } catch (IOException e) {
                 e.printStackTrace();
             }
