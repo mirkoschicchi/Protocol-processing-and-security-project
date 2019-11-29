@@ -38,9 +38,15 @@ public class ServerNodeImpl extends NetworkNodeImpl implements ServerNode {
             super.messageReceived(message);
 
             try {
-                var reply = "<h1>Hello from " + ethernetInterface.getHost().getHostname() + "</h1>" +
+                var body = "<h1>Hello from " + ethernetInterface.getHost().getHostname() + "</h1>" +
                         "<p>Your request:</p>" +
                         "<pre>" + new String(message, "UTF-8") + "</pre>";
+
+                var reply = "HTTP/1.0 418 I'm a simple http server\r\n" +
+                        "Content-Type: text/html\r\n" +
+                        "Content-Length: " + body.length() + "\r\n" +
+                        "Connection: close\r\n" +
+                        "\r\n" + body;
 
                 send(reply.getBytes());
             } catch (UnsupportedEncodingException e) {

@@ -36,13 +36,20 @@ public class TunTapNodeImpl extends NetworkNodeImpl {
             getInterface().getFlux().subscribe(this::sendPacket);
         } catch (IOException e) {
             var helpMsg = new StringBuilder()
-                    .append("Failed to open tun device ").append(configuration.getDevice()).append(": ").append(e.getMessage()).append('\n')
-                    .append("To create the device (Linux only):\n")
+                    .append("# Failed to open tun device ").append(configuration.getDevice()).append(": ").append(e.getMessage()).append('\n')
+                    .append("# To create the device (Linux only):\n")
                     .append("sudo ip tuntap add dev ").append(configuration.getDevice()).append(" mode tun user $USER group $USER\n")
                     .append("sudo ip -6 addr add ").append(getIpAddress()).append('/').append(getInterface().getNetwork().getNetworkAddress().getPrefixLength()).append(" dev ").append(configuration.getDevice()).append("\n")
-                    .append("sudo ip link set dev ").append(configuration.getDevice()).append(" up\n")
-                    .append("sudo ip r add fe80::/16 dev ").append(configuration.getDevice()).append(" via ").append(getInterface().getNetwork().getDefaultRouter().getIpAddress()).append('\n')
-                    .append("\nAnd to remove the device:\n")
+                    .append("sudo ip link set dev ").append(configuration.getDevice()).append(" up\n");
+            for (var network : simulation.getNetworks()) {
+                if (network != getInterface().getNetwork()) {
+                    helpMsg.append("sudo ip r add " + network.getNetworkAddress() + " dev ").append(configuration.getDevice()).append(" via ").append(getInterface().getNetwork().getDefaultRouter().getIpAddress()).append('\n');
+                }
+            }
+
+            helpMsg
+                    .append("# Restart simulation to connect.\n\n")
+                    .append("# And to remove the device:\n")
                     .append("sudo ip tuntap del dev ").append(configuration.getDevice()).append(" mode tun\n");
 
             System.err.print(helpMsg.toString());
