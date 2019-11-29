@@ -105,6 +105,11 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
                 netConf.getActualClients()
                         .map(conf -> new ClientNodeImpl(context, conf, net))
                         .forEach(s -> registerNode.apply(s).addAttribute(GraphAttributes.CLASS, "clients"));
+
+                if (netConf.getTap() != null) {
+                    var tapNode = new TunTapNodeImpl(context, netConf.getTap(), net);
+                    nodes.put(tapNode.getHostname(), tapNode);
+                }
             }
         }
 

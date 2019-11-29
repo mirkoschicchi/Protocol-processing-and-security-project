@@ -1,6 +1,7 @@
 package fi.utu.protproc.group3.simulator;
 
 import fi.utu.protproc.group3.configuration.NetworkConfiguration;
+import fi.utu.protproc.group3.nodes.RouterNode;
 import fi.utu.protproc.group3.utils.NetworkAddress;
 import reactor.core.publisher.DirectProcessor;
 import reactor.core.publisher.Flux;
@@ -76,6 +77,19 @@ public class NetworkImpl implements Network {
     @Override
     public int getAutonomousSystem() {
         return autonomousSystem;
+    }
+
+    @Override
+    public EthernetInterface getDefaultRouter() {
+        var routers = interfaces.stream()
+                .filter(i -> i.getHost() instanceof RouterNode)
+                .iterator();
+        var result = routers.next();
+        if (routers.hasNext()) {
+            throw new IllegalStateException("Network has more than one router. Could not determine default router.");
+        }
+
+        return result;
     }
 
     @Override

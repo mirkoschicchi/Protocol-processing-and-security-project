@@ -1,6 +1,8 @@
 package fi.utu.protproc.group3.nodes;
 
 import fi.utu.protproc.group3.configuration.NodeConfiguration;
+import fi.utu.protproc.group3.protocols.EthernetFrame;
+import fi.utu.protproc.group3.protocols.IPv6Packet;
 import fi.utu.protproc.group3.simulator.*;
 import fi.utu.protproc.group3.utils.AddressGenerator;
 import fi.utu.protproc.group3.utils.IPAddress;
@@ -114,5 +116,20 @@ public abstract class NetworkNodeImpl implements NetworkNode, SimpleNode {
     @Override
     public String toString() {
         return hostname;
+    }
+
+    protected void send(IPv6Packet packet) {
+        Objects.requireNonNull(packet);
+
+        var ethernetInterface = getInterface();
+        var destMac = ethernetInterface.resolveIpAddress(packet.getDestinationIP());
+        if (destMac == null) {
+            destMac = ethernetInterface.getDefaultRouter();
+        }
+
+        var frame = EthernetFrame.create(destMac, ethernetInterface.getAddress(), EthernetFrame.TYPE_IPV6,
+                packet.serialize());
+
+        ethernetInterface.transmit(frame.serialize());
     }
 }

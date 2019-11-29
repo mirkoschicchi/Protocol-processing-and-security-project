@@ -4,6 +4,7 @@ import fi.utu.protproc.group3.configuration.*;
 import fi.utu.protproc.group3.nodes.NetworkNode;
 import fi.utu.protproc.group3.nodes.ServerNode;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.logging.Logger;
 

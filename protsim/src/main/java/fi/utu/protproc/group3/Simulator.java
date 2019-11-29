@@ -1,13 +1,11 @@
 package fi.utu.protproc.group3;
 
 import fi.utu.protproc.group3.configuration.SimulationConfiguration;
-import fi.utu.protproc.group3.simulator.Network;
 import fi.utu.protproc.group3.simulator.Simulation;
 import picocli.CommandLine;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.HashMap;
 import java.util.concurrent.Callable;
 
 @CommandLine.Command(name = "run", description = "Runs a simulation until stopped by the user")

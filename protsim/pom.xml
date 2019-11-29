@@ -73,6 +73,11 @@
           <version>18.0.0</version>
           <scope>compile</scope>
       </dependency>
+      <dependency>
+          <groupId>io.github.isotes</groupId>
+          <artifactId>tun-io</artifactId>
+          <version>1.0.0</version>
+      </dependency>
   </dependencies>
 
   <build>

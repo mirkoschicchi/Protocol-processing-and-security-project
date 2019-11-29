@@ -17,6 +17,7 @@ public class NetworkConfiguration {
     private int randomClients;
     private List<NodeConfiguration> servers;
     private int randomServers;
+    private TapConfiguration tap;
 
     public String getName() {
         return name;
@@ -82,5 +83,13 @@ public class NetworkConfiguration {
 
     public void setAutonomousSystem(int autonomousSystem) {
         this.autonomousSystem = autonomousSystem;
+    }
+
+    public TapConfiguration getTap() {
+        return tap;
+    }
+
+    public void setTap(TapConfiguration tap) {
+        this.tap = tap;
     }
 }

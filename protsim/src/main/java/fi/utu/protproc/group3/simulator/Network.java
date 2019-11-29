@@ -1,6 +1,5 @@
 package fi.utu.protproc.group3.simulator;
 
-import fi.utu.protproc.group3.configuration.NetworkConfiguration;
 import fi.utu.protproc.group3.utils.NetworkAddress;
 import reactor.core.publisher.Flux;
 
@@ -36,4 +35,6 @@ public interface Network {
     void transmit(byte[] pdu);
 
     int getAutonomousSystem();
+
+    EthernetInterface getDefaultRouter();
 }
