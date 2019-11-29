@@ -8,6 +8,7 @@ import org.graphstream.ui.view.ViewerPipe;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.util.Map;
@@ -53,6 +54,10 @@ public class UserInterfaceManager implements ViewerListener {
 
         public PopUpDemo() {
             JMenuItem item;
+
+            this.setFont(new Font("TimesRoman", Font.PLAIN, 20));
+            Border compound = BorderFactory.createCompoundBorder(BorderFactory.createRaisedBevelBorder(), BorderFactory.createLoweredBevelBorder());
+            this.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(Color.black), compound));
 
             this.add(item = new JMenuItem("Shutdown"));
             item.addActionListener(menuListener);
