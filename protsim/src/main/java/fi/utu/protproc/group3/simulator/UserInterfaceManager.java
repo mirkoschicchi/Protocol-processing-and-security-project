@@ -7,13 +7,16 @@ import org.graphstream.ui.view.ViewerListener;
 import org.graphstream.ui.view.ViewerPipe;
 import org.jetbrains.annotations.NotNull;
 
+import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionListener;
 import java.util.Map;
 
 public class UserInterfaceManager implements ViewerListener {
     private boolean loop = true;
     private Map<String, NetworkNode> nodes;
     private MultiGraph graph;
+    private PopUpDemo menu;
 
     public UserInterfaceManager(@NotNull Viewer viewer, MultiGraph graph, Map<String, NetworkNode> nodes) {
         this.nodes = nodes;
@@ -23,6 +26,8 @@ public class UserInterfaceManager implements ViewerListener {
         ViewerPipe fromViewer = viewer.newViewerPipe();
         fromViewer.addViewerListener(this);
         fromViewer.addSink(this.graph);
+
+        menu = new PopUpDemo();
 
         while(loop) {
             fromViewer.pump();
@@ -38,14 +43,75 @@ public class UserInterfaceManager implements ViewerListener {
     public void buttonPushed(String s) {
         if (nodes.containsKey(s)) {
             var node = nodes.get(s);
-            if (node.nodeIsRunning()) {
-                node.shutdown();
-                graph.getNode(s).addAttribute("ui.style", "stroke-mode: plain; stroke-width: 3px; stroke-color: red;");
-                System.out.println("Node SHUTDOWN: " + s);
+
+            menu.toggleMenu(node);
+        }
+    }
+
+    class PopUpDemo extends JPopupMenu {
+        NetworkNode node;
+
+        public PopUpDemo() {
+            JMenuItem item;
+
+            this.add(item = new JMenuItem("Shutdown"));
+            item.addActionListener(menuListener);
+
+            this.add(item = new JMenuItem("Start"));
+            item.addActionListener(menuListener);
+
+            this.add(item = new JMenuItem("Routing table"));
+            item.addActionListener(menuListener);
+
+            this.add(item = new JMenuItem("Cancel"));
+            item.addActionListener(menuListener);
+
+            this.setVisible(false);
+        }
+
+        ActionListener menuListener = event -> {
+            String invAction = event.getActionCommand();
+
+            switch (invAction) {
+                case "Shutdown":
+                    if (node.nodeIsRunning()) {
+                        node.shutdown();
+                        graph.getNode(node.getHostname()).addAttribute("ui.style", "stroke-mode: plain; stroke-width: 3px; stroke-color: red;");
+                        System.out.println("Node SHUTDOWN: " + node.getHostname());
+
+                        this.setVisible(false);
+                    }
+
+                    break;
+                case "Start":
+                    if (!node.nodeIsRunning()) {
+                        node.start();
+                        graph.getNode(node.getHostname()).addAttribute("ui.style", "stroke-mode: none;");
+                        System.out.println("Node START: " + node.getHostname());
+
+                        this.setVisible(false);
+                    }
+                    break;
+                case "Routing table":
+                    System.out.println("Routing table TODO.");
+                    break;
+                case "Cancel":
+                    System.out.println("Cancel was pressed.");
+                    this.setVisible(false);
+                    break;
+                default:
+                    System.out.println("You pressed something strange.");
+            }
+        };
+
+        public void toggleMenu(NetworkNode node) {
+            this.node = node;
+
+            if (this.isVisible()) {
+                this.setVisible(false);
             } else {
-                node.start();
-                graph.getNode(s).addAttribute("ui.style", "stroke-mode: none;");
-                System.out.println("Node START: " + s);
+                this.show(null, MouseInfo.getPointerInfo().getLocation().x, MouseInfo.getPointerInfo().getLocation().y);
+                this.setVisible(true);
             }
         }
     }
