@@ -13,19 +13,20 @@ public class TCPDatagramImpl implements TCPDatagram {
     private int ackN;
     private short flags;
     private short window;
-    private short checksum;
     private byte[] payload;
+    private short checksum;
 
     TCPDatagramImpl(short sourcePort, short destinationPort, int seqN, int ackN,
-                    short flags, short window, short checksum, byte[] payload) {
+                    short flags, short window, byte[] payload) {
         this.sourcePort = sourcePort;
         this.destinationPort = destinationPort;
         this.seqN = seqN;
         this.ackN = ackN;
         this.flags = flags;
         this.window = window;
-        this.checksum = checksum;
         this.payload = payload;
+
+        if (this.payload == null) this.payload = new byte[0];
     }
 
     public static TCPDatagram parse(byte[] pdu) {
@@ -53,7 +54,7 @@ public class TCPDatagramImpl implements TCPDatagram {
         bb.get(payload, 0, bb.remaining());
 
         return new TCPDatagramImpl(sourcePort, destinationPort, seqN, ackN,
-                flags, window, checksum, payload);
+                flags, window, payload);
     }
 
     public short getSourcePort() {
@@ -80,7 +81,7 @@ public class TCPDatagramImpl implements TCPDatagram {
         return this.window;
     }
 
-    public int getChecksum() {
+    public short getChecksum() {
         return this.checksum;
     }
 
@@ -88,61 +89,54 @@ public class TCPDatagramImpl implements TCPDatagram {
         return this.payload;
     }
 
-    public byte[] serialize(IPAddress sourceIP, IPAddress destinationIP, byte protocol, short tcpLength) {
+    public byte[] serialize(IPAddress sourceIP, IPAddress destinationIP) {
+        Objects.requireNonNull(sourceIP);
+        Objects.requireNonNull(destinationIP);
+
         int length = 20;
         if (payload != null) {
             length += payload.length;
         }
 
-        byte[] data = new byte[length];
-        ByteBuffer bb = ByteBuffer.wrap(data);
-
+        ByteBuffer bb = ByteBuffer.allocate(length);
         bb.putShort(this.sourcePort);
         bb.putShort(this.destinationPort);
         bb.putInt(this.seqN);
         bb.putInt(this.ackN);
         bb.putShort((short) (this.flags | (5 << 12)));
         bb.putShort(this.window);
-        bb.putShort(this.checksum);
+        bb.putShort((short) 0); // checksum (placeholder)
         bb.putShort((short) 0); // urgent pointer
+        bb.put(this.payload);
 
-        if (this.payload != null) {
-            bb.put(this.payload);
+        var sourceIParray = sourceIP.toArray();
+        var destinationIParray = destinationIP.toArray();
+
+        var checksum = 6 + payload.length + 20; // protocol + TCP length
+        for (var i = 0; i < sourceIParray.length; i += 2) {
+            checksum += (((sourceIParray[i] & 0xff) << 8) | (sourceIParray[i + 1] & 0xff))
+                    + (((destinationIParray[i] & 0xff) << 8) | (destinationIParray[i + 1] & 0xff));
         }
 
-        // TODO : Fix this (includes IP)
-        // compute checksum if needed
-        if (this.checksum == 0) {
-            Objects.requireNonNull(sourceIP);
-            Objects.requireNonNull(destinationIP);
-
-            var sourceIParray = sourceIP.toArray();
-            var destinationIParray = destinationIP.toArray();
-
-            int sumPseudoHeader = (protocol & 0xff) + (tcpLength & 0xffff);
-            for (var i = 0; i < sourceIParray.length; i += 2) {
-                sumPseudoHeader += (((sourceIParray[i] & 0xff) << 8) | (sourceIParray[i + 1] & 0xff))
-                        + (((destinationIParray[i] & 0xff) << 8) | (destinationIParray[i + 1] & 0xff));
-            }
-
-            bb.rewind();
-            int sumTCPHeaderAndPayload = 0;
-            for (int i = 0; i < length / 2; ++i) {
-                sumTCPHeaderAndPayload += 0xffff & bb.getShort();
-            }
-            // pad to an even number of shorts
-            if (length % 2 > 0) {
-                sumTCPHeaderAndPayload += (bb.get() & 0xff) << 8;
-            }
-
-            int totalSum = sumPseudoHeader + sumTCPHeaderAndPayload;
-            short totalSum16Bit = (short) (((totalSum >> 16) & 0xffff) + (totalSum & 0xffff));
-
-            this.checksum = (short) (~totalSum16Bit & 0xffff);
+        bb.rewind();
+        for (int i = 0; i < length / 2; ++i) {
+            checksum += 0xffff & bb.getShort();
         }
 
-        bb.putShort(16, this.checksum);
+        // pad to an even number of shorts
+        if (length % 2 != 0) {
+            checksum += (bb.get() & 0xff) << 8;
+        }
 
-        return data;
+        checksum = (((checksum >> 16) & 0xffff) + (checksum & 0xffff));
+
+        // second time to carry over any overflows from first addition
+        checksum = (((checksum >> 16) & 0xffff) + (checksum & 0xffff));
+
+        this.checksum = (short) (~checksum & 0xffff);
+
+        bb.putShort(16, (short) (this.checksum & 0xffff));
+
+        return bb.array();
     }
 }

@@ -6,7 +6,10 @@ import fi.utu.protproc.group3.simulator.EthernetInterface;
 import fi.utu.protproc.group3.utils.IPAddress;
 import reactor.core.Disposable;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Random;
 import java.util.logging.Logger;
 
 public class DatagramHandler {
@@ -239,11 +242,9 @@ public class DatagramHandler {
 
             var ackN = (flags & (TCPDatagram.ACK | TCPDatagram.SYN)) != 0 ? this.peerSeqN : 0;
             var datagram = TCPDatagram.create(descriptor.localPort, descriptor.remotePort, this.seqN, ackN, flags,
-                    (short) 0xffff, (short) 0, message);
+                    (short) 0xffff, message);
 
-            var payloadLength = datagram.getPayload() != null ? datagram.getPayload().length : 0;
-
-            var packet = IPv6Packet.create((byte)0x6, descriptor.localIp, descriptor.remoteIp, datagram.serialize(descriptor.localIp, descriptor.remoteIp, (byte)0x6, (short)(40 + 20 + payloadLength)));
+            var packet = IPv6Packet.create((byte) 0x6, descriptor.localIp, descriptor.remoteIp, datagram.serialize(descriptor.localIp, descriptor.remoteIp));
 
             var destMac = handler.ethernetInterface.resolveIpAddress(descriptor.remoteIp);
             if (destMac == null) {

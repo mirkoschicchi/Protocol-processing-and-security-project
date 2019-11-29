@@ -23,6 +23,13 @@ networks:
   - name: net4 # fourth test net (clients only)
     address: "2003:4::0/64"
     randomClients: 10
+    servers:
+      - name: test
+        address: "2003:4::3"
+    tap:
+      address: "2003:4::2"
+      device: "protsim"
+      name: "tuntap"
 routers:
   - name: t1_t2a
     interfaces:
@@ -41,6 +48,7 @@ routers:
       - network: t2a
       - network: net1
       - network: net4
+        address: "2003:4::1"
   - name: t2b_net
     interfaces:
       - network: t2b

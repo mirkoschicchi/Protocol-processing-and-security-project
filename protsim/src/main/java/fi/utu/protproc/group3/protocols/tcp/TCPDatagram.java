@@ -31,8 +31,8 @@ public interface TCPDatagram {
     */
 
     static TCPDatagram create(short sourcePort, short destinationPort, int seqN, int ackN,
-                              short flags, short window, short checksum, byte[] payload) {
-        return new TCPDatagramImpl(sourcePort, destinationPort, seqN, ackN, flags, window, checksum, payload);
+                              short flags, short window, byte[] payload) {
+        return new TCPDatagramImpl(sourcePort, destinationPort, seqN, ackN, flags, window, payload);
     }
 
     static TCPDatagram parse(byte[] pdu){
@@ -56,7 +56,8 @@ public interface TCPDatagram {
 
     short getFlags();
     short getWindow();
-    int getChecksum();
+
+    short getChecksum();
 
     byte[] getPayload();
 
@@ -64,5 +65,5 @@ public interface TCPDatagram {
     // https://en.wikipedia.org/wiki/List_of_IP_protocol_numbers
     // Then it is needed the protocol length which is given by TCP header + payload
     // https://stackoverflow.com/questions/30858973/udp-checksum-calculation-for-ipv6-packet
-    byte[] serialize(IPAddress sourceIP, IPAddress destinationIP, byte protocol, short tcpLength);
+    byte[] serialize(IPAddress sourceIP, IPAddress destinationIP);
 }
