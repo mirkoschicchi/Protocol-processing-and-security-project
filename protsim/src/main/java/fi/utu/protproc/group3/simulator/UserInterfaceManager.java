@@ -68,6 +68,9 @@ public class UserInterfaceManager implements ViewerListener {
             this.add(item = new JMenuItem("Routing table"));
             item.addActionListener(menuListener);
 
+            this.add(item = new JMenuItem("Node information"));
+            item.addActionListener(menuListener);
+
             this.add(item = new JMenuItem("Cancel"));
             item.addActionListener(menuListener);
 
@@ -99,6 +102,14 @@ public class UserInterfaceManager implements ViewerListener {
                     break;
                 case "Routing table":
                     System.out.println("Routing table TODO.");
+                    break;
+                case "Node information":
+                    this.setVisible(false);
+                    final JOptionPane pane = new JOptionPane(node.getHostname());
+                    final JDialog d = pane.createDialog((JFrame)null, "Node information");
+                    d.setLocation(MouseInfo.getPointerInfo().getLocation().x - (d.getWidth()/2), MouseInfo.getPointerInfo().getLocation().y - (d.getHeight()/2));
+                    d.setVisible(true);
+
                     break;
                 case "Cancel":
                     System.out.println("Cancel was pressed.");
