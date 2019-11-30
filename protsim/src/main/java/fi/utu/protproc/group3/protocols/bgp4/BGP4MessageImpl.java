@@ -17,6 +17,18 @@ public abstract class BGP4MessageImpl implements BGP4Message {
         this.type = type;
     }
 
+    private static void getNetworkAddressesList(ByteBuffer buf, List<NetworkAddress> netAddrList, int elemNum) {
+        int prefLen;
+        IPAddress addr;
+        for (short i = 0; i < elemNum; i++) {
+            byte[] app = new byte[16];
+            prefLen = buf.get();
+            buf.get(app);
+            addr = new IPAddress(app);
+            netAddrList.add(new NetworkAddress(addr, prefLen));
+        }
+    }
+
     @Override
     public byte[] getMarker() {
         return marker;
@@ -45,14 +57,12 @@ public abstract class BGP4MessageImpl implements BGP4Message {
 
     public static BGP4Message parse(byte[] message) {
         byte[] marker = new byte[16];
-        short len;
-        byte type;
 
         ByteBuffer buf = ByteBuffer.wrap(message);
 
         buf.get(marker);
-        len = buf.getShort();
-        type = buf.get();
+        short len = buf.getShort();
+        byte type = buf.get();
 
         switch (type) {
             case BGP4Message.TYPE_OPEN:
@@ -63,51 +73,51 @@ public abstract class BGP4MessageImpl implements BGP4Message {
                 return BGP4MessageOpen.create(myAutonomousSystem, holdTime, bgpIdentifier);
 
             case BGP4Message.TYPE_UPDATE:
-                short withdrawnRoutesLength = buf.getShort();
-
                 List<NetworkAddress> withdrawnRoutes = new ArrayList<NetworkAddress>();
                 byte[] tmp = new byte[16];
-                for (short i=0; i < withdrawnRoutesLength; i++) {
-                    buf.get(tmp);
-                    IPAddress addr = new IPAddress(tmp);
-                    int prefLen = buf.getInt();
-                    withdrawnRoutes.add(new NetworkAddress(addr, prefLen));
+                IPAddress addr;
+                int prefLen = 0;
+
+                //  withdrawnRoutes
+                short withdrawnRoutesLength = buf.getShort();
+                getNetworkAddressesList(buf, withdrawnRoutes, withdrawnRoutesLength / 17);
+
+                // Total Path Attribute Length
+                buf.getShort();
+
+                //  origin
+                buf.getInt();
+                byte origin = buf.get();
+
+                List<List<Short>> asPath = new ArrayList<>();
+                buf.getShort();
+                short valueLen = buf.getShort();
+                short cont = 0;
+                while (cont < valueLen) {
+                    List<Short> asSet = new ArrayList<>();
+                    buf.get();
+                    short asLen = buf.get();
+                    cont += 2;
+                    for (int i=0; i < asLen; i++) {
+                        asSet.add(buf.getShort());
+                        cont += 2;
+                    }
+                    asPath.add(asSet);
                 }
 
-                short totalPathAttributeLength = buf.getShort();
+                // nextHop
+                buf.getInt();
+                prefLen = buf.get();
+                buf.get(tmp);
+                addr = new IPAddress(tmp);
+                NetworkAddress nextHop = new NetworkAddress(addr, prefLen);
 
                 List<NetworkAddress> networkLayerReachabilityInformation
                         = new ArrayList<NetworkAddress>();
-                for (short i=0; i < totalPathAttributeLength; i++) {
-                    var attrFlags = buf.get();
-                    var attrType = buf.get();
+                //int nlriLen = buf.capacity() - 23 - 5 - 4 - valueLen - 21;
+                getNetworkAddressesList(buf, networkLayerReachabilityInformation, buf.remaining() / 17);
 
-                    var extended = (attrFlags & (1 << 4)) != 0;
-                    int attrLen = extended ? buf.getShort() : buf.get();
-
-                    var oldPos = buf.position();
-
-                    switch (attrType) {
-                        case 1: // ORIGIN
-                        {
-                            // TODO: Parse origin and set it on the update message
-                        }
-                        case 2: // AS_PATH
-                        {
-                            // TODO: Parse as path sequence and assign it
-                        }
-                        case 3: // NEXT_HOP
-                        {
-                            // TODO
-                        }
-                    }
-
-                    buf.position(oldPos + attrLen);
-                }
-
-                return BGP4MessageUpdate.create(withdrawnRoutesLength,
-                        withdrawnRoutes,
-                        totalPathAttributeLength,
+                return BGP4MessageUpdate.create(withdrawnRoutes, origin, asPath, nextHop,
                         networkLayerReachabilityInformation);
 
             case BGP4Message.TYPE_NOTIFICATION:
