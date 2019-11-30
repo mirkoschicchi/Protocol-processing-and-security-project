@@ -29,7 +29,7 @@ public class RoutingTableImpl implements RoutingTable {
 
     @Override
     public TableRow getRowByDestinationAddress(IPAddress destinationAddress) {
-        int longestMatch = -1;
+        int longestMatch = 0;
         TableRow routeRow = null;
         for(TableRow row: getRows()) {
             int matchLength = NetworkAddress.matchLength(row.getPrefix(), destinationAddress);

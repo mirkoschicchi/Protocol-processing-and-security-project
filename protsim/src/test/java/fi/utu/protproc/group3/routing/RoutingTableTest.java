@@ -36,4 +36,22 @@ public class RoutingTableTest {
         assertEquals(r3, table.getRowByDestinationAddress(IPAddress.parse("fe80:3::ffff")));
         assertEquals(r3, table.getRowByDestinationAddress(IPAddress.parse("fe80:3::ffff:ffff:ffff:ffff")));
     }
+    @Test
+    void longestMatch() {
+        var table = RoutingTable.create();
+
+        var r1 = TableRow.create(NetworkAddress.parse("fe80:1::/64"), IPAddress.parse("fe80:1::1"), 100, (short) 100, (short) 100, null);
+        var r2 = TableRow.create(NetworkAddress.parse("fe80:2::/64"), IPAddress.parse("fe80:2::1"), 100, (short) 100, (short) 100, null);
+        var r3 = TableRow.create(NetworkAddress.parse("0::/0"), IPAddress.parse("0::1"), 100, (short) 100, (short) 100, null);
+
+        table.insertRow(r1);
+        table.insertRow(r3);
+        table.insertRow(r2);
+
+        assertEquals(3, table.getRows().size());
+
+        assertEquals(null, table.getRowByDestinationAddress(IPAddress.parse("fe80:1:2::1")));
+        assertEquals(null, table.getRowByDestinationAddress(IPAddress.parse("fe80:3::1")));
+        assertEquals(null, table.getRowByDestinationAddress(IPAddress.parse("fe00::1")));
+    }
 }

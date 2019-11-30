@@ -61,7 +61,12 @@ public class TableRowImpl implements TableRow {
 
     @Override
     public String toString() {
-        return "Prefix:" + prefix.toString() + " | Next Hop:" + nextHop.toString() + " | metric:" + metric +
-                " | TOS:" + tos + " | scope:" + scope + " | Interface:" + eInterface.toString();
+        if (eInterface == null) {
+            return "Prefix:" + prefix.toString() + " | Next Hop:" + nextHop.toString() + " | metric:" + metric +
+                    " | TOS:" + tos + " | scope:" + scope + " | Interface: null";
+        } else {
+            return "Prefix:" + prefix.toString() + " | Next Hop:" + nextHop.toString() + " | metric:" + metric +
+                    " | TOS:" + tos + " | scope:" + scope + " | Interface:" + eInterface.toString();
+        }
     }
 }

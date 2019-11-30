@@ -53,15 +53,16 @@ public final class NetworkAddress {
      */
     public static int matchLength(NetworkAddress networkAddress, IPAddress ipAddress) {
         int ris = 0;
-
         byte[] addressArray = networkAddress.getAddress().toArray();
 
         String mask = IPAddress.createMask((networkAddress.getPrefixLength()));
+
         byte[] maskByte = new byte[16];
         for(int i = 0; i < 16; i++) {
             String portion = mask.substring(i*8, i*8 + 8);
             maskByte[i] = (byte)Integer.parseInt(portion, 2);
         }
+
         byte[] masked = new byte[16];
         byte[] maskedIpAddr = new byte[16];
         for(int i = 0; i < 16; i++) {
@@ -75,11 +76,11 @@ public final class NetworkAddress {
                 if(s1.charAt(j) == s2.charAt(j)) {
                     ris++;
                 } else {
-                    return ris;
+                    return 0;
                 }
             }
         }
-        if(ris >= networkAddress.getPrefixLength()) {
+        if (ris >= networkAddress.getPrefixLength()) {
             ris = networkAddress.getPrefixLength();
         }
         return ris;
