@@ -335,7 +335,6 @@ public class FSMImpl {
             }
         });
 
-
         fsm.fire(FSMImpl.FSMEvent.AutomaticStart);
         fsm.fire(FSMImpl.FSMEvent.TcpConnectionConfirmed);
 
