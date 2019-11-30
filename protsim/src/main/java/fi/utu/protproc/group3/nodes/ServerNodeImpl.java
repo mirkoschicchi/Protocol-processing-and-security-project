@@ -3,12 +3,14 @@ package fi.utu.protproc.group3.nodes;
 import fi.utu.protproc.group3.configuration.NodeConfiguration;
 import fi.utu.protproc.group3.protocols.tcp.Connection;
 import fi.utu.protproc.group3.protocols.tcp.Server;
-import fi.utu.protproc.group3.simulator.*;
+import fi.utu.protproc.group3.simulator.EthernetInterface;
+import fi.utu.protproc.group3.simulator.Network;
+import fi.utu.protproc.group3.simulator.SimulationBuilderContext;
 
 import java.io.UnsupportedEncodingException;
 
 public class ServerNodeImpl extends NetworkNodeImpl implements ServerNode {
-    private Server server;
+    private Server httpServer;
 
     public ServerNodeImpl(SimulationBuilderContext context, NodeConfiguration conf, Network net) {
         super(context, conf, net);
@@ -18,12 +20,12 @@ public class ServerNodeImpl extends NetworkNodeImpl implements ServerNode {
     public void start() {
         super.start();
 
-        this.server = Server.listen(getInterface(), (short) 80, SimpleHttpServerConnection.class);
+        this.httpServer = Server.listen(getInterface(), (short) 80, SimpleHttpServerConnection.class);
     }
 
     @Override
     public void shutdown() {
-        server.close();
+        httpServer.shutdown();
 
         super.shutdown();
     }

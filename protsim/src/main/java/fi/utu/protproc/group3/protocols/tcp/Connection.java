@@ -1,6 +1,5 @@
 package fi.utu.protproc.group3.protocols.tcp;
 
-import fi.utu.protproc.group3.protocols.IPv6Packet;
 import fi.utu.protproc.group3.simulator.EthernetInterface;
 import fi.utu.protproc.group3.utils.IPAddress;
 
@@ -48,7 +47,10 @@ public abstract class Connection {
      * Closes the current TCP connection.
      */
     public final void close() {
-        this.connectionState.close();
+        if (connectionState != null) {
+            connectionState.close();
+            connectionState = null;
+        }
     }
 
     /**

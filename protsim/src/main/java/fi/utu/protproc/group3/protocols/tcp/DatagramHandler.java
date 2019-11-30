@@ -161,7 +161,7 @@ public class DatagramHandler {
         }
     }
 
-    class ConnectionDescriptor {
+    public class ConnectionDescriptor {
         private final IPAddress localIp, remoteIp;
         private final short localPort, remotePort;
 
@@ -188,6 +188,22 @@ public class DatagramHandler {
             }
 
             return super.equals(obj);
+        }
+
+        public IPAddress getLocalIp() {
+            return localIp;
+        }
+
+        public IPAddress getRemoteIp() {
+            return remoteIp;
+        }
+
+        public short getLocalPort() {
+            return localPort;
+        }
+
+        public short getRemotePort() {
+            return remotePort;
         }
     }
 

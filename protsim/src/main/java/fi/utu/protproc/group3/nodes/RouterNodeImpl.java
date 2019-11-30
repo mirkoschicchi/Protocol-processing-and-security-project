@@ -3,18 +3,26 @@ package fi.utu.protproc.group3.nodes;
 import fi.utu.protproc.group3.configuration.RouterConfiguration;
 import fi.utu.protproc.group3.protocols.EthernetFrame;
 import fi.utu.protproc.group3.protocols.IPv6Packet;
+import fi.utu.protproc.group3.protocols.bgp4.BGPPeerContext;
+import fi.utu.protproc.group3.protocols.bgp4.BGPServer;
 import fi.utu.protproc.group3.routing.RoutingTable;
 import fi.utu.protproc.group3.routing.RoutingTableImpl;
 import fi.utu.protproc.group3.routing.TableRow;
-import fi.utu.protproc.group3.simulator.*;
+import fi.utu.protproc.group3.simulator.EthernetInterface;
+import fi.utu.protproc.group3.simulator.EthernetInterfaceImpl;
+import fi.utu.protproc.group3.simulator.SimulationBuilderContext;
 import fi.utu.protproc.group3.utils.IPAddress;
 
 import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
     private final int autonomousSystem;
+    private final Map<IPAddress, BGPPeerContext> peerings = new HashMap<>();
+    private final BGPServer bgpServer = new BGPServer(this, Collections.unmodifiableMap(peerings));
 
     public RouterNodeImpl(SimulationBuilderContext context, RouterConfiguration configuration) {
         super(context, configuration);
@@ -100,10 +108,40 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
     @Override
     public void start() {
         super.start();
+
+        bgpServer.start();
+
+        if (peerings.size() == 0) {
+            createPeerings();
+        }
+
+        for (var peering : peerings.values()) {
+            peering.start();
+        }
     }
 
     @Override
     public void shutdown() {
+        for (var peering : peerings.values()) {
+            peering.stop();
+        }
+
+        bgpServer.shutdown();
+
         super.shutdown();
+    }
+
+    private void createPeerings() {
+        for (var intf : interfaces) {
+            for (var peerDev : intf.getNetwork().getDevices()) {
+                if (peerDev != intf && peerDev.getHost() instanceof RouterNode) {
+                    var peer = (RouterNode) peerDev.getHost();
+                    if (peer.getAutonomousSystem() != getAutonomousSystem()) {
+                        var context = new BGPPeerContext(this, intf, peerDev.getIpAddress());
+                        peerings.put(peerDev.getIpAddress(), context);
+                    }
+                }
+            }
+        }
     }
 }

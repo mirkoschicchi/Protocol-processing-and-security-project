@@ -44,7 +44,7 @@ public class ServerClientTest extends LanScenarioTest {
         }
 
         clientConnection.close();
-        tcpServer.close();
+        tcpServer.shutdown();
     }
 
     @Test
@@ -75,7 +75,7 @@ public class ServerClientTest extends LanScenarioTest {
         }
 
         clientConnection.close();
-        tcpServer.close();
+        tcpServer.shutdown();
     }
 
     @Test
@@ -112,7 +112,7 @@ public class ServerClientTest extends LanScenarioTest {
         }
 
         clientConnection.close();
-        tcpServer.close();
+        tcpServer.shutdown();
     }
 
     @Test
@@ -154,7 +154,7 @@ public class ServerClientTest extends LanScenarioTest {
             fail(e);
         }
 
-        tcpServer.close();
+        tcpServer.shutdown();
     }
 
     @BeforeEach
