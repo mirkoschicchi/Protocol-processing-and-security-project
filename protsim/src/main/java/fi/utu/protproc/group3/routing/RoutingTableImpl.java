@@ -42,6 +42,18 @@ public class RoutingTableImpl implements RoutingTable {
     }
 
     @Override
+    public TableRow getRowByPrefix(NetworkAddress prefix) {
+        TableRow row = null;
+
+        for(TableRow r: getRows()) {
+            if(r.getPrefix().equals(prefix)) {
+                row = r;
+            }
+        }
+        return row;
+    }
+
+    @Override
     public void insertRow(TableRow row) {
         rows.add(row);
     }

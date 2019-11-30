@@ -96,4 +96,14 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
             }
         }
     }
+
+    @Override
+    public void start() {
+        super.start();
+    }
+
+    @Override
+    public void shutdown() {
+        super.shutdown();
+    }
 }

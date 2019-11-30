@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 public class FSMImpl {
     private static final Logger LOGGER = Logger.getLogger(FSMImpl.class.getName());
 
-    enum FSMEvent {
+    public enum FSMEvent {
         ManualStart, ManualStop, AutomaticStart, ManualStart_with_PassiveTcpEstablishment,
         AutomaticStart_with_PassiveTcpEstablishment, AutomaticStart_with_DampPeerOscillations,
         AutomaticStart_with_DampPeerOscillations_and_PassiveTcpEstablishment,
@@ -151,7 +151,7 @@ public class FSMImpl {
             builder.externalTransition().from("ESTABLISHED").to("IDLE").on(FSMEvent.NotifMsg).callMethod("onTcpConnectionFails_NotifMsgVerErr_NotifMsgEstablished");
             builder.internalTransition().within("ESTABLISHED").on(FSMEvent.KeepAliveMsg).callMethod("onKeepAliveMsgEstablished");
             builder.internalTransition().within("ESTABLISHED").on(FSMEvent.UpdateMsg).callMethod("onUpdateMsgEstablished");
-            builder.externalTransition().from("ESTABLISHED").to("IDLE").on(FSMEvent.UpdateMsg).callMethod("onUpdateMsgErrEstablished");
+            builder.externalTransition().from("ESTABLISHED").to("IDLE").on(FSMEvent.UpdateMsgErr).callMethod("onUpdateMsgErrEstablished");
             builder.externalTransition().from("ESTABLISHED").to("IDLE").on(FSMEvent.ConnectRetryTimer_Expires).callMethod("onAnyOtherEventEstablished");
             builder.externalTransition().from("ESTABLISHED").to("IDLE").on(FSMEvent.DelayOpenTimer_Expires).callMethod("onAnyOtherEventEstablished");
             builder.externalTransition().from("ESTABLISHED").to("IDLE").on(FSMEvent.IdleHoldTimer_Expires).callMethod("onAnyOtherEventEstablished");
@@ -343,7 +343,7 @@ public class FSMImpl {
         fsm.fire(FSMEvent.BGPOpen_with_DelayOpenTimer_running);
     }
 
-    @StateMachineParameters(stateType=String.class, eventType=FSMEvent.class, contextType=Integer.class)
+    @StateMachineParameters(stateType=String.class, eventType=FSMEvent.class, contextType=BGPEventContext.class)
     static class StateMachineSample extends AbstractUntypedStateMachine {
         int connectRetryCounter = 0;
         int connectRetryTime = 120;
@@ -456,7 +456,7 @@ public class FSMImpl {
         }
 
         // IDLE -------------------------------------------------------------------------------------------------------
-        protected void onManualStart_AutomaticStartIdle(String from, String to, FSMEvent event, Integer context) {
+        protected void onManualStart_AutomaticStartIdle(String from, String to, FSMEvent event, BGPEventContext context) {
             // initializes all BGP resources for the peer connection
             callbacks.initializeBGPResources();
 
@@ -476,7 +476,7 @@ public class FSMImpl {
             LOGGER.info("Changing state from IDLE to CONNECT");
         }
 
-        protected void onManualStart_with_PassiveTcpEstablishment_AutomaticStart_with_PassiveTcpEstablishmentIdle(String from, String to, FSMEvent event, Integer context) {
+        protected void onManualStart_with_PassiveTcpEstablishment_AutomaticStart_with_PassiveTcpEstablishmentIdle(String from, String to, FSMEvent event, BGPEventContext context) {
             // initializes all BGP resources
             callbacks.initializeBGPResources();
 
@@ -495,7 +495,7 @@ public class FSMImpl {
         // ------------------------------------------------------------------------------------------------------------
 
         // CONNECT ----------------------------------------------------------------------------------------------------
-        protected void onManualStopConnect(String from, String to, FSMEvent event, Integer context) {
+        protected void onManualStopConnect(String from, String to, FSMEvent event, BGPEventContext context) {
             // drops the TCP connection
             callbacks.dropTCPConnection();
 
@@ -514,7 +514,7 @@ public class FSMImpl {
             LOGGER.info("Changing state from CONNECT to IDLE");
         }
 
-        protected void onConnectRetryTimer_ExpiresConnect(String from, String to, FSMEvent event, Integer context) {
+        protected void onConnectRetryTimer_ExpiresConnect(String from, String to, FSMEvent event, BGPEventContext context) {
             // drops the TCP connection
             callbacks.dropTCPConnection();
 
@@ -535,7 +535,7 @@ public class FSMImpl {
             LOGGER.info("Remaining in CONNECT state");
         }
 
-        protected void onDelayOpenTimer_ExpiresConnect(String from, String to, FSMEvent event, Integer context) {
+        protected void onDelayOpenTimer_ExpiresConnect(String from, String to, FSMEvent event, BGPEventContext context) {
             // sends an OPEN message to its peer
             callbacks.sendOpenMessage();
 
@@ -546,11 +546,10 @@ public class FSMImpl {
             LOGGER.info("Changing state from CONNECT to OPEN_SENT");
         }
 
-        public void onTcp_CR_Acked_TcpConnectionConfirmed_DelayOpenConnect(String from, String to, FSMEvent event, Integer context) {
+        public void onTcp_CR_Acked_TcpConnectionConfirmed_DelayOpenConnect(String from, String to, FSMEvent event, BGPEventContext context) {
             // stops the ConnectRetryTimer (if running) and sets the ConnectRetryTimer to zero
             connectRetryTimer.cancel();
             connectRetryTime = 0;
-
 
             // sets the DelayOpenTimer to the initial value
             restartDelayOpenTimer();
@@ -559,11 +558,10 @@ public class FSMImpl {
             LOGGER.info("Remaining in CONNECT state");
         }
 
-        public void onTcp_CR_Acked_TcpConnectionConfirmedConnect(String from, String to, FSMEvent event, Integer context) {
+        public void onTcp_CR_Acked_TcpConnectionConfirmedConnect(String from, String to, FSMEvent event, BGPEventContext context) {
             // stops the ConnectRetryTimer (if running) and sets the ConnectRetryTimer to zero
             connectRetryTimer.cancel();
             connectRetryTime = 0;
-
 
             // completes BGP initialization
             callbacks.completeBGPPeerInitialization();
@@ -607,7 +605,7 @@ public class FSMImpl {
         //        - releases all BGP resources, and
         //        - changes its state to Idle.
 
-        protected void onBGPOpen_with_DelayOpenTimer_runningConnect(String from, String to, FSMEvent event, Integer context) {
+        protected void onBGPOpen_with_DelayOpenTimer_runningConnect(String from, String to, FSMEvent event, BGPEventContext context) {
             // stops the ConnectRetryTimer (if running) and sets the ConnectRetryTimer to zero
             connectRetryTimer.cancel();
             connectRetryTime = 0;
@@ -647,7 +645,7 @@ public class FSMImpl {
             LOGGER.info("Changing state from CONNECT to OPEN_CONFIRM");
         }
 
-        protected void onBGPHeaderErrConnect(String from, String to, FSMEvent event, Integer context) {
+        protected void onBGPHeaderErrConnect(String from, String to, FSMEvent event, BGPEventContext context) {
             // (optionally) If the SendNOTIFICATIONwithoutOPEN attribute is
             //          set to TRUE, then the local system first sends a NOTIFICATION
             //          message with the appropriate error code
@@ -677,7 +675,7 @@ public class FSMImpl {
             LOGGER.info("Changing state from CONNECT to IDLE");
         }
 
-        protected void onBGPOpenMsgErrConnect(String from, String to, FSMEvent event, Integer context) {
+        protected void onBGPOpenMsgErrConnect(String from, String to, FSMEvent event, BGPEventContext context) {
             // (optionally) If the SendNOTIFICATIONwithoutOPEN attribute is
             //          set to TRUE, then the local system first sends a NOTIFICATION
             //          message with the appropriate error code
@@ -707,7 +705,7 @@ public class FSMImpl {
             LOGGER.info("Changing state from CONNECT to IDLE");
         }
 
-        protected void onNotifMsgVerErrConnect(String from, String to, FSMEvent event, Integer context) {
+        protected void onNotifMsgVerErrConnect(String from, String to, FSMEvent event, BGPEventContext context) {
             if(delayOpenTime > 0) {
                 // stops the ConnectRetryTimer (if running) and sets the ConnectRetryTimer to zero
                 connectRetryTimer.cancel();
@@ -749,7 +747,7 @@ public class FSMImpl {
             }
         }
 
-        protected void onAnyOtherEventConnect(String from, String to, FSMEvent event, Integer context) {
+        protected void onAnyOtherEventConnect(String from, String to, FSMEvent event, BGPEventContext context) {
             // if the ConnectRetryTimer is running, stops and resets the ConnectRetryTimer (sets to zero)
             connectRetryTimer.cancel();
             connectRetryTime = 0;
@@ -778,7 +776,7 @@ public class FSMImpl {
         // ------------------------------------------------------------------------------------------------------------
 
         // ACTIVE -----------------------------------------------------------------------------------------------------
-        protected void onManualStopActive(String from, String to, FSMEvent event, Integer context) {
+        protected void onManualStopActive(String from, String to, FSMEvent event, BGPEventContext context) {
             // If the DelayOpenTimer is running and the
             // SendNOTIFICATIONwithoutOPEN session attribute is set, the
             // local system sends a NOTIFICATION with a Cease
@@ -805,7 +803,7 @@ public class FSMImpl {
             LOGGER.info("Changing state from ACTIVE to IDLE");
         }
 
-        protected void onConnectRetryTimer_ExpiresActive(String from, String to, FSMEvent event, Integer context) {
+        protected void onConnectRetryTimer_ExpiresActive(String from, String to, FSMEvent event, BGPEventContext context) {
             // restarts the ConnectRetryTimer (with initial value)
             restartConnectRetryTimer();
 
@@ -819,7 +817,7 @@ public class FSMImpl {
             LOGGER.info("Changing state from ACTIVE to CONNECT");
         }
 
-        protected void onDelayOpenTimer_ExpiresActive(String from, String to, FSMEvent event, Integer context) {
+        protected void onDelayOpenTimer_ExpiresActive(String from, String to, FSMEvent event, BGPEventContext context) {
             // sets the ConnectRetryTimer to zero
             connectRetryTimer.cancel();
             connectRetryTime = 0;
@@ -841,7 +839,7 @@ public class FSMImpl {
             LOGGER.info("Changing state from ACTIVE to OPEN_SENT");
         }
 
-        protected void onTcpConnection_ValidActive(String from, String to, FSMEvent event, Integer context) {
+        protected void onTcpConnection_ValidActive(String from, String to, FSMEvent event, BGPEventContext context) {
             // the local system processes the TCP connection flags
             callbacks.processTCPConnection();
 
@@ -849,7 +847,7 @@ public class FSMImpl {
             LOGGER.info("Remaining in ACTIVE state");
         }
 
-        protected void onTcp_CR_InvalidActive(String from, String to, FSMEvent event, Integer context) {
+        protected void onTcp_CR_InvalidActive(String from, String to, FSMEvent event, BGPEventContext context) {
             // the local system rejects the TCP connection and
             callbacks.rejectTCPConnection();
 
@@ -875,7 +873,7 @@ public class FSMImpl {
         //      A HoldTimer value of 4 minutes is suggested as a "large value" for
         //      the HoldTimer.
 
-        protected void onTcpConnectionFailsActive(String from, String to, FSMEvent event, Integer context) {
+        protected void onTcpConnectionFailsActive(String from, String to, FSMEvent event, BGPEventContext context) {
             // restarts the ConnectRetryTimer (with the initial value)
             restartConnectRetryTimer();
 
@@ -898,7 +896,7 @@ public class FSMImpl {
             LOGGER.info("Changing state from ACTIVE to IDLE");
         }
 
-        protected void onBGPOpen_with_DelayOpenTimer_runningActive(String from, String to, FSMEvent event, Integer context) {
+        protected void onBGPOpen_with_DelayOpenTimer_runningActive(String from, String to, FSMEvent event, BGPEventContext context) {
             // stops the ConnectRetryTimer (if running) and sets the ConnectRetryTimer to zero
             connectRetryTimer.cancel();
             connectRetryTime = 0;
@@ -936,7 +934,7 @@ public class FSMImpl {
             LOGGER.info("Changing state from ACTIVE to OPEN_CONFIRM");
         }
 
-        protected void onBGPHeaderErrActive(String from, String to, FSMEvent event, Integer context) {
+        protected void onBGPHeaderErrActive(String from, String to, FSMEvent event, BGPEventContext context) {
             // (optionally) sends a NOTIFICATION message with the appropriate error code if the SendNOTIFICATIONwithoutOPEN attribute is set to TRUE
             if(sendNOTIFICATIONwithoutOPEN) {
                 callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_MESSAGE_HEADER_ERROR);
@@ -964,7 +962,7 @@ public class FSMImpl {
             LOGGER.info("Changing state from ACTIVE to IDLE");
         }
 
-        protected void onBGPOpenMsgErrActive(String from, String to, FSMEvent event, Integer context) {
+        protected void onBGPOpenMsgErrActive(String from, String to, FSMEvent event, BGPEventContext context) {
             // (optionally) sends a NOTIFICATION message with the appropriate error code if the SendNOTIFICATIONwithoutOPEN attribute is set to TRUE
             if(sendNOTIFICATIONwithoutOPEN) {
                 callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_OPEN_MESSAGE_ERROR);
@@ -992,7 +990,7 @@ public class FSMImpl {
             LOGGER.info("Changing state from ACTIVE to IDLE");
         }
 
-        protected void onNotifMsgVerErrActive(String from, String to, FSMEvent event, Integer context) {
+        protected void onNotifMsgVerErrActive(String from, String to, FSMEvent event, BGPEventContext context) {
             if(delayOpenTime > 0 && delayOpenTime < 120) {
                 // stops the ConnectRetryTimer (if running) and sets the ConnectRetryTimer to zero
                 connectRetryTimer.cancel();
@@ -1034,7 +1032,7 @@ public class FSMImpl {
             }
         }
 
-        protected void onAnyOtherEventActive(String from, String to, FSMEvent event, Integer context) {
+        protected void onAnyOtherEventActive(String from, String to, FSMEvent event, BGPEventContext context) {
             // sets the ConnectRetryTimer to zero
             connectRetryTimer.cancel();
             connectRetryTime = 0;
@@ -1060,7 +1058,7 @@ public class FSMImpl {
         // ------------------------------------------------------------------------------------------------------------
 
         // OPEN_SENT --------------------------------------------------------------------------------------------------
-        protected void onManualStopOpenSent(String from, String to, FSMEvent event, Integer context) {
+        protected void onManualStopOpenSent(String from, String to, FSMEvent event, BGPEventContext context) {
             // sends the NOTIFICATION with a Cease
             callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_CAESE);
 
@@ -1081,7 +1079,7 @@ public class FSMImpl {
             LOGGER.info("Changing state from OPEN_SENT to IDLE");
         }
 
-        protected void onAutomaticStopOpenSent(String from, String to, FSMEvent event, Integer context) {
+        protected void onAutomaticStopOpenSent(String from, String to, FSMEvent event, BGPEventContext context) {
             // sends the NOTIFICATION with a Cease
             callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_CAESE);
 
@@ -1107,7 +1105,7 @@ public class FSMImpl {
             LOGGER.info("Changing state from OPEN_SENT to IDLE");
         }
 
-        protected void onHoldTimer_ExpiresOpenSent(String from, String to, FSMEvent event, Integer context) {
+        protected void onHoldTimer_ExpiresOpenSent(String from, String to, FSMEvent event, BGPEventContext context) {
             // sends a NOTIFICATION message with the error code Hold Timer Expired
             callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_HOLD_TIMER_EXPIRED);
 
@@ -1134,7 +1132,7 @@ public class FSMImpl {
 
         }
 
-        protected void onTcpConnectionFailsOpenSent(String from, String to, FSMEvent event, Integer context) {
+        protected void onTcpConnectionFailsOpenSent(String from, String to, FSMEvent event, BGPEventContext context) {
             // closes the BGP connection
             callbacks.closeBGPConnection();
 
@@ -1148,7 +1146,7 @@ public class FSMImpl {
             LOGGER.info("Changing state from OPEN_SENT to ACTIVE");
         }
 
-        protected void onBGPOpenOpenSent(String from, String to, FSMEvent event, Integer context) {
+        protected void onBGPOpenOpenSent(String from, String to, FSMEvent event, BGPEventContext context) {
             // resets the DelayOpenTimer to zero
             delayOpenTimer.cancel();
             delayOpenTime = 0;
@@ -1170,7 +1168,7 @@ public class FSMImpl {
             LOGGER.info("Changing state from OPEN_SENT to OPEN_CONFIRM");
         }
 
-        protected void onBGPHeaderErrOpenSent(String from, String to, FSMEvent event, Integer context) {
+        protected void onBGPHeaderErrOpenSent(String from, String to, FSMEvent event, BGPEventContext context) {
             // sends a NOTIFICATION message with the appropriate error code
             callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_MESSAGE_HEADER_ERROR);
 
@@ -1196,7 +1194,7 @@ public class FSMImpl {
             LOGGER.info("Changing state from OPEN_SENT to IDLE");
         }
 
-        protected void onBGPOpenMsgErrOpenSent(String from, String to, FSMEvent event, Integer context) {
+        protected void onBGPOpenMsgErrOpenSent(String from, String to, FSMEvent event, BGPEventContext context) {
             // sends a NOTIFICATION message with the appropriate error code
             callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_OPEN_MESSAGE_ERROR);
 
@@ -1222,7 +1220,7 @@ public class FSMImpl {
             LOGGER.info("Changing state from OPEN_SENT to IDLE");
         }
 
-        protected void onOpenCollisionDumpOpenSent(String from, String to, FSMEvent event, Integer context) {
+        protected void onOpenCollisionDumpOpenSent(String from, String to, FSMEvent event, BGPEventContext context) {
             // sends a NOTIFICATION with a Cease
             callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_CAESE);
 
@@ -1248,7 +1246,7 @@ public class FSMImpl {
             LOGGER.info("Changing state from OPEN_SENT to IDLE");
         }
 
-        protected void onNotifMsgVerErrOpenSent(String from, String to, FSMEvent event, Integer context) {
+        protected void onNotifMsgVerErrOpenSent(String from, String to, FSMEvent event, BGPEventContext context) {
             // sets the ConnectRetryTimer to zero
             connectRetryTimer.cancel();
             connectRetryTime = 0;
@@ -1263,7 +1261,7 @@ public class FSMImpl {
             LOGGER.info("Changing state from OPEN_SENT to IDLE");
         }
 
-        protected void onAnyOtherEventOpenSent(String from, String to, FSMEvent event, Integer context) {
+        protected void onAnyOtherEventOpenSent(String from, String to, FSMEvent event, BGPEventContext context) {
             // sends the NOTIFICATION with the Error Code Finite State Machine Error
             callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_FINITE_STATE_MACHINE_ERROR);
 
@@ -1291,7 +1289,7 @@ public class FSMImpl {
         // ------------------------------------------------------------------------------------------------------------
 
         // CONFIRM ----------------------------------------------------------------------------------------------------
-        protected void onManualStopOpenConfirm(String from, String to, FSMEvent event, Integer context) {
+        protected void onManualStopOpenConfirm(String from, String to, FSMEvent event, BGPEventContext context) {
             // sends the NOTIFICATION message with a Cease
             callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_CAESE);
 
@@ -1312,7 +1310,7 @@ public class FSMImpl {
             LOGGER.info("Changing state from OPEN_CONFIRM to IDLE");
         }
 
-        protected void onAutomaticStopOpenConfirm(String from, String to, FSMEvent event, Integer context) {
+        protected void onAutomaticStopOpenConfirm(String from, String to, FSMEvent event, BGPEventContext context) {
             // sends the NOTIFICATION message with a Cease
             callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_CAESE);
 
@@ -1338,7 +1336,7 @@ public class FSMImpl {
             LOGGER.info("Changing state from OPEN_CONFIRM to IDLE");
         }
 
-        protected void onHoldTimer_ExpiresOpenConfirm(String from, String to, FSMEvent event, Integer context) {
+        protected void onHoldTimer_ExpiresOpenConfirm(String from, String to, FSMEvent event, BGPEventContext context) {
             // sends the NOTIFICATION message with the Error Code Hold Timer Expired
             callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_HOLD_TIMER_EXPIRED);
 
@@ -1364,7 +1362,7 @@ public class FSMImpl {
             LOGGER.info("Changing state from OPEN_CONFIRM to IDLE");
         }
 
-        protected void onKeepaliveTimer_ExpiresOpenConfirm(String from, String to, FSMEvent event, Integer context) {
+        protected void onKeepaliveTimer_ExpiresOpenConfirm(String from, String to, FSMEvent event, BGPEventContext context) {
             // sends a KEEPALIVE message
             callbacks.sendKeepaliveMessage();
 
@@ -1375,7 +1373,7 @@ public class FSMImpl {
             LOGGER.info("Remaining in the OPEN_CONFIRM state");
         }
 
-        protected void onTcpConnectionFails_NotifMsgOpenConfirm(String from, String to, FSMEvent event, Integer context) {
+        protected void onTcpConnectionFails_NotifMsgOpenConfirm(String from, String to, FSMEvent event, BGPEventContext context) {
             // sets the ConnectRetryTimer to zero
             connectRetryTimer.cancel();
             connectRetryTime = 0;
@@ -1398,7 +1396,7 @@ public class FSMImpl {
             LOGGER.info("Changing state from OPEN_CONFIRM to IDLE");
         }
 
-        protected void onNotifMsgVerErrOpenConfirm(String from, String to, FSMEvent event, Integer context) {
+        protected void onNotifMsgVerErrOpenConfirm(String from, String to, FSMEvent event, BGPEventContext context) {
             // sets the ConnectRetryTimer to zero
             connectRetryTimer.cancel();
             connectRetryTime = 0;
@@ -1413,7 +1411,7 @@ public class FSMImpl {
             LOGGER.info("Changing state from OPEN_CONFIRM to IDLE");
         }
 
-        protected void onBGPHeaderErrOpenConfirm(String from, String to, FSMEvent event, Integer context) {
+        protected void onBGPHeaderErrOpenConfirm(String from, String to, FSMEvent event, BGPEventContext context) {
             // sends a NOTIFICATION message with the appropriate error code
             callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_MESSAGE_HEADER_ERROR);
 
@@ -1439,7 +1437,7 @@ public class FSMImpl {
             LOGGER.info("Changing state from OPEN_CONFIRM to IDLE");
         }
 
-        protected void onBGPOpenMsgErrOpenConfirm(String from, String to, FSMEvent event, Integer context) {
+        protected void onBGPOpenMsgErrOpenConfirm(String from, String to, FSMEvent event, BGPEventContext context) {
             // sends a NOTIFICATION message with the appropriate error code
             callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_OPEN_MESSAGE_ERROR);
 
@@ -1465,7 +1463,7 @@ public class FSMImpl {
             LOGGER.info("Changing state from OPEN_CONFIRM to IDLE");
         }
 
-        protected void onOpenCollisionDumpOpenConfirm(String from, String to, FSMEvent event, Integer context) {
+        protected void onOpenCollisionDumpOpenConfirm(String from, String to, FSMEvent event, BGPEventContext context) {
             // sends a NOTIFICATION with a Cease
             callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_CAESE);
 
@@ -1491,7 +1489,7 @@ public class FSMImpl {
             LOGGER.info("Changing state from OPEN_CONFIRM to IDLE");
         }
 
-        protected void onKeepAliveMsgOpenConfirm(String from, String to, FSMEvent event, Integer context) {
+        protected void onKeepAliveMsgOpenConfirm(String from, String to, FSMEvent event, BGPEventContext context) {
             // restarts the HoldTimer
             restartHoldTimer(90);
 
@@ -1499,7 +1497,7 @@ public class FSMImpl {
             LOGGER.info("Changing state from OPEN_CONFIRM to ESTABLISHED");
         }
 
-        protected void onAnyOtherEventOpenConfirm(String from, String to, FSMEvent event, Integer context) {
+        protected void onAnyOtherEventOpenConfirm(String from, String to, FSMEvent event, BGPEventContext context) {
             // sends a NOTIFICATION with a code of Finite State Machine Error
             callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_FINITE_STATE_MACHINE_ERROR);
 
@@ -1540,7 +1538,7 @@ public class FSMImpl {
         //          DampPeerOscillations attribute is set to TRUE, and
         //        - changes its state to Idle.
 
-        protected void onManualStopEstablished(String from, String to, FSMEvent event, Integer context) {
+        protected void onManualStopEstablished(String from, String to, FSMEvent event, BGPEventContext context) {
             // sends the NOTIFICATION message with a Cease
             callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_CAESE);
 
@@ -1564,7 +1562,7 @@ public class FSMImpl {
             LOGGER.info("Changing state from ESTABLISHED to IDLE");
         }
 
-        protected void onAutomaticStopEstablished(String from, String to, FSMEvent event, Integer context) {
+        protected void onAutomaticStopEstablished(String from, String to, FSMEvent event, BGPEventContext context) {
             // sends the NOTIFICATION message with a Cease
             callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_CAESE);
 
@@ -1591,7 +1589,7 @@ public class FSMImpl {
             LOGGER.info("Changing state from ESTABLISHED to IDLE");
         }
 
-        protected void onHoldTimer_ExpiresEstablished(String from, String to, FSMEvent event, Integer context) {
+        protected void onHoldTimer_ExpiresEstablished(String from, String to, FSMEvent event, BGPEventContext context) {
             // sends a NOTIFICATION message with the Error Code Hold Timer Expired
             callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_HOLD_TIMER_EXPIRED);
 
@@ -1617,7 +1615,7 @@ public class FSMImpl {
             LOGGER.info("Changing state from ESTABLISHED to IDLE");
         }
 
-        protected void onKeepaliveTimer_ExpiresEstablished(String from, String to, FSMEvent event, Integer context) {
+        protected void onKeepaliveTimer_ExpiresEstablished(String from, String to, FSMEvent event, BGPEventContext context) {
             // sends a KEEPALIVE message
             callbacks.sendKeepaliveMessage();
 
@@ -1627,7 +1625,7 @@ public class FSMImpl {
             }
         }
 
-        protected void onOpenCollisionDumpEstablished(String from, String to, FSMEvent event, Integer context) {
+        protected void onOpenCollisionDumpEstablished(String from, String to, FSMEvent event, BGPEventContext context) {
             // sends a NOTIFICATION with a Cease
             callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_CAESE);
 
@@ -1656,7 +1654,7 @@ public class FSMImpl {
             LOGGER.info("Changing state from ESTABLISHED to IDLE");
         }
 
-        protected void onTcpConnectionFails_NotifMsgVerErr_NotifMsgEstablished(String from, String to, FSMEvent event, Integer context) {
+        protected void onTcpConnectionFails_NotifMsgVerErr_NotifMsgEstablished(String from, String to, FSMEvent event, BGPEventContext context) {
             // sets the ConnectRetryTimer to zero
             connectRetryTimer.cancel();
             connectRetryTime = 0;
@@ -1677,7 +1675,7 @@ public class FSMImpl {
             LOGGER.info("Changing state from ESTABLISHED to IDLE");
         }
 
-        protected void onKeepAliveMsgEstablished(String from, String to, FSMEvent event, Integer context) {
+        protected void onKeepAliveMsgEstablished(String from, String to, FSMEvent event, BGPEventContext context) {
             // restarts its HoldTimer, if the negotiated HoldTime value is non-zero
             restartHoldTimer(90);
 
@@ -1685,7 +1683,7 @@ public class FSMImpl {
             LOGGER.info("Remaining in ESTABLISHED state");
         }
 
-        protected void onUpdateMsgEstablished(String from, String to, FSMEvent event, Integer context) {
+        protected void onUpdateMsgEstablished(String from, String to, FSMEvent event, BGPEventContext context) {
             // processes the message
             callbacks.processUpdateMessage();
 
@@ -1698,7 +1696,7 @@ public class FSMImpl {
             LOGGER.info("Remaining in ESTABLISHED state");
         }
 
-        protected void onUpdateMsgErrEstablished(String from, String to, FSMEvent event, Integer context) {
+        protected void onUpdateMsgErrEstablished(String from, String to, FSMEvent event, BGPEventContext context) {
             // sends a NOTIFICATION message with an Update error
             callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_UPDATE_MESSAGE_ERROR);
 
@@ -1727,7 +1725,7 @@ public class FSMImpl {
             LOGGER.info("Changing state from ESTABLISHED to IDLE");
         }
 
-        protected void onAnyOtherEventEstablished(String from, String to, FSMEvent event, Integer context) {
+        protected void onAnyOtherEventEstablished(String from, String to, FSMEvent event, BGPEventContext context) {
             // sends a NOTIFICATION message with the Error Code Finite State Machine Error
             callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_FINITE_STATE_MACHINE_ERROR);
 
@@ -1757,27 +1755,27 @@ public class FSMImpl {
         }
         // ------------------------------------------------------------------------------------------------------------
 
-        protected void onIdle(String from, String to, FSMEvent event, Integer context) {
+        protected void onIdle(String from, String to, FSMEvent event, BGPEventContext context) {
             LOGGER.info("Now the state is IDLE");
         }
 
-        protected void onConnect(String from, String to, FSMEvent event, Integer context) {
+        protected void onConnect(String from, String to, FSMEvent event, BGPEventContext context) {
             LOGGER.info("Now the state is CONNECTED");
         }
 
-        protected void onActive(String from, String to, FSMEvent event, Integer context) {
+        protected void onActive(String from, String to, FSMEvent event, BGPEventContext context) {
             LOGGER.info("Now the state is ACTIVE");
         }
 
-        protected void onOpenSent(String from, String to, FSMEvent event, Integer context) {
+        protected void onOpenSent(String from, String to, FSMEvent event, BGPEventContext context) {
             LOGGER.info("Now the state is OPEN_SENT");
         }
 
-        protected void onOpenConfirm(String from, String to, FSMEvent event, Integer context) {
+        protected void onOpenConfirm(String from, String to, FSMEvent event, BGPEventContext context) {
             LOGGER.info("Now the state is OPEN_CONFIRM");
         }
 
-        protected void onEstablished(String from, String to, FSMEvent event, Integer context) {
+        protected void onEstablished(String from, String to, FSMEvent event, BGPEventContext context) {
             LOGGER.info("Now the state is ESTABLISHED");
         }
     }

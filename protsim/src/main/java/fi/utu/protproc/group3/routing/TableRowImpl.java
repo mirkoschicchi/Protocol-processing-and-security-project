@@ -59,4 +59,9 @@ public class TableRowImpl implements TableRow {
                 " | TOS:" + tos + " | scope:" + scope + " | Interface:" + eInterface.toString());
     }
 
+    @Override
+    public String toString() {
+        return "Prefix:" + prefix.toString() + " | Next Hop:" + nextHop.toString() + " | metric:" + metric +
+                " | TOS:" + tos + " | scope:" + scope + " | Interface:" + eInterface.toString();
+    }
 }

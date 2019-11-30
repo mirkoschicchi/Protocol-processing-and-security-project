@@ -2,6 +2,7 @@ package fi.utu.protproc.group3.routing;
 
 
 import fi.utu.protproc.group3.utils.IPAddress;
+import fi.utu.protproc.group3.utils.NetworkAddress;
 
 import java.util.Collection;
 
@@ -25,6 +26,13 @@ public interface RoutingTable {
      * @return A row in the routing table corresponding with that destination address
      */
     TableRow getRowByDestinationAddress(IPAddress destinationAddress);
+
+    /**
+     * Get the row corresponding to the prefix
+     * @param prefix
+     * @return
+     */
+    TableRow getRowByPrefix(NetworkAddress prefix);
 
     /**
      * Insert a new row in the table
