@@ -3,6 +3,7 @@ name: Default Test Scenario
 description: A relatively simple test scenario with one Tier 1, three Tier 2 and four Tier 3 ISPs.
 networks:
   - name: t1 # tier 1 ISP internal network
+    autonomousSystem: 1000
     address: "2001:1:ffff:ffff::0/64"
   - name: t2a # first tier 2 ISP
     address: "2002:1:ffff:ffff::0/64"
@@ -12,16 +13,20 @@ networks:
     address: "2002:3:ffff:ffff::0/64"
   - name: net1 # first test net (servers)
     address: "2003:1::0/64"
+    autonomousSystem: 2
     randomServers: 10
   - name: net2 # second test net (servers)
     address: "2003:2::0/64"
+    autonomousSystem: 1
     randomServers: 10
   - name: net3 # first test net (servers & clients)
     address: "2003:3::0/64"
+    autonomousSystem: 3
     randomServers: 5
     randomClients: 5
   - name: net4 # fourth test net (clients only)
     address: "2003:4::0/64"
+    autonomousSystem: 2
     randomClients: 10
     servers:
       - name: test
@@ -32,28 +37,34 @@ networks:
       name: "tuntap"
 routers:
   - name: t1_t2a
+    autonomousSystem: 1000
     interfaces:
       - network: t1
       - network: t2a
   - name: t1_t2b
+    autonomousSystem: 1000
     interfaces:
       - network: t1
       - network: t2b
   - name: t1_t2c
+    autonomousSystem: 1000
     interfaces:
       - network: t1
       - network: t2c
   - name: t2a_net
+    autonomousSystem: 2
     interfaces:
       - network: t2a
       - network: net1
       - network: net4
         address: "2003:4::1"
   - name: t2b_net
+    autonomousSystem: 1
     interfaces:
       - network: t2b
       - network: net2
   - name: t2c_net
+    autonomousSystem: 3
     interfaces:
       - network: t2c
       - network: net3
