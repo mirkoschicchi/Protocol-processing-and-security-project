@@ -172,12 +172,12 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
                                     router.getRoutingTable().insertRow(TableRow.create(
                                             target.getNetworkAddress(),
                                             nextHopIntf.get().getIpAddress(),
-                                            metric, (short) 0, (short) 0, outIntf.get()
+                                            metric, outIntf.get()
                                     ));
                                 }
                             } else {
                                 router.getRoutingTable().insertRow(TableRow.create(
-                                        target.getNetworkAddress(), null, metric, (short) 0, (short) 0, outIntf.get()
+                                        target.getNetworkAddress(), null, metric, outIntf.get()
                                 ));
                             }
                         });

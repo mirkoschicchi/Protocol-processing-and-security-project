@@ -4,14 +4,20 @@ import fi.utu.protproc.group3.simulator.EthernetInterface;
 import fi.utu.protproc.group3.utils.IPAddress;
 import fi.utu.protproc.group3.utils.NetworkAddress;
 
+import java.util.List;
+
 
 /**
  * This represents a row in the routing table
  */
 public interface TableRow {
-    static TableRow create(NetworkAddress prefix, IPAddress nextHop, int metric,
-                           short tos, short scope, EthernetInterface eInterface) {
-        return new TableRowImpl(prefix, nextHop, metric, tos, scope, eInterface);
+    static TableRow create(NetworkAddress prefix, IPAddress nextHop, int metric, EthernetInterface eInterface) {
+        return new TableRowImpl(prefix, nextHop, metric, eInterface);
+    }
+
+    static TableRowImpl create(NetworkAddress prefix, IPAddress nextHop, int metric, int bgpPeer,
+                               EthernetInterface eInterface, List<List<Short>> asPath) {
+        return new TableRowImpl(prefix, nextHop, metric, bgpPeer, eInterface, asPath);
     }
 
     // From cat /etc/iproute2/rt_protos
@@ -41,9 +47,10 @@ public interface TableRow {
     NetworkAddress getPrefix();
     IPAddress getNextHop();
     int getMetric();
-    short getTos();
-    short getScope();
+    int getBgpPeer();
     EthernetInterface getEInterface();
+    List<List<Short>> getAsPath();
+    int getAsPathLength();
 
     void show();
 }

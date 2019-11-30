@@ -43,7 +43,8 @@ public class BGPConnection extends Connection {
 
             for(NetworkAddress networkAddress: updateMessage.getNetworkLayerReachabilityInformation()) {
                 // Create a new row parsing also the path attributes
-                TableRow newRoute = TableRow.create(networkAddress, null, 0,(short)0,(short)0,null);
+                TableRow newRoute = TableRow.create(networkAddress, null, 0, context.getRouter().getAutonomousSystem(), null, updateMessage.getAsPath());
+
                 context.getRouter().getRoutingTable().insertRow(newRoute);
                 LOGGER.info("Inserting row " + newRoute.toString());
             }

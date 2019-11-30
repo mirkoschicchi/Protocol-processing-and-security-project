@@ -30,12 +30,26 @@ public class RoutingTableImpl implements RoutingTable {
     @Override
     public TableRow getRowByDestinationAddress(IPAddress destinationAddress) {
         int longestMatch = 0;
+        int shortestAsPath = 999999999;
+        int shortestMetric = 999999999;
         TableRow routeRow = null;
         for(TableRow row: getRows()) {
             int matchLength = NetworkAddress.matchLength(row.getPrefix(), destinationAddress);
-            if(matchLength > longestMatch) {
-                longestMatch = matchLength;
-                routeRow = row;
+
+            if (matchLength > 0) {
+                if (matchLength > longestMatch) {
+                    longestMatch = matchLength;
+                    shortestMetric = row.getMetric();
+                    shortestAsPath = row.getAsPathLength();
+                    routeRow = row;
+                } else if (matchLength == longestMatch && row.getMetric() < shortestMetric) {
+                    shortestMetric = row.getMetric();
+                    shortestAsPath = row.getAsPathLength();
+                    routeRow = row;
+                } else if (matchLength == longestMatch && row.getMetric() == shortestMetric && row.getAsPathLength() < shortestAsPath) {
+                    shortestAsPath = row.getAsPathLength();
+                    routeRow = row;
+                }
             }
         }
         return routeRow;
