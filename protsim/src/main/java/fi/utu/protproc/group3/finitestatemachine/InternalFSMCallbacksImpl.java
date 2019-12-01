@@ -32,7 +32,7 @@ public class InternalFSMCallbacksImpl implements InternalFSMCallbacks {
     }
 
     @Override
-    public void sendNotificationMessage(byte errorCode) {
+    public void sendNotificationMessage(byte errorCode, byte subErrorCode, byte[] data) {
 
     }
 

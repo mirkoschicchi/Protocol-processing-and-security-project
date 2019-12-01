@@ -14,20 +14,19 @@ networks:
   - name: net1 # first test net (servers)
     address: "2003:1::0/64"
     autonomousSystem: 2
-    randomServers: 10
+    randomServers: 1
   - name: net2 # second test net (servers)
     address: "2003:2::0/64"
     autonomousSystem: 1
-    randomServers: 10
+    randomServers: 1
   - name: net3 # first test net (servers & clients)
     address: "2003:3::0/64"
     autonomousSystem: 3
-    randomServers: 5
-    randomClients: 5
+    randomClients: 1
   - name: net4 # fourth test net (clients only)
     address: "2003:4::0/64"
     autonomousSystem: 2
-    randomClients: 10
+    randomServers: 1
     servers:
       - name: test
         address: "2003:4::3"

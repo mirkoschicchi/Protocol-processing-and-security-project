@@ -1,5 +1,6 @@
 package fi.utu.protproc.group3.protocols.bgp4;
 
+import fi.utu.protproc.group3.utils.IPAddress;
 import fi.utu.protproc.group3.utils.NetworkAddress;
 
 import java.util.List;
@@ -13,14 +14,14 @@ public interface BGP4MessageUpdate extends BGP4Message {
     short getPathAttributesLength();
 
     static BGP4MessageUpdate create(List<NetworkAddress> withdrawnRoutes, byte origin,
-                                    List<List<Short>> asPath, NetworkAddress nextHop,
+                                    List<List<Short>> asPath, IPAddress nextHop,
                                     List<NetworkAddress> networkLayerReachabilityInformation) {
         short len = 21;
         for (NetworkAddress addr : withdrawnRoutes)
             len += (1 + addr.getAddress().toArray().length);
         len += 5; // origin
         len += 4 + (asPath.size() * 4);
-        len += 1 + nextHop.getAddress().toArray().length;
+        len += 1 + nextHop.toArray().length;
         for (NetworkAddress addr : networkLayerReachabilityInformation)
             len += (5 + addr.getAddress().toArray().length);
         return new BGP4MessageUpdateImpl(len, (byte) BGP4Message.TYPE_UPDATE,
@@ -30,6 +31,7 @@ public interface BGP4MessageUpdate extends BGP4Message {
     List<NetworkAddress> getWithdrawnRoutes();
     byte getOrigin();
     List<List<Short>> getAsPath();
-    NetworkAddress getNextHop();
+
+    IPAddress getNextHop();
     List<NetworkAddress> getNetworkLayerReachabilityInformation();
 }

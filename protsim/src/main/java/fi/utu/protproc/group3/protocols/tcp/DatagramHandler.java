@@ -6,10 +6,7 @@ import fi.utu.protproc.group3.simulator.EthernetInterface;
 import fi.utu.protproc.group3.utils.IPAddress;
 import reactor.core.Disposable;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Random;
+import java.util.*;
 import java.util.logging.Logger;
 
 public class DatagramHandler {
@@ -64,7 +61,7 @@ public class DatagramHandler {
 
     public void onMessage(byte[] pdu) {
         var frame = EthernetFrame.parse(pdu);
-        if (frame.getType() == EthernetFrame.TYPE_IPV6) {
+        if (Arrays.equals(frame.getDestination(), ethernetInterface.getAddress()) && frame.getType() == EthernetFrame.TYPE_IPV6) {
             var packet = IPv6Packet.parse(frame.getPayload());
             if (packet.getNextHeader() == 0x6) {
                 var datagram = TCPDatagram.parse(packet.getPayload());
@@ -124,7 +121,7 @@ public class DatagramHandler {
                     state.status = ConnectionStatus.Closed;
                     state.connection.closed();
                 } else if (state.status == ConnectionStatus.Established) {
-                    if (datagram.getPayload() != null) {
+                    if (datagram.getPayload() != null && datagram.getPayload().length > 0) {
                         state.connection.messageReceived(datagram.getPayload());
                     }
                 } else if (flags == TCPDatagram.ACK) {
@@ -188,6 +185,11 @@ public class DatagramHandler {
             }
 
             return super.equals(obj);
+        }
+
+        @Override
+        public String toString() {
+            return "[" + localIp + "]:" + localPort + " -> [" + remoteIp + "]:" + remotePort;
         }
 
         public IPAddress getLocalIp() {
@@ -282,6 +284,14 @@ public class DatagramHandler {
         public void close() {
             status = ConnectionStatus.Closing;
             send(null, TCPDatagram.FIN);
+        }
+
+        public ConnectionDescriptor getDescriptor() {
+            return descriptor;
+        }
+
+        public ConnectionStatus getStatus() {
+            return status;
         }
     }
 }

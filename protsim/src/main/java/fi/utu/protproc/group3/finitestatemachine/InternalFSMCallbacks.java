@@ -20,7 +20,7 @@ public interface InternalFSMCallbacks {
 
     void sendKeepaliveMessage();
 
-    void sendNotificationMessage(byte errorCode);
+    void sendNotificationMessage(byte errorCode, byte subErrorCode, byte[] data);
 
     void performPeerOscillationDamping();
 

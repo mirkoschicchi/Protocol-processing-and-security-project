@@ -5,6 +5,7 @@ import fi.utu.protproc.group3.utils.IPAddress;
 import fi.utu.protproc.group3.utils.NetworkAddress;
 
 import java.util.List;
+import java.util.Objects;
 
 
 public class TableRowImpl implements TableRow {
@@ -69,19 +70,50 @@ public class TableRowImpl implements TableRow {
     }
 
     @Override
-    public void show() {
-        System.out.println("Prefix:" + prefix.toString() + " | Next Hop:" + nextHop.toString() + " | metric:" + metric +
-                " | Interface:" + eInterface.toString());
+    public String toString() {
+        var result = new StringBuilder();
+        result.append(prefix);
+        if (eInterface != null) {
+            result.append(" dev " + eInterface.getNetwork().getNetworkName());
+        }
+
+        if (nextHop != null) {
+            result.append(" via " + nextHop);
+        }
+
+        if (metric > 0) {
+            result.append(" metric " + metric);
+        }
+
+        if (bgpPeer != 0) {
+            result.append(" peer ").append(bgpPeer);
+        }
+
+        if (asPath != null && asPath.size() > 0) {
+            result.append(" as_path AS").append(String.join(
+                    ", AS",
+                    (Iterable<String>) asPath.get(0).stream().map(Object::toString)::iterator)
+            );
+        }
+
+        return result.toString();
     }
 
     @Override
-    public String toString() {
-        if (eInterface == null) {
-            return "Prefix:" + prefix.toString() + " | Next Hop:" + nextHop.toString() + " | metric:" + metric +
-                    " | Interface: null";
-        } else {
-            return "Prefix:" + prefix.toString() + " | Next Hop:" + nextHop.toString() + " | metric:" + metric +
-                    "| Interface:" + eInterface.toString();
+    public int hashCode() {
+        return toString().hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof TableRowImpl) {
+            var other = (TableRowImpl) obj;
+            return Objects.equals(other.nextHop, nextHop)
+                    && Objects.equals(other.eInterface, eInterface)
+                    && other.metric == metric
+                    && Objects.equals(other.prefix, prefix);
         }
+
+        return super.equals(obj);
     }
 }

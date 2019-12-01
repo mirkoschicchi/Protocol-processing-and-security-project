@@ -1,0 +1,44 @@
+---
+name: A minimal BGP test scenario
+description: A minimal test scenario using BGP to update routes between two routers.
+networks:
+  - name: net1
+    autonomousSystem: 1
+    address: "fe80:1::/64"
+    clients:
+      - name: client1
+        address: "fe80:1::2"
+  - name: net2
+    autonomousSystem: 2
+    address: "fe80:2::/64"
+    servers:
+      - name: server1
+        address: "fe80:2::2"
+  - name: link1
+    address: "fe80:ff01::/64"
+    autonomousSystem: 3
+  - name: link2
+    address: "fe80:ff02::/64"
+    autonomousSystem: 3
+routers:
+  - name: r1
+    autonomousSystem: 1
+    interfaces:
+      - network: net1
+        address: "fe80:1::1"
+      - network: link1
+        address: "fe80:ff01::2"
+  - name: r2
+    autonomousSystem: 2
+    interfaces:
+      - network: net2
+        address: "fe80:2::1"
+      - network: link2
+        address: "fe80:ff02::2"
+  - name: isp
+    autonomousSystem: 3
+    interfaces:
+      - network: link1
+        address: "fe80:ff01::1"
+      - network: link2
+        address: "fe80:ff02::1"

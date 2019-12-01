@@ -86,7 +86,7 @@ public class RoutingTableImpl implements RoutingTable {
     public void show() {
         System.out.println("Table ID: " + tableId);
         for(TableRow row : rows) {
-            row.show();
+            System.out.println(row);
         }
     }
 }

@@ -1,5 +1,6 @@
 package fi.utu.protproc.group3.protocols.bgp4;
 
+import fi.utu.protproc.group3.utils.IPAddress;
 import fi.utu.protproc.group3.utils.NetworkAddress;
 
 import java.nio.ByteBuffer;
@@ -18,12 +19,12 @@ public class BGP4MessageUpdateImpl extends BGP4MessageImpl implements BGP4Messag
     private List<NetworkAddress> withdrawnRoutes;
     private byte origin;
     private List<List<Short>> asPath;
-    private NetworkAddress nextHop;
+    private IPAddress nextHop;
     private List<NetworkAddress> networkLayerReachabilityInformation;
 
     public BGP4MessageUpdateImpl(short length, byte type,
                                  List<NetworkAddress> withdrawnRoutes,
-                                 byte origin, List<List<Short>> asPath, NetworkAddress nextHop,
+                                 byte origin, List<List<Short>> asPath, IPAddress nextHop,
                                  List<NetworkAddress> networkLayerReachabilityInformation) {
         super(length, type);
         this.withdrawnRoutes = withdrawnRoutes;
@@ -54,7 +55,7 @@ public class BGP4MessageUpdateImpl extends BGP4MessageImpl implements BGP4Messag
             len += asSet.size() * 2;
         }
 
-        len += 5 + getNextHop().getAddress().toArray().length;
+        len += 5 + getNextHop().toArray().length;
         return len;
     }
 
@@ -74,7 +75,7 @@ public class BGP4MessageUpdateImpl extends BGP4MessageImpl implements BGP4Messag
     }
 
     @Override
-    public NetworkAddress getNextHop() {
+    public IPAddress getNextHop() {
         return nextHop;
     }
 
@@ -125,9 +126,9 @@ public class BGP4MessageUpdateImpl extends BGP4MessageImpl implements BGP4Messag
         // NEXTHOP
         serialized.put(TYPE_FLAGS)
                 .put(TYPE_NEXTHOP)
-                .putShort((short)(1 + getNextHop().getAddress().toArray().length))
-                .put((byte)getNextHop().getPrefixLength())
-                .put(getNextHop().getAddress().toArray());
+                .putShort((short) (1 + getNextHop().toArray().length))
+                .put((byte) 0)
+                .put(getNextHop().toArray());
 
         for(NetworkAddress addr : getNetworkLayerReachabilityInformation()) {
             serialized.put((byte)addr.getPrefixLength())

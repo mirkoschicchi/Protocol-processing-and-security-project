@@ -1,6 +1,7 @@
 package fi.utu.protproc.group3.protocols.bgp4;
 
-import fi.utu.protproc.group3.utils.*;
+import fi.utu.protproc.group3.utils.IPAddress;
+import fi.utu.protproc.group3.utils.NetworkAddress;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -117,7 +118,7 @@ public abstract class BGP4MessageImpl implements BGP4Message {
                 //int nlriLen = buf.capacity() - 23 - 5 - 4 - valueLen - 21;
                 getNetworkAddressesList(buf, networkLayerReachabilityInformation, buf.remaining() / 17);
 
-                return BGP4MessageUpdate.create(withdrawnRoutes, origin, asPath, nextHop,
+                return BGP4MessageUpdate.create(withdrawnRoutes, origin, asPath, nextHop.getAddress(),
                         networkLayerReachabilityInformation);
 
             case BGP4Message.TYPE_NOTIFICATION:

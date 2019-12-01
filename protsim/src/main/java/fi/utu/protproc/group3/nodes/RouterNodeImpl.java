@@ -12,8 +12,10 @@ import fi.utu.protproc.group3.simulator.EthernetInterface;
 import fi.utu.protproc.group3.simulator.EthernetInterfaceImpl;
 import fi.utu.protproc.group3.simulator.SimulationBuilderContext;
 import fi.utu.protproc.group3.utils.IPAddress;
+import reactor.core.Disposable;
+import reactor.core.publisher.Flux;
 
-import java.net.UnknownHostException;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -21,6 +23,8 @@ import java.util.Map;
 
 public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
     private final int autonomousSystem;
+    private static int nextBgpIdentifier = 1;
+    private final int bgpIdentifier;
     private final Map<IPAddress, BGPPeerContext> peerings = new HashMap<>();
     private final BGPServer bgpServer = new BGPServer(this, Collections.unmodifiableMap(peerings));
 
@@ -28,6 +32,7 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
         super(context, configuration);
         
         this.autonomousSystem = configuration.getAutonomousSystem();
+        bgpIdentifier = nextBgpIdentifier++;
 
         for (var intf : configuration.getInterfaces()) {
             var network = context.network(intf.getNetwork());
@@ -60,13 +65,18 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
     }
 
     @Override
-    protected void packetReceived(EthernetInterface intf, byte[] pdu) throws UnknownHostException {
+    protected void packetReceived(EthernetInterface intf, byte[] pdu) {
         super.packetReceived(intf, pdu);
 
         // Parse the bytes into an Ethernet frame object
         EthernetFrame frame = EthernetFrame.parse(pdu);
         if (frame.getType() == EthernetFrame.TYPE_IPV6) {
             IPv6Packet packet = IPv6Packet.parse(frame.getPayload());
+
+            if (packet.getDestinationIP().equals(intf.getIpAddress())) {
+                // Packet is for local consumption, no forwarding
+                return;
+            }
 
             if (packet.getHopLimit() == 0) {
                 // TODO : Error handling
@@ -115,9 +125,19 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
             createPeerings();
         }
 
-        for (var peering : peerings.values()) {
-            peering.start();
-        }
+        var ref = new Object() {
+            Disposable startPeerings = null;
+        };
+        ref.startPeerings = Flux.interval(Duration.ofSeconds(1), Duration.ofSeconds(5))
+                .subscribe(i -> {
+                    for (var peering : peerings.values()) {
+                        peering.start();
+                    }
+                    if (ref.startPeerings != null) {
+                        ref.startPeerings.dispose();
+                        ref.startPeerings = null;
+                    }
+                });
     }
 
     @Override
@@ -131,15 +151,26 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
         super.shutdown();
     }
 
+    @Override
+    public int getBGPIdentifier() {
+        return bgpIdentifier;
+    }
+
     private void createPeerings() {
         for (var intf : interfaces) {
             for (var peerDev : intf.getNetwork().getDevices()) {
                 if (peerDev != intf && peerDev.getHost() instanceof RouterNode) {
-                    var peer = (RouterNode) peerDev.getHost();
-                    if (peer.getAutonomousSystem() != getAutonomousSystem()) {
-                        var context = new BGPPeerContext(this, intf, peerDev.getIpAddress());
-                        peerings.put(peerDev.getIpAddress(), context);
-                    }
+                    var context = new BGPPeerContext(this, intf, peerDev.getIpAddress());
+                    peerings.put(peerDev.getIpAddress(), context);
+                }
+            }
+        }
+
+        for (var peer : peerings.keySet()) {
+            var peering = peerings.get(peer);
+            for (var neighbor : peerings.values()) {
+                if (!neighbor.getPeer().equals(peer)) {
+                    peering.getDistributionList().add(neighbor);
                 }
             }
         }

@@ -7,7 +7,7 @@ import java.util.Objects;
 
 public abstract class Connection {
     protected final EthernetInterface ethernetInterface;
-    protected DatagramHandler.ConnectionState connectionState;
+    public DatagramHandler.ConnectionState connectionState;
 
     public Connection(EthernetInterface ethernetInterface) {
         Objects.requireNonNull(ethernetInterface);
@@ -40,7 +40,9 @@ public abstract class Connection {
      * Sends a message to the peer.
      */
     public final void send(byte[] message) {
-        this.connectionState.send(message);
+        if (connectionState != null && connectionState.getStatus() == DatagramHandler.ConnectionStatus.Established) {
+            connectionState.send(message);
+        }
     }
 
     /**
