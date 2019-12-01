@@ -19,6 +19,9 @@ public class Simulator implements Callable<Integer> {
     @CommandLine.Option(names = { "-n", "--network" }, description = "Limit traffic capture to the given network")
     private String network;
 
+    @CommandLine.Option(names = { "-q", "--no-gui" }, description = "Disables the simulation UI")
+    private boolean noGui;
+
     @Override
     public Integer call() throws Exception {
         SimulationConfiguration config = null;
@@ -38,7 +41,9 @@ public class Simulator implements Callable<Integer> {
             sim.start();
         }
 
-        sim.show();
+        if (!noGui) {
+            sim.show();
+        }
 
         System.out.println("Simulation running. Press enter to stop simulation.");
         System.in.read();
