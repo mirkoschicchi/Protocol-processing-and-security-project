@@ -42,6 +42,7 @@ public class RoutingTableTest {
         assertEquals(r3, table.getRowByDestinationAddress(IPAddress.parse("fe80:3::ffff")));
         assertEquals(r3, table.getRowByDestinationAddress(IPAddress.parse("fe80:3::ffff:ffff:ffff:ffff")));
     }
+
     @Test
     void longestMatch() {
         List<Short> list1 = Arrays.asList((short)1, (short)2, (short)3);
@@ -56,12 +57,18 @@ public class RoutingTableTest {
         var r2 = TableRow.create(NetworkAddress.parse("0::/0"), IPAddress.parse("0::1"), 100, 0, null, asPath1);
 
         table.insertRow(r1);
-        table.insertRow(r2);
 
         assertEquals(r1, table.getRowByDestinationAddress(IPAddress.parse("fe80:1::")));
         assertNull(table.getRowByDestinationAddress(IPAddress.parse("fe80:1:2::1")));
         assertNull(table.getRowByDestinationAddress(IPAddress.parse("fe80:3::1")));
         assertNull(table.getRowByDestinationAddress(IPAddress.parse("fe00::1")));
+
+        table.insertRow(r2);
+
+        assertEquals(r1, table.getRowByDestinationAddress(IPAddress.parse("fe80:1::")));
+        assertEquals(r2, table.getRowByDestinationAddress(IPAddress.parse("fe80:1:2::1")));
+        assertEquals(r2, table.getRowByDestinationAddress(IPAddress.parse("fe80:3::1")));
+        assertEquals(r2, table.getRowByDestinationAddress(IPAddress.parse("fe00::1")));
 
         var r3 = TableRow.create(NetworkAddress.parse("fe80:1::/64"), IPAddress.parse("fe80:1::1"), 90, 0, null, asPath1);
         table.insertRow(r3);

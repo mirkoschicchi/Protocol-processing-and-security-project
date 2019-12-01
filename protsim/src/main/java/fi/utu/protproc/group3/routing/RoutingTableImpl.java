@@ -30,29 +30,35 @@ public class RoutingTableImpl implements RoutingTable {
     @Override
     public TableRow getRowByDestinationAddress(IPAddress destinationAddress) {
         int longestMatch = 0;
-        int shortestAsPath = 999999999;
-        int shortestMetric = 999999999;
-        TableRow routeRow = null;
-        for(TableRow row: getRows()) {
-            int matchLength = NetworkAddress.matchLength(row.getPrefix(), destinationAddress);
+        int shortestAsPath = Integer.MAX_VALUE;
+        int shortestMetric = Integer.MAX_VALUE;
 
-            if (matchLength > 0) {
-                if (matchLength > longestMatch) {
-                    longestMatch = matchLength;
+        TableRow result = null;
+        for(TableRow row: getRows()) {
+            var prefixLength = row.getPrefix().getPrefixLength();
+            if (prefixLength >= longestMatch
+                    && NetworkAddress.isMatch(row.getPrefix(), destinationAddress)) {
+                // 1) longest prefix length
+                // 2) local routes (AS_PATH length)
+                // 3) metric (if not 0)
+                if (prefixLength > longestMatch) {
+                    longestMatch = prefixLength;
+
+                    shortestMetric = row.getMetric() == 0 ? Integer.MAX_VALUE : row.getMetric();
+                    shortestAsPath = row.getAsPathLength();
+                    result = row;
+                } else if (row.getAsPathLength() < shortestAsPath) {
+                    shortestAsPath = row.getAsPathLength();
+                    shortestMetric = row.getMetric() == 0 ? Integer.MAX_VALUE : row.getMetric();
+                    result = row;
+                } else if (row.getAsPathLength() == shortestAsPath && row.getMetric() < shortestMetric) {
                     shortestMetric = row.getMetric();
-                    shortestAsPath = row.getAsPathLength();
-                    routeRow = row;
-                } else if (matchLength == longestMatch && row.getMetric() < shortestMetric) {
-                    shortestMetric = row.getMetric();
-                    shortestAsPath = row.getAsPathLength();
-                    routeRow = row;
-                } else if (matchLength == longestMatch && row.getMetric() == shortestMetric && row.getAsPathLength() < shortestAsPath) {
-                    shortestAsPath = row.getAsPathLength();
-                    routeRow = row;
+                    result = row;
                 }
             }
         }
-        return routeRow;
+
+        return result;
     }
 
     @Override
@@ -65,6 +71,15 @@ public class RoutingTableImpl implements RoutingTable {
             }
         }
         return row;
+    }
+
+    @Override
+    public void removeBgpEntries(int bgpIdentifier, NetworkAddress prefix) {
+        if (prefix == null) {
+            rows.removeIf(r -> r.getBgpPeer() == bgpIdentifier);
+        } else {
+            rows.removeIf(r -> r.getBgpPeer() == bgpIdentifier && r.getPrefix().equals(prefix));
+        }
     }
 
     @Override

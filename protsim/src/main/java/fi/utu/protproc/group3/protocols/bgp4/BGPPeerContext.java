@@ -1,5 +1,6 @@
 package fi.utu.protproc.group3.protocols.bgp4;
 
+import fi.utu.protproc.group3.finitestatemachine.BGPEventContext;
 import fi.utu.protproc.group3.finitestatemachine.FSMImpl;
 import fi.utu.protproc.group3.finitestatemachine.InternalFSMCallbacksImpl;
 import fi.utu.protproc.group3.nodes.RouterNode;
@@ -25,6 +26,7 @@ public class BGPPeerContext {
     private final UntypedStateMachine fsm;
     private final BGPConnection connection;
     private final List<BGPPeerContext> distributionList = new ArrayList<>();
+    private int bgpIdentifier;
     private Disposable updateSendProcess;
 
     public BGPPeerContext(RouterNode router, EthernetInterface ethernetInterface, IPAddress peer) {
@@ -82,6 +84,11 @@ public class BGPPeerContext {
                             .subscribe(context::updateLocalRoutes);
                 }
             }
+
+            @Override
+            public void deleteAllRoutes() {
+                context.getRouter().getRoutingTable().removeBgpEntries(context.getBgpIdentifier(), null);
+            }
         });
     }
 
@@ -97,12 +104,20 @@ public class BGPPeerContext {
         return peer;
     }
 
-    public UntypedStateMachine getFsm() {
-        return fsm;
+    public void fireEvent(FSMImpl.FSMEvent event) {
+        synchronized (fsm) {
+            fsm.fire(event);
+        }
+    }
+
+    public void fireEvent(FSMImpl.FSMEvent event, BGPEventContext context) {
+        synchronized (fsm) {
+            fsm.fire(event, context);
+        }
     }
 
     public void start() {
-        this.fsm.fire(FSMImpl.FSMEvent.ManualStart);
+        fireEvent(FSMImpl.FSMEvent.ManualStart);
     }
 
     public void stop() {
@@ -111,7 +126,7 @@ public class BGPPeerContext {
             updateSendProcess = null;
         }
 
-        fsm.fire(FSMImpl.FSMEvent.ManualStop);
+        fireEvent(FSMImpl.FSMEvent.ManualStop);
     }
 
     public Connection getConnection() {
@@ -124,7 +139,7 @@ public class BGPPeerContext {
         var newRoutes = new ArrayList<TableRow>();
         var withdrawnRoutes = new ArrayList<TableRow>();
         var currentRoutes = router.getRoutingTable().getRows().stream()
-                .filter(r -> r.getMetric() > 0) // TODO : Is local route?
+                .filter(r -> r.getBgpPeer() == 0)
                 .filter(r -> r.getEInterface() != ethernetInterface)
                 .collect(Collectors.toUnmodifiableSet());
 
@@ -142,7 +157,6 @@ public class BGPPeerContext {
         }
 
         if (newRoutes.size() + withdrawnRoutes.size() > 0) {
-            System.out.println(getRouter().getHostname() + " detected " + newRoutes.size() + " new local routes.");
             var msg = BGP4MessageUpdate.create(
                     withdrawnRoutes.stream().map(r -> r.getPrefix()).collect(Collectors.toUnmodifiableList()),
                     BGP4MessageUpdate.ORIGIN_FROM_IGP,
@@ -157,5 +171,13 @@ public class BGPPeerContext {
 
     public List<BGPPeerContext> getDistributionList() {
         return distributionList;
+    }
+
+    public int getBgpIdentifier() {
+        return bgpIdentifier;
+    }
+
+    public void setBgpIdentifier(int bgpIdentifier) {
+        this.bgpIdentifier = bgpIdentifier;
     }
 }

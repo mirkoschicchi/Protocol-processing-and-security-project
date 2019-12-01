@@ -1,6 +1,9 @@
 package fi.utu.protproc.group3.utils;
 
+import fi.utu.protproc.group3.simulator.Network;
+
 import java.util.BitSet;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -45,44 +48,24 @@ public final class NetworkAddress {
         return address.toString() + "/" + prefixLength;
     }
 
-    /**
-     * Get the length in bits of an ip address inside a network address
-     * @param networkAddress
-     * @param ipAddress
-     * @return The number of bits that match
-     */
-    public static int matchLength(NetworkAddress networkAddress, IPAddress ipAddress) {
-        int ris = 0;
-        byte[] addressArray = networkAddress.getAddress().toArray();
+    private static final byte[] MASK = new byte[]
+            {
+                    (byte) 0x00, (byte) 0x80, (byte) 0xc0, (byte) 0xe0,
+                    (byte) 0xf0, (byte) 0xf8, (byte) 0xfc, (byte) 0xfe
+            };
 
-        String mask = IPAddress.createMask((networkAddress.getPrefixLength()));
-
-        byte[] maskByte = new byte[16];
-        for(int i = 0; i < 16; i++) {
-            String portion = mask.substring(i*8, i*8 + 8);
-            maskByte[i] = (byte)Integer.parseInt(portion, 2);
+    public static boolean isMatch(NetworkAddress networkAddress, IPAddress ipAddress) {
+        var net = networkAddress.address.toArray();
+        var ip = ipAddress.toArray();
+        int prefixLen = networkAddress.getPrefixLength() / 8;
+        for (var i = 0; i < prefixLen; i++) {
+            if (net[i] != ip[i]) return false;
         }
 
-        byte[] masked = new byte[16];
-        byte[] maskedIpAddr = new byte[16];
-        for(int i = 0; i < 16; i++) {
-            masked[i] = (byte) ((ipAddress.toArray()[i] & 0xff) & (maskByte[i] & 0xff));
-            maskedIpAddr[i] = (byte) ((addressArray[i] & 0xff) & (maskByte[i] & 0xff));
-            String s1 = String.format("%8s", Integer.toBinaryString(masked[i] & 0xFF)).replace(' ', '0');
-            String s2 = String.format("%8s", Integer.toBinaryString(maskedIpAddr[i] & 0xFF)).replace(' ', '0');
-            // System.out.println("S1: " + i + " " + s1 + " : " + masked[i] + " : " + (ipAddress.toArray()[i]&0xff) + " : " + maskByte[i]);
-            // System.out.println("S2: " + i + " " + s2 + " : " + maskedIpAddr[i]);
-            for(int j = 0; j < 8; j++) {
-                if(s1.charAt(j) == s2.charAt(j)) {
-                    ris++;
-                } else {
-                    return 0;
-                }
-            }
-        }
-        if (ris >= networkAddress.getPrefixLength()) {
-            ris = networkAddress.getPrefixLength();
-        }
-        return ris;
+        if (prefixLen == ip.length) return true;
+
+        var mask = MASK[networkAddress.getPrefixLength() % 8];
+        return (net[prefixLen + 1] & mask) == (ip[prefixLen + 1] & mask);
     }
+
 }

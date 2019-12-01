@@ -34,6 +34,8 @@ public interface RoutingTable {
      */
     TableRow getRowByPrefix(NetworkAddress prefix);
 
+    void removeBgpEntries(int bgpIdentifier, NetworkAddress prefix);
+
     /**
      * Insert a new row in the table
      * @param row The row to be inserted

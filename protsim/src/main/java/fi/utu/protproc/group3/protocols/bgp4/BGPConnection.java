@@ -1,5 +1,6 @@
 package fi.utu.protproc.group3.protocols.bgp4;
 
+import fi.utu.protproc.group3.finitestatemachine.BGPEventContext;
 import fi.utu.protproc.group3.finitestatemachine.FSMImpl;
 import fi.utu.protproc.group3.protocols.tcp.Connection;
 import fi.utu.protproc.group3.protocols.tcp.DatagramHandler;
@@ -24,7 +25,7 @@ public class BGPConnection extends Connection {
     @Override
     public void connected(DatagramHandler.ConnectionState connectionState) {
         super.connected(connectionState);
-        context.getFsm().fire(FSMImpl.FSMEvent.Tcp_CR_Acked);
+        context.fireEvent(FSMImpl.FSMEvent.Tcp_CR_Acked);
     }
 
     @Override
@@ -34,7 +35,9 @@ public class BGPConnection extends Connection {
         var bgpMessage = BGP4Message.parse(message);
 
         if (bgpMessage instanceof BGP4MessageOpen) {
-            context.getFsm().fire(FSMImpl.FSMEvent.BGPOpen);
+            BGP4MessageOpen openMessage = (BGP4MessageOpen) bgpMessage;
+            context.setBgpIdentifier(openMessage.getBGPIdentifier());
+            context.fireEvent(FSMImpl.FSMEvent.BGPOpen);
         } else if (bgpMessage instanceof BGP4MessageUpdate) {
             BGP4MessageUpdate updateMessage = (BGP4MessageUpdate) bgpMessage;
 
@@ -42,24 +45,23 @@ public class BGPConnection extends Connection {
             List<Short> bgpIdentifiers = updateMessage.getAsPath().get(1);
             if (!bgpIdentifiers.contains((short) context.getRouter().getBGPIdentifier())) {
                 for (NetworkAddress networkAddress : updateMessage.getWithdrawnRoutes()) {
-                    TableRow row = context.getRouter().getRoutingTable().getRowByPrefix(networkAddress);
-                    context.getRouter().getRoutingTable().deleteRow(row);
-                    LOGGER.info("Deleting row " + row.toString());
+                    context.getRouter().getRoutingTable().removeBgpEntries(context.getBgpIdentifier(), networkAddress);
                 }
 
                 for (NetworkAddress networkAddress : updateMessage.getNetworkLayerReachabilityInformation()) {
                     // Create a new row parsing also the path attributes
-                    TableRow newRoute = TableRow.create(networkAddress, updateMessage.getNextHop(), 0, bgpIdentifiers.get(0), ethernetInterface, updateMessage.getAsPath());
+                    TableRow newRoute = TableRow.create(networkAddress, updateMessage.getNextHop(), 0,
+                            context.getBgpIdentifier(), ethernetInterface, updateMessage.getAsPath());
                     context.getRouter().getRoutingTable().insertRow(newRoute);
-                    LOGGER.info(context.getRouter().getHostname() + ": inserting row " + newRoute.toString());
+                    LOGGER.fine(context.getRouter().getHostname() + ": inserting row " + newRoute.toString());
                 }
 
-                context.getFsm().fire(FSMImpl.FSMEvent.UpdateMsg);
+                context.fireEvent(FSMImpl.FSMEvent.UpdateMsg);
 
                 asPath.add(0, (short) context.getRouter().getAutonomousSystem());
                 bgpIdentifiers.add((short) context.getRouter().getBGPIdentifier());
                 for (var neighbour : context.getDistributionList()) {
-                    System.out.println("Router " + context.getRouter().getHostname() + " is forwarding UPDATE to " + neighbour.getPeer());
+                    LOGGER.fine("Router " + context.getRouter().getHostname() + " is forwarding UPDATE to " + neighbour.getPeer());
                     neighbour.getConnection().send(BGP4MessageUpdate.create(
                             updateMessage.getWithdrawnRoutes(),
                             BGP4MessageUpdate.ORIGIN_FROM_ESP,
@@ -69,14 +71,12 @@ public class BGPConnection extends Connection {
                     ).serialize());
                 }
             }
-
-            // cast to update
-            // modify the routing table
-            //bgpPeering.stateMachine.fire();
         } else if (bgpMessage instanceof BGP4MessageKeepalive) {
-            context.getFsm().fire(FSMImpl.FSMEvent.KeepAliveMsg);
+            context.fireEvent(FSMImpl.FSMEvent.KeepAliveMsg);
         } else if (bgpMessage instanceof BGP4MessageNotification) {
-            context.getFsm().fire(FSMImpl.FSMEvent.NotifMsg);
+            context.fireEvent(FSMImpl.FSMEvent.NotifMsg);
+
+            // TODO : LOGGER.warn()
         }
     }
 
