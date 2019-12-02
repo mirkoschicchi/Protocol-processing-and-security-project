@@ -4,6 +4,7 @@ import fi.utu.protproc.group3.utils.IPAddress;
 import fi.utu.protproc.group3.utils.NetworkAddress;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.List;
 
 public class BGP4MessageUpdateImpl extends BGP4MessageImpl implements BGP4MessageUpdate {
@@ -43,11 +44,11 @@ public class BGP4MessageUpdateImpl extends BGP4MessageImpl implements BGP4Messag
     public short getLength() {
         short len = 21;
         for (NetworkAddress addr : getWithdrawnRoutes())
-            len += (1 + addr.getAddress().toArray().length);
+            len += (1 + addr.getRequiredBytesForPrefix());
         len += 2; // Total Path Attribute Length
         len += getPathAttributesLength();
         for (NetworkAddress addr : getNetworkLayerReachabilityInformation())
-            len += (1 + addr.getAddress().toArray().length);
+            len += (1 + addr.getRequiredBytesForPrefix());
 
         return len;
     }
@@ -95,10 +96,14 @@ public class BGP4MessageUpdateImpl extends BGP4MessageImpl implements BGP4Messag
         ByteBuffer serialized = ByteBuffer.allocate(getLength());
         serialized.put(super.serialize());
 
-        serialized.putShort((short) (getWithdrawnRoutes().size() + getWithdrawnRoutes().size() * 16));
+        short withdrawnRoutesLength = 0;
+        for (NetworkAddress addr : getWithdrawnRoutes()) {
+            withdrawnRoutesLength += 1 + addr.getRequiredBytesForPrefix();
+        }
+        serialized.putShort(withdrawnRoutesLength);
         for(NetworkAddress addr : getWithdrawnRoutes()) {
             serialized.put((byte)addr.getPrefixLength())
-                    .put(addr.getAddress().toArray());
+                    .put(Arrays.copyOfRange(addr.getAddress().toArray(), 0, addr.getRequiredBytesForPrefix()));
         }
 
         //  Total Path Attribute Length
@@ -135,8 +140,38 @@ public class BGP4MessageUpdateImpl extends BGP4MessageImpl implements BGP4Messag
 
         for(NetworkAddress addr : getNetworkLayerReachabilityInformation()) {
             serialized.put((byte)addr.getPrefixLength())
+                    .put(Arrays.copyOfRange(addr.getAddress().toArray(), 0, addr.getRequiredBytesForPrefix()));
+        }
+
+
+        /*
+        // MP_REACH_NLRI
+        serialized.put(TYPE_FLAGS_OPTIONAL_NON_TRANSITIVE)
+                .put(TYPE_MP_REACH_NLRI)
+                .putShort((short)(5 + getNextHop().toArray().length + (getNetworkLayerReachabilityInformation().size()) * NETADDR_LENGTH))
+                .putShort(AFI_IPV6)
+                .put(SAFI_UNICAST)
+                .put((byte)getNextHop().toArray().length)
+                .put(getNextHop().toArray())
+                .put((byte)0);
+        for (NetworkAddress addr : getNetworkLayerReachabilityInformation()) {
+            serialized.put((byte)addr.getPrefixLength())
                     .put(addr.getAddress().toArray());
         }
+
+        // MP_UNREACH_NLRI
+        serialized.put(TYPE_FLAGS_OPTIONAL_NON_TRANSITIVE)
+                .put(TYPE_MP_UNREACH_NLRI)
+                .putShort((short)(3 + (getWithdrawnRoutes().size()) * NETADDR_LENGTH))
+                .putShort(AFI_IPV6)
+                .put(SAFI_UNICAST);
+        for (NetworkAddress addr : getWithdrawnRoutes()) {
+            serialized.put((byte)addr.getPrefixLength())
+                    .put(addr.getAddress().toArray());
+        }
+
+         */
+
 
         return serialized.array();
     }

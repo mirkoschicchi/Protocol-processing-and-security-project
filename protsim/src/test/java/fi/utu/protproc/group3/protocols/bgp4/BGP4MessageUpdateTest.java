@@ -41,7 +41,7 @@ public class BGP4MessageUpdateTest {
         var cont = 0;
         for (NetworkAddress addr : message.getWithdrawnRoutes()) {
             assertEquals(addr.getPrefixLength(), parsedMsg.getWithdrawnRoutes().get(cont).getPrefixLength());
-            assertEquals(addr.getAddress(), parsedMsg.getWithdrawnRoutes().get(cont).getAddress());
+            assertTrue(NetworkAddress.isMatch(addr, parsedMsg.getWithdrawnRoutes().get(cont).getAddress()));
             cont++;
         }
         assertSame(message.getOrigin(), parsedMsg.getOrigin());
@@ -50,7 +50,7 @@ public class BGP4MessageUpdateTest {
         cont = 0;
         for (NetworkAddress addr : message.getNetworkLayerReachabilityInformation()) {
             assertEquals(addr.getPrefixLength(), parsedMsg.getNetworkLayerReachabilityInformation().get(cont).getPrefixLength());
-            assertEquals(addr.getAddress(), parsedMsg.getNetworkLayerReachabilityInformation().get(cont).getAddress());
+            assertTrue(NetworkAddress.isMatch(addr, parsedMsg.getNetworkLayerReachabilityInformation().get(cont).getAddress()));
             cont++;
         }
     }

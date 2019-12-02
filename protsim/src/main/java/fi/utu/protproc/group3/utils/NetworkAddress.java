@@ -1,9 +1,5 @@
 package fi.utu.protproc.group3.utils;
 
-import fi.utu.protproc.group3.simulator.Network;
-
-import java.util.BitSet;
-import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -66,6 +62,13 @@ public final class NetworkAddress {
 
         var mask = MASK[networkAddress.getPrefixLength() % 8];
         return (net[prefixLen + 1] & mask) == (ip[prefixLen + 1] & mask);
+    }
+
+    public short getRequiredBytesForPrefix() {
+        short len = (short) (getPrefixLength() / 8);
+        if (getPrefixLength() % 8 > 0)
+            len += 1;
+        return len;
     }
 
 }
