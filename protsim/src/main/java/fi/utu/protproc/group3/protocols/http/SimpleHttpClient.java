@@ -4,7 +4,11 @@ import fi.utu.protproc.group3.protocols.tcp.Connection;
 import fi.utu.protproc.group3.protocols.tcp.DatagramHandler;
 import fi.utu.protproc.group3.simulator.EthernetInterface;
 
+import java.util.logging.Logger;
+
 public class SimpleHttpClient extends Connection {
+    private static final Logger LOGGER = Logger.getLogger(SimpleHttpClient.class.getName());
+
     public SimpleHttpClient(EthernetInterface ethernetInterface) {
         super(ethernetInterface);
     }
@@ -15,14 +19,14 @@ public class SimpleHttpClient extends Connection {
 
         send("GET / HTTP/1.0".getBytes());
 
-        System.out.println(connectionState.getDescriptor() + " SENT");
+        LOGGER.info("Sent GET request for " + connectionState.getDescriptor());
     }
 
     @Override
     public void messageReceived(byte[] message) {
         super.messageReceived(message);
 
-        System.out.println(connectionState.getDescriptor() + " RECEIVED");
+        LOGGER.info("Received response for " + connectionState.getDescriptor());
 
         close();
     }

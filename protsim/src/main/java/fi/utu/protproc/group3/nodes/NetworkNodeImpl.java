@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 
 
 public abstract class NetworkNodeImpl implements NetworkNode, SimpleNode {
-    protected final Simulation simulation;
+    public final Simulation simulation;
     protected final String hostname;
     protected final List<EthernetInterface> interfaces = new ArrayList<>();
 

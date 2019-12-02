@@ -29,10 +29,10 @@ public class NetworkImpl implements Network {
         this.autonomousSystem = configuration.getAutonomousSystem();
 
         var processor = DirectProcessor.<byte[]>create().serialize();
-        input = processor.sink(FluxSink.OverflowStrategy.DROP);
+        input = processor.sink(FluxSink.OverflowStrategy.BUFFER);
         output = processor.publish(5)
                 .autoConnect(0)
-        //        .publishOn(Schedulers.elastic())
+                .publishOn(Schedulers.elastic())
         //        .subscribeOn(Schedulers.elastic())
         ;
     }

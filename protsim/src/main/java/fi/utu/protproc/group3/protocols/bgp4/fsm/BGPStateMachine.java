@@ -152,7 +152,8 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     public static BGPStateMachine newInstance(BGPCallbacks callbacks) {
-        return builder.newStateMachine(State.Idle, callbacks);
+        var result = builder.newStateMachine(State.Idle, callbacks);
+        return result;
     }
 
     public enum Event {
@@ -300,7 +301,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
 
     // IDLE -------------------------------------------------------------------------------------------------------
     // @AsyncExecute
-    protected void onManualStart_AutomaticStartIdle(State from, State to, Event event, EventContext context) {
+    public void onManualStart_AutomaticStartIdle(State from, State to, Event event, EventContext context) {
         // initializes all BGP resources for the peer connection
         callbacks.initializeBGPResources();
 
@@ -321,7 +322,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onManualStart_with_PassiveTcpEstablishment_AutomaticStart_with_PassiveTcpEstablishmentIdle(State from, State to, Event event, EventContext context) {
+    public void onManualStart_with_PassiveTcpEstablishment_AutomaticStart_with_PassiveTcpEstablishmentIdle(State from, State to, Event event, EventContext context) {
         // initializes all BGP resources
         callbacks.initializeBGPResources();
 
@@ -341,7 +342,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
 
     // CONNECT ----------------------------------------------------------------------------------------------------
     // @AsyncExecute
-    protected void onManualStopConnect(State from, State to, Event event, EventContext context) {
+    public void onManualStopConnect(State from, State to, Event event, EventContext context) {
         // drops the TCP connection
         callbacks.dropTCPConnection();
 
@@ -361,7 +362,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onConnectRetryTimer_ExpiresConnect(State from, State to, Event event, EventContext context) {
+    public void onConnectRetryTimer_ExpiresConnect(State from, State to, Event event, EventContext context) {
         // drops the TCP connection
         callbacks.dropTCPConnection();
 
@@ -383,7 +384,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onDelayOpenTimer_ExpiresConnect(State from, State to, Event event, EventContext context) {
+    public void onDelayOpenTimer_ExpiresConnect(State from, State to, Event event, EventContext context) {
         // sends an OPEN message to its peer
         callbacks.sendOpenMessage();
 
@@ -395,7 +396,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onTcp_CR_Acked_TcpConnectionConfirmed_DelayOpenConnect(State from, State to, Event event, EventContext context) {
+    public void onTcp_CR_Acked_TcpConnectionConfirmed_DelayOpenConnect(State from, State to, Event event, EventContext context) {
         // stops the ConnectRetryTimer (if running) and sets the ConnectRetryTimer to zero
         connectRetryTimer.cancel();
         connectRetryTime = 0;
@@ -408,7 +409,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onTcp_CR_Acked_TcpConnectionConfirmedConnect(State from, State to, Event event, EventContext context) {
+    public void onTcp_CR_Acked_TcpConnectionConfirmedConnect(State from, State to, Event event, EventContext context) {
         // stops the ConnectRetryTimer (if running) and sets the ConnectRetryTimer to zero
         connectRetryTimer.cancel();
         connectRetryTime = 0;
@@ -441,7 +442,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     //        - changes its state to Idle.
 
     // @AsyncExecute
-    protected void onBGPOpen_with_DelayOpenTimer_runningConnect(State from, State to, Event event, EventContext context) {
+    public void onBGPOpen_with_DelayOpenTimer_runningConnect(State from, State to, Event event, EventContext context) {
         // stops the ConnectRetryTimer (if running) and sets the ConnectRetryTimer to zero
         connectRetryTimer.cancel();
         connectRetryTime = 0;
@@ -482,7 +483,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onBGPHeaderErrConnect(State from, State to, Event event, EventContext context) {
+    public void onBGPHeaderErrConnect(State from, State to, Event event, EventContext context) {
         // (optionally) If the SendNOTIFICATIONwithoutOPEN attribute is
         //          set to TRUE, then the local system first sends a NOTIFICATION
         //          message with the appropriate error code
@@ -513,7 +514,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onBGPOpenMsgErrConnect(State from, State to, Event event, EventContext context) {
+    public void onBGPOpenMsgErrConnect(State from, State to, Event event, EventContext context) {
         // (optionally) If the SendNOTIFICATIONwithoutOPEN attribute is
         //          set to TRUE, then the local system first sends a NOTIFICATION
         //          message with the appropriate error code
@@ -544,7 +545,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onNotifMsgVerErrConnect(State from, State to, Event event, EventContext context) {
+    public void onNotifMsgVerErrConnect(State from, State to, Event event, EventContext context) {
         if (delayOpenTime > 0) {
             // stops the ConnectRetryTimer (if running) and sets the ConnectRetryTimer to zero
             connectRetryTimer.cancel();
@@ -587,7 +588,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onAnyOtherEventConnect(State from, State to, Event event, EventContext context) {
+    public void onAnyOtherEventConnect(State from, State to, Event event, EventContext context) {
         // if the ConnectRetryTimer is running, stops and resets the ConnectRetryTimer (sets to zero)
         connectRetryTimer.cancel();
         connectRetryTime = 0;
@@ -617,7 +618,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
 
     // ACTIVE -----------------------------------------------------------------------------------------------------
     // @AsyncExecute
-    protected void onManualStopActive(State from, State to, Event event, EventContext context) {
+    public void onManualStopActive(State from, State to, Event event, EventContext context) {
         // If the DelayOpenTimer is running and the
         // SendNOTIFICATIONwithoutOPEN session attribute is set, the
         // local system sends a NOTIFICATION with a Cease
@@ -645,7 +646,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onConnectRetryTimer_ExpiresActive(State from, State to, Event event, EventContext context) {
+    public void onConnectRetryTimer_ExpiresActive(State from, State to, Event event, EventContext context) {
         // restarts the ConnectRetryTimer (with initial value)
         restartConnectRetryTimer();
 
@@ -660,7 +661,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onDelayOpenTimer_ExpiresActive(State from, State to, Event event, EventContext context) {
+    public void onDelayOpenTimer_ExpiresActive(State from, State to, Event event, EventContext context) {
         // sets the ConnectRetryTimer to zero
         connectRetryTimer.cancel();
         connectRetryTime = 0;
@@ -683,7 +684,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onTcpConnection_ValidActive(State from, State to, Event event, EventContext context) {
+    public void onTcpConnection_ValidActive(State from, State to, Event event, EventContext context) {
         // the local system processes the TCP connection flags
         callbacks.processTCPConnection();
 
@@ -692,7 +693,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onTcp_CR_InvalidActive(State from, State to, Event event, EventContext context) {
+    public void onTcp_CR_InvalidActive(State from, State to, Event event, EventContext context) {
         // the local system rejects the TCP connection and
         callbacks.rejectTCPConnection();
 
@@ -719,7 +720,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     //      the HoldTimer.
 
     // @AsyncExecute
-    protected void onTcpConnectionFailsActive(State from, State to, Event event, EventContext context) {
+    public void onTcpConnectionFailsActive(State from, State to, Event event, EventContext context) {
         // restarts the ConnectRetryTimer (with the initial value)
         restartConnectRetryTimer();
 
@@ -743,7 +744,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onBGPOpen_with_DelayOpenTimer_runningActive(State from, State to, Event event, EventContext context) {
+    public void onBGPOpen_with_DelayOpenTimer_runningActive(State from, State to, Event event, EventContext context) {
         // stops the ConnectRetryTimer (if running) and sets the ConnectRetryTimer to zero
         connectRetryTimer.cancel();
         connectRetryTime = 0;
@@ -782,7 +783,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onBGPHeaderErrActive(State from, State to, Event event, EventContext context) {
+    public void onBGPHeaderErrActive(State from, State to, Event event, EventContext context) {
         // (optionally) sends a NOTIFICATION message with the appropriate error code if the SendNOTIFICATIONwithoutOPEN attribute is set to TRUE
         if (sendNOTIFICATIONwithoutOPEN) {
             callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_MESSAGE_HEADER_ERROR, (byte) 0, null);
@@ -811,7 +812,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onBGPOpenMsgErrActive(State from, State to, Event event, EventContext context) {
+    public void onBGPOpenMsgErrActive(State from, State to, Event event, EventContext context) {
         // (optionally) sends a NOTIFICATION message with the appropriate error code if the SendNOTIFICATIONwithoutOPEN attribute is set to TRUE
         if (sendNOTIFICATIONwithoutOPEN) {
             callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_OPEN_MESSAGE_ERROR, (byte) 0, null);
@@ -840,7 +841,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onNotifMsgVerErrActive(State from, State to, Event event, EventContext context) {
+    public void onNotifMsgVerErrActive(State from, State to, Event event, EventContext context) {
         if (delayOpenTime > 0 && delayOpenTime < 120) {
             // stops the ConnectRetryTimer (if running) and sets the ConnectRetryTimer to zero
             connectRetryTimer.cancel();
@@ -883,7 +884,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onAnyOtherEventActive(State from, State to, Event event, EventContext context) {
+    public void onAnyOtherEventActive(State from, State to, Event event, EventContext context) {
         // sets the ConnectRetryTimer to zero
         connectRetryTimer.cancel();
         connectRetryTime = 0;
@@ -910,7 +911,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
 
     // OPEN_SENT --------------------------------------------------------------------------------------------------
     // @AsyncExecute
-    protected void onManualStopOpenSent(State from, State to, Event event, EventContext context) {
+    public void onManualStopOpenSent(State from, State to, Event event, EventContext context) {
         // sends the NOTIFICATION with a Cease
         callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_CAESE, (byte) 0, null);
 
@@ -932,7 +933,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onAutomaticStopOpenSent(State from, State to, Event event, EventContext context) {
+    public void onAutomaticStopOpenSent(State from, State to, Event event, EventContext context) {
         // sends the NOTIFICATION with a Cease
         callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_CAESE, (byte) 0, null);
 
@@ -959,7 +960,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onHoldTimer_ExpiresOpenSent(State from, State to, Event event, EventContext context) {
+    public void onHoldTimer_ExpiresOpenSent(State from, State to, Event event, EventContext context) {
         // sends a NOTIFICATION message with the error code Hold Timer Expired
         callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_HOLD_TIMER_EXPIRED, (byte) 0, null);
 
@@ -987,7 +988,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onTcpConnectionFailsOpenSent(State from, State to, Event event, EventContext context) {
+    public void onTcpConnectionFailsOpenSent(State from, State to, Event event, EventContext context) {
         // closes the BGP connection
         callbacks.closeBGPConnection();
 
@@ -1002,7 +1003,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onBGPOpenOpenSent(State from, State to, Event event, EventContext context) {
+    public void onBGPOpenOpenSent(State from, State to, Event event, EventContext context) {
         // resets the DelayOpenTimer to zero
         delayOpenTimer.cancel();
         delayOpenTime = 0;
@@ -1025,7 +1026,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onBGPHeaderErrOpenSent(State from, State to, Event event, EventContext context) {
+    public void onBGPHeaderErrOpenSent(State from, State to, Event event, EventContext context) {
         // sends a NOTIFICATION message with the appropriate error code
         callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_MESSAGE_HEADER_ERROR, (byte) 0, null);
 
@@ -1052,7 +1053,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onBGPOpenMsgErrOpenSent(State from, State to, Event event, EventContext context) {
+    public void onBGPOpenMsgErrOpenSent(State from, State to, Event event, EventContext context) {
         // sends a NOTIFICATION message with the appropriate error code
         callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_OPEN_MESSAGE_ERROR, (byte) 0, null);
 
@@ -1079,7 +1080,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onOpenCollisionDumpOpenSent(State from, State to, Event event, EventContext context) {
+    public void onOpenCollisionDumpOpenSent(State from, State to, Event event, EventContext context) {
         // sends a NOTIFICATION with a Cease
         callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_CAESE, (byte) 0, null);
 
@@ -1106,7 +1107,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onNotifMsgVerErrOpenSent(State from, State to, Event event, EventContext context) {
+    public void onNotifMsgVerErrOpenSent(State from, State to, Event event, EventContext context) {
         // sets the ConnectRetryTimer to zero
         connectRetryTimer.cancel();
         connectRetryTime = 0;
@@ -1122,7 +1123,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onAnyOtherEventOpenSent(State from, State to, Event event, EventContext context) {
+    public void onAnyOtherEventOpenSent(State from, State to, Event event, EventContext context) {
         // sends the NOTIFICATION with the Error Code Finite State Machine Error
         callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_FINITE_STATE_MACHINE_ERROR, (byte) 0, null);
 
@@ -1151,7 +1152,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
 
     // CONFIRM ----------------------------------------------------------------------------------------------------
     // @AsyncExecute
-    protected void onManualStopOpenConfirm(State from, State to, Event event, EventContext context) {
+    public void onManualStopOpenConfirm(State from, State to, Event event, EventContext context) {
         // sends the NOTIFICATION message with a Cease
         callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_CAESE, (byte) 0, null);
 
@@ -1173,7 +1174,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onAutomaticStopOpenConfirm(State from, State to, Event event, EventContext context) {
+    public void onAutomaticStopOpenConfirm(State from, State to, Event event, EventContext context) {
         // sends the NOTIFICATION message with a Cease
         callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_CAESE, (byte) 0, null);
 
@@ -1200,7 +1201,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onHoldTimer_ExpiresOpenConfirm(State from, State to, Event event, EventContext context) {
+    public void onHoldTimer_ExpiresOpenConfirm(State from, State to, Event event, EventContext context) {
         // sends the NOTIFICATION message with the Error Code Hold Timer Expired
         callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_HOLD_TIMER_EXPIRED, (byte) 0, null);
 
@@ -1227,7 +1228,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onKeepaliveTimer_ExpiresOpenConfirm(State from, State to, Event event, EventContext context) {
+    public void onKeepaliveTimer_ExpiresOpenConfirm(State from, State to, Event event, EventContext context) {
         // sends a KEEPALIVE message
         callbacks.sendKeepaliveMessage();
 
@@ -1239,7 +1240,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onTcpConnectionFails_NotifMsgOpenConfirm(State from, State to, Event event, EventContext context) {
+    public void onTcpConnectionFails_NotifMsgOpenConfirm(State from, State to, Event event, EventContext context) {
         // sets the ConnectRetryTimer to zero
         connectRetryTimer.cancel();
         connectRetryTime = 0;
@@ -1263,7 +1264,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onNotifMsgVerErrOpenConfirm(State from, State to, Event event, EventContext context) {
+    public void onNotifMsgVerErrOpenConfirm(State from, State to, Event event, EventContext context) {
         // sets the ConnectRetryTimer to zero
         connectRetryTimer.cancel();
         connectRetryTime = 0;
@@ -1279,7 +1280,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onBGPHeaderErrOpenConfirm(State from, State to, Event event, EventContext context) {
+    public void onBGPHeaderErrOpenConfirm(State from, State to, Event event, EventContext context) {
         // sends a NOTIFICATION message with the appropriate error code
         callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_MESSAGE_HEADER_ERROR, (byte) 0, null);
 
@@ -1306,7 +1307,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onBGPOpenMsgErrOpenConfirm(State from, State to, Event event, EventContext context) {
+    public void onBGPOpenMsgErrOpenConfirm(State from, State to, Event event, EventContext context) {
         // sends a NOTIFICATION message with the appropriate error code
         callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_OPEN_MESSAGE_ERROR, (byte) 0, null);
 
@@ -1333,7 +1334,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onOpenCollisionDumpOpenConfirm(State from, State to, Event event, EventContext context) {
+    public void onOpenCollisionDumpOpenConfirm(State from, State to, Event event, EventContext context) {
         // sends a NOTIFICATION with a Cease
         callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_CAESE, (byte) 0, null);
 
@@ -1360,7 +1361,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onKeepAliveMsgOpenConfirm(State from, State to, Event event, EventContext context) {
+    public void onKeepAliveMsgOpenConfirm(State from, State to, Event event, EventContext context) {
         // restarts the HoldTimer
         restartHoldTimer(90);
 
@@ -1369,7 +1370,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onAnyOtherEventOpenConfirm(State from, State to, Event event, EventContext context) {
+    public void onAnyOtherEventOpenConfirm(State from, State to, Event event, EventContext context) {
         // sends a NOTIFICATION with a code of Finite State Machine Error
         callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_FINITE_STATE_MACHINE_ERROR, (byte) 0, null);
 
@@ -1411,7 +1412,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     //        - changes its state to Idle.
 
     // @AsyncExecute
-    protected void onManualStopEstablished(State from, State to, Event event, EventContext context) {
+    public void onManualStopEstablished(State from, State to, Event event, EventContext context) {
         // sends the NOTIFICATION message with a Cease
         callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_CAESE, (byte) 0, null);
 
@@ -1436,7 +1437,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onAutomaticStopEstablished(State from, State to, Event event, EventContext context) {
+    public void onAutomaticStopEstablished(State from, State to, Event event, EventContext context) {
         // sends the NOTIFICATION message with a Cease
         callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_CAESE, (byte) 0, null);
 
@@ -1464,7 +1465,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onHoldTimer_ExpiresEstablished(State from, State to, Event event, EventContext context) {
+    public void onHoldTimer_ExpiresEstablished(State from, State to, Event event, EventContext context) {
         // sends a NOTIFICATION message with the Error Code Hold Timer Expired
         callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_HOLD_TIMER_EXPIRED, (byte) 0, null);
 
@@ -1491,7 +1492,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onKeepaliveTimer_ExpiresEstablished(State from, State to, Event event, EventContext context) {
+    public void onKeepaliveTimer_ExpiresEstablished(State from, State to, Event event, EventContext context) {
         // sends a KEEPALIVE message
         callbacks.sendKeepaliveMessage();
 
@@ -1502,7 +1503,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onOpenCollisionDumpEstablished(State from, State to, Event event, EventContext context) {
+    public void onOpenCollisionDumpEstablished(State from, State to, Event event, EventContext context) {
         // sends a NOTIFICATION with a Cease
         callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_CAESE, (byte) 0, null);
 
@@ -1532,7 +1533,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onTcpConnectionFails_NotifMsgVerErr_NotifMsgEstablished(State from, State to, Event event, EventContext context) {
+    public void onTcpConnectionFails_NotifMsgVerErr_NotifMsgEstablished(State from, State to, Event event, EventContext context) {
         // sets the ConnectRetryTimer to zero
         connectRetryTimer.cancel();
         connectRetryTime = 0;
@@ -1554,7 +1555,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onKeepAliveMsgEstablished(State from, State to, Event event, EventContext context) {
+    public void onKeepAliveMsgEstablished(State from, State to, Event event, EventContext context) {
         // restarts its HoldTimer, if the negotiated HoldTime value is non-zero
         restartHoldTimer(90);
 
@@ -1563,7 +1564,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onUpdateMsgEstablished(State from, State to, Event event, EventContext context) {
+    public void onUpdateMsgEstablished(State from, State to, Event event, EventContext context) {
         // processes the message
         callbacks.processUpdateMessage();
 
@@ -1577,7 +1578,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onUpdateMsgErrEstablished(State from, State to, Event event, EventContext context) {
+    public void onUpdateMsgErrEstablished(State from, State to, Event event, EventContext context) {
         // sends a NOTIFICATION message with an Update error
         callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_UPDATE_MESSAGE_ERROR, (byte) 0, null);
 
@@ -1607,7 +1608,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     // @AsyncExecute
-    protected void onAnyOtherEventEstablished(State from, State to, Event event, EventContext context) {
+    public void onAnyOtherEventEstablished(State from, State to, Event event, EventContext context) {
         // sends a NOTIFICATION message with the Error Code Finite State Machine Error
         callbacks.sendNotificationMessage(BGP4MessageNotification.ERR_CODE_FINITE_STATE_MACHINE_ERROR, (byte) 0, null);
 
@@ -1637,27 +1638,27 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
     // ------------------------------------------------------------------------------------------------------------
 
-    protected void onIdle(State from, State to, Event event, EventContext context) {
+    public void onIdle(State from, State to, Event event, EventContext context) {
         LOGGER.fine("Now the state is IDLE");
     }
 
-    protected void onConnect(State from, State to, Event event, EventContext context) {
+    public void onConnect(State from, State to, Event event, EventContext context) {
         LOGGER.fine("Now the state is CONNECTED");
     }
 
-    protected void onActive(State from, State to, Event event, EventContext context) {
+    public void onActive(State from, State to, Event event, EventContext context) {
         LOGGER.fine("Now the state is ACTIVE");
     }
 
-    protected void onOpenSent(State from, State to, Event event, EventContext context) {
+    public void onOpenSent(State from, State to, Event event, EventContext context) {
         LOGGER.fine("Now the state is OPEN_SENT");
     }
 
-    protected void onOpenConfirm(State from, State to, Event event, EventContext context) {
+    public void onOpenConfirm(State from, State to, Event event, EventContext context) {
         LOGGER.fine("Now the state is OPEN_CONFIRM");
     }
 
-    protected void onEstablished(State from, State to, Event event, EventContext context) {
+    public void onEstablished(State from, State to, Event event, EventContext context) {
         LOGGER.fine("Now the state is ESTABLISHED");
     }
 }

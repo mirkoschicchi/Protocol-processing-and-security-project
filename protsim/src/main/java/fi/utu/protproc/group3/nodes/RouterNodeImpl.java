@@ -72,7 +72,6 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
         EthernetFrame frame = EthernetFrame.parse(pdu);
         if (frame.getType() == EthernetFrame.TYPE_IPV6) {
             IPv6Packet packet = IPv6Packet.parse(frame.getPayload());
-
             if (packet.getDestinationIP().equals(intf.getIpAddress())) {
                 // Packet is for local consumption, no forwarding
                 return;

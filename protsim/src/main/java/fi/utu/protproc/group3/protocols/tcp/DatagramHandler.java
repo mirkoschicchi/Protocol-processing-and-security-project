@@ -189,7 +189,7 @@ public class DatagramHandler {
 
         @Override
         public String toString() {
-            return "[" + localIp + "]:" + localPort + " -> [" + remoteIp + "]:" + remotePort;
+            return "[" + localIp + "]:" + (localPort & 0xffff) + " -> [" + remoteIp + "]:" + (remotePort & 0xffff);
         }
 
         public IPAddress getLocalIp() {
@@ -222,7 +222,6 @@ public class DatagramHandler {
         private final Connection connection;
         private ConnectionStatus status;
         private int seqN;
-        private int peerSeqN;
         private int ackN;
 
         public ConnectionState(ConnectionDescriptor descriptor, DatagramHandler handler, Connection connection) {
@@ -240,12 +239,12 @@ public class DatagramHandler {
         }
 
         public void update(TCPDatagram datagram) {
-            this.peerSeqN = datagram.getSeqN();
+            ackN = datagram.getSeqN();
 
             if (datagram.getPayload() == null || datagram.getPayload().length == 0) {
-                this.peerSeqN++;
+                ackN++;
             } else {
-                this.peerSeqN += datagram.getPayload().length;
+                ackN += datagram.getPayload().length;
             }
         }
 
@@ -254,11 +253,11 @@ public class DatagramHandler {
         }
 
         public void send(byte[] message, short flags) {
-            if (this.ackN != this.peerSeqN &&  (flags & (TCPDatagram.SYN | TCPDatagram.RST)) == 0) {
+            if ((flags & (TCPDatagram.SYN | TCPDatagram.RST)) == 0) {
                 flags |= TCPDatagram.ACK;
             }
 
-            var ackN = (flags & (TCPDatagram.ACK | TCPDatagram.SYN)) != 0 ? this.peerSeqN : 0;
+            var ackN = (flags & (TCPDatagram.ACK | TCPDatagram.SYN)) != 0 ? this.ackN : 0;
             var datagram = TCPDatagram.create(descriptor.localPort, descriptor.remotePort, this.seqN, ackN, flags,
                     (short) 0xffff, message);
 

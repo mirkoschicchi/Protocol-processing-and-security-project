@@ -1,7 +1,5 @@
 package fi.utu.protproc.group3.protocols.bgp4;
 
-import fi.utu.protproc.group3.nodes.RouterNode;
-import fi.utu.protproc.group3.nodes.RouterNodeImpl;
 import fi.utu.protproc.group3.protocols.bgp4.fsm.BGPStateMachine;
 import fi.utu.protproc.group3.protocols.tcp.Connection;
 import fi.utu.protproc.group3.protocols.tcp.DatagramHandler;
@@ -26,6 +24,12 @@ public class BGPConnection extends Connection {
     @Override
     public void connected(DatagramHandler.ConnectionState connectionState) {
         super.connected(connectionState);
+
+        // HACK HACK: Make sure the FSM is started, since it could not yet be started during the initial startup
+        // Otherwise we'd have to wait for 30s for the retry of the OPEN message. This is caused by our simulated
+        // network being faster to deliver the first OPEN message for loop is starting all the routers in some cases.
+        context.fireEvent(BGPStateMachine.Event.AutomaticStart);
+
         context.fireEvent(BGPStateMachine.Event.Tcp_CR_Acked);
     }
 
