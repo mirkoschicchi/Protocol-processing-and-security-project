@@ -1,7 +1,8 @@
 package fi.utu.protproc.group3.protocols.bgp4;
 
-import fi.utu.protproc.group3.finitestatemachine.BGPEventContext;
-import fi.utu.protproc.group3.finitestatemachine.FSMImpl;
+import fi.utu.protproc.group3.nodes.RouterNode;
+import fi.utu.protproc.group3.nodes.RouterNodeImpl;
+import fi.utu.protproc.group3.protocols.bgp4.fsm.BGPStateMachine;
 import fi.utu.protproc.group3.protocols.tcp.Connection;
 import fi.utu.protproc.group3.protocols.tcp.DatagramHandler;
 import fi.utu.protproc.group3.routing.TableRow;
@@ -25,7 +26,7 @@ public class BGPConnection extends Connection {
     @Override
     public void connected(DatagramHandler.ConnectionState connectionState) {
         super.connected(connectionState);
-        context.fireEvent(FSMImpl.FSMEvent.Tcp_CR_Acked);
+        context.fireEvent(BGPStateMachine.Event.Tcp_CR_Acked);
     }
 
     @Override
@@ -37,7 +38,7 @@ public class BGPConnection extends Connection {
         if (bgpMessage instanceof BGP4MessageOpen) {
             BGP4MessageOpen openMessage = (BGP4MessageOpen) bgpMessage;
             context.setBgpIdentifier(openMessage.getBGPIdentifier());
-            context.fireEvent(FSMImpl.FSMEvent.BGPOpen);
+            context.fireEvent(BGPStateMachine.Event.BGPOpen);
         } else if (bgpMessage instanceof BGP4MessageUpdate) {
             BGP4MessageUpdate updateMessage = (BGP4MessageUpdate) bgpMessage;
 
@@ -56,7 +57,7 @@ public class BGPConnection extends Connection {
                     LOGGER.fine(context.getRouter().getHostname() + ": inserting row " + newRoute.toString());
                 }
 
-                context.fireEvent(FSMImpl.FSMEvent.UpdateMsg);
+                context.fireEvent(BGPStateMachine.Event.UpdateMsg);
 
                 asPath.add(0, (short) context.getRouter().getAutonomousSystem());
                 bgpIdentifiers.add((short) context.getRouter().getBGPIdentifier());
@@ -72,9 +73,9 @@ public class BGPConnection extends Connection {
                 }
             }
         } else if (bgpMessage instanceof BGP4MessageKeepalive) {
-            context.fireEvent(FSMImpl.FSMEvent.KeepAliveMsg);
+            context.fireEvent(BGPStateMachine.Event.KeepAliveMsg);
         } else if (bgpMessage instanceof BGP4MessageNotification) {
-            context.fireEvent(FSMImpl.FSMEvent.NotifMsg);
+            context.fireEvent(BGPStateMachine.Event.NotifMsg);
 
             // TODO : LOGGER.warn()
         }

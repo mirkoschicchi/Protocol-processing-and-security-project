@@ -1,14 +1,12 @@
 package fi.utu.protproc.group3.protocols.bgp4;
 
-import fi.utu.protproc.group3.finitestatemachine.BGPEventContext;
-import fi.utu.protproc.group3.finitestatemachine.FSMImpl;
-import fi.utu.protproc.group3.finitestatemachine.InternalFSMCallbacksImpl;
 import fi.utu.protproc.group3.nodes.RouterNode;
+import fi.utu.protproc.group3.protocols.bgp4.fsm.BGPCallbacksDefault;
+import fi.utu.protproc.group3.protocols.bgp4.fsm.BGPStateMachine;
 import fi.utu.protproc.group3.protocols.tcp.Connection;
 import fi.utu.protproc.group3.routing.TableRow;
 import fi.utu.protproc.group3.simulator.EthernetInterface;
 import fi.utu.protproc.group3.utils.IPAddress;
-import org.squirrelframework.foundation.fsm.UntypedStateMachine;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 
@@ -23,7 +21,7 @@ public class BGPPeerContext {
     private final RouterNode router;
     private final EthernetInterface ethernetInterface;
     private final IPAddress peer;
-    private final UntypedStateMachine fsm;
+    private final BGPStateMachine fsm;
     private final BGPConnection connection;
     private final List<BGPPeerContext> distributionList = new ArrayList<>();
     private int bgpIdentifier;
@@ -37,7 +35,7 @@ public class BGPPeerContext {
 
         var context = this;
         var isInitiator = ethernetInterface.getIpAddress().toArray()[15] < peer.toArray()[15];
-        this.fsm = FSMImpl.newInstance(new InternalFSMCallbacksImpl() {
+        this.fsm = BGPStateMachine.newInstance(new BGPCallbacksDefault() {
             // Connection management
             @Override
             public void connectRemotePeer() {
@@ -61,7 +59,7 @@ public class BGPPeerContext {
             public void sendOpenMessage() {
                 connection.send(BGP4MessageOpen.create(
                         (short) router.getAutonomousSystem(),
-                        FSMImpl.DEFAULT_HOLD_TIME,
+                        BGPStateMachine.DEFAULT_HOLD_TIME,
                         router.getBGPIdentifier()
                 ).serialize());
             }
@@ -104,12 +102,12 @@ public class BGPPeerContext {
         return peer;
     }
 
-    public void fireEvent(FSMImpl.FSMEvent event) {
+    public void fireEvent(BGPStateMachine.Event event) {
         fsm.fire(event);
     }
 
     public void start() {
-        fireEvent(FSMImpl.FSMEvent.ManualStart);
+        fireEvent(BGPStateMachine.Event.ManualStart);
     }
 
     public void stop() {
@@ -118,7 +116,7 @@ public class BGPPeerContext {
             updateSendProcess = null;
         }
 
-        fireEvent(FSMImpl.FSMEvent.ManualStop);
+        fireEvent(BGPStateMachine.Event.ManualStop);
     }
 
     public Connection getConnection() {

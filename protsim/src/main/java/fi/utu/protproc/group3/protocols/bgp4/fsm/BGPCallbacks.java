@@ -1,6 +1,6 @@
-package fi.utu.protproc.group3.finitestatemachine;
+package fi.utu.protproc.group3.protocols.bgp4.fsm;
 
-public interface InternalFSMCallbacks {
+public interface BGPCallbacks {
 
     /**
      * Instantiate a connection to a remote peer

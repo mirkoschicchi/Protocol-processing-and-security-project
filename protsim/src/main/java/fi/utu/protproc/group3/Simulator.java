@@ -1,8 +1,6 @@
 package fi.utu.protproc.group3;
 
 import fi.utu.protproc.group3.configuration.SimulationConfiguration;
-import fi.utu.protproc.group3.finitestatemachine.FSMImpl;
-import fi.utu.protproc.group3.finitestatemachine.InternalFSMCallbacksImpl;
 import fi.utu.protproc.group3.simulator.Simulation;
 import picocli.CommandLine;
 
@@ -49,6 +47,7 @@ public class Simulator implements Callable<Integer> {
         System.out.println("Simulation running. Press enter to stop simulation.");
         System.in.read();
 
+        System.out.println("Shutting down nodes...");
         sim.stop();
         System.out.println("Simulation stopped.");
 
