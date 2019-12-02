@@ -108,17 +108,14 @@ public abstract class BGP4MessageImpl implements BGP4Message {
 
                 // nextHop
                 buf.getInt();
-                prefLen = buf.get();
                 buf.get(tmp);
-                addr = new IPAddress(tmp);
-                NetworkAddress nextHop = new NetworkAddress(addr, prefLen);
+                IPAddress nextHop = new IPAddress(tmp);
 
                 List<NetworkAddress> networkLayerReachabilityInformation
                         = new ArrayList<NetworkAddress>();
-                //int nlriLen = buf.capacity() - 23 - 5 - 4 - valueLen - 21;
                 getNetworkAddressesList(buf, networkLayerReachabilityInformation, buf.remaining() / 17);
 
-                return BGP4MessageUpdate.create(withdrawnRoutes, origin, asPath, nextHop.getAddress(),
+                return BGP4MessageUpdate.create(withdrawnRoutes, origin, asPath, nextHop,
                         networkLayerReachabilityInformation);
 
             case BGP4Message.TYPE_NOTIFICATION:
