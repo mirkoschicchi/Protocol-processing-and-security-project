@@ -1,6 +1,8 @@
 package fi.utu.protproc.group3;
 
 import fi.utu.protproc.group3.configuration.SimulationConfiguration;
+import fi.utu.protproc.group3.finitestatemachine.FSMImpl;
+import fi.utu.protproc.group3.finitestatemachine.InternalFSMCallbacksImpl;
 import fi.utu.protproc.group3.simulator.Simulation;
 import picocli.CommandLine;
 
@@ -24,8 +26,7 @@ public class Simulator implements Callable<Integer> {
 
     @Override
     public Integer call() throws Exception {
-        SimulationConfiguration config = null;
-
+        SimulationConfiguration config;
         var fis = new FileInputStream(scenarioFile);
         try {
             config = SimulationConfiguration.parse(fis);

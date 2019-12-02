@@ -17,7 +17,6 @@ public interface RoutingTable {
     short TABLEID_DEFAULT = 253;
     short TABLEID_UNSPEC = 0;
 
-    short getTableId();
     Collection<TableRow> getRows();
 
     /**
@@ -53,8 +52,4 @@ public interface RoutingTable {
      */
     void flush();
 
-    /**
-     * Show entire content of routing table
-     */
-    void show();
 }

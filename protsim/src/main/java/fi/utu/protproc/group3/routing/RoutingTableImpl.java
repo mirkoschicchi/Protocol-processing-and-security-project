@@ -6,25 +6,23 @@ import fi.utu.protproc.group3.utils.NetworkAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 
 public class RoutingTableImpl implements RoutingTable {
-    // Don't know if we need it
-    private short tableId;
-
-    private Collection<TableRow> rows;
-
-    public RoutingTableImpl() {
-        this.rows = new ArrayList<TableRow>();
-    }
-
-    @Override
-    public short getTableId() {
-        return tableId;
-    }
+    private Collection<TableRow> rows = new ArrayList<>();
+    private ReadWriteLock lock = new ReentrantReadWriteLock();
 
     @Override
     public Collection<TableRow> getRows() {
-        return Collections.unmodifiableCollection(rows);
+        var rl = lock.readLock();
+        rl.lock();
+        try {
+            return rows.stream().collect(Collectors.toUnmodifiableList());
+        } finally {
+            rl.unlock();
+        }
     }
 
     @Override
@@ -63,45 +61,54 @@ public class RoutingTableImpl implements RoutingTable {
 
     @Override
     public TableRow getRowByPrefix(NetworkAddress prefix) {
-        TableRow row = null;
-
-        for(TableRow r: getRows()) {
+        TableRow result = null;
+        for(TableRow r : getRows()) {
             if(r.getPrefix().equals(prefix)) {
-                row = r;
+                result = r;
             }
         }
-        return row;
+        return result;
     }
 
     @Override
     public void removeBgpEntries(int bgpIdentifier, NetworkAddress prefix) {
-        if (prefix == null) {
-            rows.removeIf(r -> r.getBgpPeer() == bgpIdentifier);
-        } else {
-            rows.removeIf(r -> r.getBgpPeer() == bgpIdentifier && r.getPrefix().equals(prefix));
+        var wl = lock.writeLock();
+        wl.lock();
+        try {
+            if (prefix == null) {
+                rows.removeIf(r -> r.getBgpPeer() == bgpIdentifier);
+            } else {
+                rows.removeIf(r -> r.getBgpPeer() == bgpIdentifier && r.getPrefix().equals(prefix));
+            }
+        } finally {
+            wl.unlock();
         }
     }
 
     @Override
     public void insertRow(TableRow row) {
-        rows.add(row);
+        var wl = lock.writeLock();
+        wl.lock();
+        try {
+            rows.add(row);
+        } finally {
+            wl.unlock();
+        }
     }
 
     @Override
     public void deleteRow(TableRow row) {
-        rows.remove(row);
+        var wl = lock.writeLock();
+        wl.lock();
+        try {
+            rows.remove(row);
+        } finally {
+            wl.unlock();
+        }
     }
 
     @Override
     public void flush() {
         rows = null;
-    }
-
-    @Override
-    public void show() {
-        System.out.println("Table ID: " + tableId);
-        for(TableRow row : rows) {
-            System.out.println(row);
-        }
     }
 }

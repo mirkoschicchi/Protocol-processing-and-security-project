@@ -105,15 +105,7 @@ public class BGPPeerContext {
     }
 
     public void fireEvent(FSMImpl.FSMEvent event) {
-        synchronized (fsm) {
-            fsm.fire(event);
-        }
-    }
-
-    public void fireEvent(FSMImpl.FSMEvent event, BGPEventContext context) {
-        synchronized (fsm) {
-            fsm.fire(event, context);
-        }
+        fsm.fire(event);
     }
 
     public void start() {
