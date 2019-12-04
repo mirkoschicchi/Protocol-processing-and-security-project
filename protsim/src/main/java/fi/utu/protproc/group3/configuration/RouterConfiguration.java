@@ -31,12 +31,4 @@ public class RouterConfiguration extends NodeConfiguration {
     public void setAutonomousSystem(int autonomousSystem) {
         this.autonomousSystem = autonomousSystem;
     }
-
-    public void setInheritTrust(int inheritTrust) {
-        this.inheritTrust = inheritTrust;
-    }
-
-    public int getInheritTrust() {
-        return inheritTrust;
-    }
 }

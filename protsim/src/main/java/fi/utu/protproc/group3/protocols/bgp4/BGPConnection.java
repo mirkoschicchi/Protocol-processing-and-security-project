@@ -56,10 +56,8 @@ public class BGPConnection extends Connection {
 
                 for (NetworkAddress networkAddress : updateMessage.getNetworkLayerReachabilityInformation()) {
                     // Create a new row parsing also the path attributes
-                    Random random = new Random();
-                    int observedTrust = 1 + random.nextInt(10);
                     TableRow newRoute = TableRow.create(networkAddress, updateMessage.getNextHop(), 0,
-                            context.getBgpIdentifier(), ethernetInterface, updateMessage.getAsPath(), (context.getRouter().getInheritTrust() + observedTrust) / 2);
+                            context.getBgpIdentifier(), ethernetInterface, updateMessage.getAsPath(), context.getTrust());
                     context.getRouter().getRoutingTable().insertRow(newRoute);
                     LOGGER.fine(context.getRouter().getHostname() + ": inserting row " + newRoute.toString());
                 }
@@ -80,6 +78,7 @@ public class BGPConnection extends Connection {
                 }
             }
         } else if (bgpMessage instanceof BGP4MessageKeepalive) {
+            context.modifyObservedTrust(1.05);
             context.fireEvent(BGPStateMachine.Event.KeepAliveMsg);
         } else if (bgpMessage instanceof BGP4MessageNotification) {
             context.fireEvent(BGPStateMachine.Event.NotifMsg);
@@ -90,6 +89,7 @@ public class BGPConnection extends Connection {
 
     @Override
     public void closed() {
+        context.modifyObservedTrust(0.9);
         super.closed();
     }
 }

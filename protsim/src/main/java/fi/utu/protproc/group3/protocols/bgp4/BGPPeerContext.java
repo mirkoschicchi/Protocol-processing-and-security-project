@@ -11,10 +11,7 @@ import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class BGPPeerContext {
@@ -26,6 +23,8 @@ public class BGPPeerContext {
     private final List<BGPPeerContext> distributionList = new ArrayList<>();
     private int bgpIdentifier;
     private Disposable updateSendProcess;
+    private double inherentTrust = Math.random();
+    private double observedTrust = 0.5;
 
     public BGPPeerContext(RouterNode router, EthernetInterface ethernetInterface, IPAddress peer) {
         this.router = router;
@@ -72,11 +71,6 @@ public class BGPPeerContext {
             @Override
             public void sendNotificationMessage(byte errorCode, byte subErrorCode, byte[] data) {
                 connection.send(BGP4MessageNotification.create(errorCode, subErrorCode, data).serialize());
-            }
-
-            @Override
-            public void sendTrustRateMessage(int inheritTrust) {
-                connection.send(BGP4MessageTrustRate.create(inheritTrust).serialize());
             }
 
             // Handling for local routes
@@ -174,5 +168,13 @@ public class BGPPeerContext {
 
     public void setBgpIdentifier(int bgpIdentifier) {
         this.bgpIdentifier = bgpIdentifier;
+    }
+
+    public void modifyObservedTrust(double v) {
+        observedTrust = Math.min(observedTrust*v, 1.0);
+    }
+
+    public double getTrust() {
+        return (inherentTrust + observedTrust) / 2.0;
     }
 }

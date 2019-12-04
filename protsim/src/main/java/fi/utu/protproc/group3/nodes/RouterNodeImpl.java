@@ -24,7 +24,6 @@ import java.util.Map;
 public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
     private final int autonomousSystem;
     private static int nextBgpIdentifier = 1;
-    private final int inheritTrust;
     private final int bgpIdentifier;
     private final Map<IPAddress, BGPPeerContext> peerings = new HashMap<>();
     private final BGPServer bgpServer = new BGPServer(this, Collections.unmodifiableMap(peerings));
@@ -46,7 +45,6 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
                     )
             );
         }
-        this.inheritTrust = configuration.getInheritTrust();
     }
 
     private final RoutingTable routingTable = new RoutingTableImpl();
@@ -64,11 +62,6 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
     @Override
     public int getAutonomousSystem() {
         return autonomousSystem;
-    }
-
-    @Override
-    public int getInheritTrust() {
-        return inheritTrust;
     }
 
     protected void packetReceived(EthernetInterface intf, byte[] pdu) {

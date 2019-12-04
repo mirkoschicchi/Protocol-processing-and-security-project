@@ -16,7 +16,7 @@ public interface TableRow {
     }
 
     static TableRowImpl create(NetworkAddress prefix, IPAddress nextHop, int metric, int bgpPeer,
-                               EthernetInterface eInterface, List<List<Short>> asPath, int neighborTrust) {
+                               EthernetInterface eInterface, List<List<Short>> asPath, double neighborTrust) {
         return new TableRowImpl(prefix, nextHop, metric, bgpPeer, eInterface, asPath, neighborTrust);
     }
 
@@ -46,10 +46,9 @@ public interface TableRow {
 
     NetworkAddress getPrefix();
     IPAddress getNextHop();
-    int getMetric();
+    double getCalculatedMetric();
     int getBgpPeer();
     EthernetInterface getEInterface();
     List<List<Short>> getAsPath();
     int getAsPathLength();
-    int getNeighborTrust();
 }

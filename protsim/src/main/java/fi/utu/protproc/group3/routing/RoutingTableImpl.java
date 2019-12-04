@@ -28,9 +28,7 @@ public class RoutingTableImpl implements RoutingTable {
     @Override
     public TableRow getRowByDestinationAddress(IPAddress destinationAddress) {
         int longestMatch = 0;
-        int greaterTrust = 0;
-        int shortestAsPath = Integer.MAX_VALUE;
-        int shortestMetric = Integer.MAX_VALUE;
+        double shortestMetric = Integer.MAX_VALUE;
 
         TableRow result = null;
         for(TableRow row: getRows()) {
@@ -38,26 +36,13 @@ public class RoutingTableImpl implements RoutingTable {
             if (prefixLength >= longestMatch
                     && NetworkAddress.isMatch(row.getPrefix(), destinationAddress)) {
                 // 1) longest prefix length
-                // 2) best inherit trust
-                // 3) local routes (AS_PATH length)
-                // 4) metric (if not 0)
+                // 2) calculated metric
                 if (prefixLength > longestMatch) {
                     longestMatch = prefixLength;
-                    greaterTrust = row.getNeighborTrust();
-                    shortestAsPath = row.getAsPathLength();
-                    shortestMetric = row.getMetric() == 0 ? Integer.MAX_VALUE : row.getMetric();
+                    shortestMetric = row.getCalculatedMetric();
                     result = row;
-                } else if (row.getNeighborTrust() > greaterTrust) {
-                    greaterTrust = row.getNeighborTrust();
-                    shortestAsPath = row.getAsPathLength();
-                    shortestMetric = row.getMetric() == 0 ? Integer.MAX_VALUE : row.getMetric();
-                    result = row;
-                } else if (row.getAsPathLength() < shortestAsPath) {
-                    shortestAsPath = row.getAsPathLength();
-                    shortestMetric = row.getMetric() == 0 ? Integer.MAX_VALUE : row.getMetric();
-                    result = row;
-                } else if (row.getAsPathLength() == shortestAsPath && row.getMetric() < shortestMetric) {
-                    shortestMetric = row.getMetric();
+                } else if (row.getCalculatedMetric() < shortestMetric) {
+                    shortestMetric = row.getCalculatedMetric();
                     result = row;
                 }
             }

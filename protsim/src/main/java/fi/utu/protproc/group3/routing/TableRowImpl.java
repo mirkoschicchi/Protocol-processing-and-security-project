@@ -15,7 +15,7 @@ public class TableRowImpl implements TableRow {
     private EthernetInterface eInterface;
     private int bgpPeer;
     private List<List<Short>> asPath;
-    private int neighborTrust;
+    private double neighborTrust;
 
     public TableRowImpl(NetworkAddress prefix, IPAddress nextHop,
                         int metric, EthernetInterface eInterface) {
@@ -26,7 +26,7 @@ public class TableRowImpl implements TableRow {
     }
 
     public TableRowImpl(NetworkAddress prefix, IPAddress nextHop, int metric, int bgpPeer,
-                        EthernetInterface eInterface, List<List<Short>> asPath, int neighborTrust) {
+                        EthernetInterface eInterface, List<List<Short>> asPath, double neighborTrust) {
         this.prefix = prefix;
         this.nextHop = nextHop;
         this.metric = metric;
@@ -47,8 +47,8 @@ public class TableRowImpl implements TableRow {
     }
 
     @Override
-    public int getMetric() {
-        return metric;
+    public double getCalculatedMetric() {
+        return metric == 0 ? (this.getAsPathLength() * 100) / neighborTrust : (metric * (this.getAsPathLength() * 100)) / neighborTrust;
     }
 
     @Override
@@ -70,9 +70,6 @@ public class TableRowImpl implements TableRow {
     public int getAsPathLength() {
         return asPath != null ? asPath.get(0).size() : 0;
     }
-
-    @Override
-    public int getNeighborTrust() { return neighborTrust; }
 
     @Override
     public String toString() {

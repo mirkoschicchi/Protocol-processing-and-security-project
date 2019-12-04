@@ -115,9 +115,6 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
 
         if (configuration.getRouters() != null) {
             for (var routerConf : configuration.getRouters()) {
-                Random random = new Random();
-                routerConf.setInheritTrust(1 + random.nextInt(10));
-
                 var node = new RouterNodeImpl(context, routerConf);
                 nodes.put(node.getHostname(), node);
 

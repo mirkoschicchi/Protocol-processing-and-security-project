@@ -5,7 +5,6 @@ public interface BGP4Message {
     byte TYPE_UPDATE = (short) 0x2;
     byte TYPE_NOTIFICATION = (short) 0x3;
     byte TYPE_KEEPALIVE = (short) 0x4;
-    byte TYPE_TRUSTRATE = (short) 0x5;
 
     byte[] getMarker();
     short getLength();
