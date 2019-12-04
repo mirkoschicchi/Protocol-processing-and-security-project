@@ -127,6 +127,8 @@ public abstract class BGP4MessageImpl implements BGP4Message {
                 buf.get(data, 0, buf.remaining());
                 return BGP4MessageNotification.create(errorCode, errorSubCode, data);
 
+            case BGP4Message.TYPE_TRUSTRATE:
+                return BGP4MessageTrustRate.create();
             case BGP4Message.TYPE_KEEPALIVE:
                 return BGP4MessageKeepalive.create();
 

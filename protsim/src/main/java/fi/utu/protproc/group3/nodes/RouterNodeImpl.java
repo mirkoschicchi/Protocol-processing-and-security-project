@@ -14,13 +14,11 @@ import fi.utu.protproc.group3.simulator.SimulationBuilderContext;
 import fi.utu.protproc.group3.utils.IPAddress;
 
 import java.net.UnknownHostException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
     private final int autonomousSystem;
+    private final int inheritTrust;
     private final Map<IPAddress, BGPPeerContext> peerings = new HashMap<>();
     private final BGPServer bgpServer = new BGPServer(this, Collections.unmodifiableMap(peerings));
 
@@ -28,7 +26,6 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
         super(context, configuration);
         
         this.autonomousSystem = configuration.getAutonomousSystem();
-
         for (var intf : configuration.getInterfaces()) {
             var network = context.network(intf.getNetwork());
             interfaces.add(
@@ -40,6 +37,7 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
                     )
             );
         }
+        this.inheritTrust = configuration.getInheritTrust();
     }
 
     private final RoutingTable routingTable = new RoutingTableImpl();
@@ -57,6 +55,11 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
     @Override
     public int getAutonomousSystem() {
         return autonomousSystem;
+    }
+
+    @Override
+    public int getInheritTrust() {
+        return inheritTrust;
     }
 
     @Override

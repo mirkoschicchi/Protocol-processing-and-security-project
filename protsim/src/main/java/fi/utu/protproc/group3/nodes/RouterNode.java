@@ -13,4 +13,5 @@ public interface RouterNode extends NetworkNode {
     RoutingTable getRoutingTable();
 
     int getAutonomousSystem();
+    int getInheritTrust();
 }

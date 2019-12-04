@@ -6,6 +6,7 @@ public class RouterConfiguration extends NodeConfiguration {
     private List<InterfaceConfiguration> interfaces;
     private List<String> staticRoutes;
     private int autonomousSystem;
+    private int inheritTrust;
 
     public List<InterfaceConfiguration> getInterfaces() {
         return interfaces;
@@ -29,5 +30,13 @@ public class RouterConfiguration extends NodeConfiguration {
 
     public void setAutonomousSystem(int autonomousSystem) {
         this.autonomousSystem = autonomousSystem;
+    }
+
+    public void setInheritTrust(int inheritTrust) {
+        this.inheritTrust = inheritTrust;
+    }
+
+    public int getInheritTrust() {
+        return inheritTrust;
     }
 }

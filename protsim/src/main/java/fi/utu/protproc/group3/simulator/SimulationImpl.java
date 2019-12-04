@@ -115,6 +115,9 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
 
         if (configuration.getRouters() != null) {
             for (var routerConf : configuration.getRouters()) {
+                Random random = new Random();
+                routerConf.setInheritTrust(1 + random.nextInt(10));
+
                 var node = new RouterNodeImpl(context, routerConf);
                 nodes.put(node.getHostname(), node);
 
@@ -379,7 +382,6 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
         public final int id;
         public final Set<Node> routers = new HashSet<>();
         public final Set<Node> networks = new HashSet<>();
-
         public AutonomousSystem(int id) {
             this.id = id;
         }
