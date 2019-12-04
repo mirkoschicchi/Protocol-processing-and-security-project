@@ -15,7 +15,7 @@ public class TableRowImpl implements TableRow {
     private EthernetInterface eInterface;
     private int bgpPeer;
     private List<List<Short>> asPath;
-    private int neighborInheritTrust;
+    private int neighborTrust;
 
     public TableRowImpl(NetworkAddress prefix, IPAddress nextHop,
                         int metric, EthernetInterface eInterface) {
@@ -26,14 +26,14 @@ public class TableRowImpl implements TableRow {
     }
 
     public TableRowImpl(NetworkAddress prefix, IPAddress nextHop, int metric, int bgpPeer,
-                        EthernetInterface eInterface, List<List<Short>> asPath, int neighborInheritTrust) {
+                        EthernetInterface eInterface, List<List<Short>> asPath, int neighborTrust) {
         this.prefix = prefix;
         this.nextHop = nextHop;
         this.metric = metric;
         this.bgpPeer = bgpPeer;
         this.eInterface = eInterface;
         this.asPath = asPath;
-        this.neighborInheritTrust = neighborInheritTrust;
+        this.neighborTrust = neighborTrust;
     }
 
     @Override
@@ -72,7 +72,7 @@ public class TableRowImpl implements TableRow {
     }
 
     @Override
-    public int getNeighborInheritTrust() { return neighborInheritTrust; }
+    public int getNeighborTrust() { return neighborTrust; }
 
     @Override
     public String toString() {

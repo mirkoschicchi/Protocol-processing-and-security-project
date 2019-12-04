@@ -8,6 +8,7 @@ import fi.utu.protproc.group3.simulator.EthernetInterface;
 import fi.utu.protproc.group3.utils.NetworkAddress;
 
 import java.util.List;
+import java.util.Random;
 import java.util.logging.Logger;
 
 public class BGPConnection extends Connection {
@@ -55,8 +56,10 @@ public class BGPConnection extends Connection {
 
                 for (NetworkAddress networkAddress : updateMessage.getNetworkLayerReachabilityInformation()) {
                     // Create a new row parsing also the path attributes
+                    Random random = new Random();
+                    int observedTrust = 1 + random.nextInt(10);
                     TableRow newRoute = TableRow.create(networkAddress, updateMessage.getNextHop(), 0,
-                            context.getBgpIdentifier(), ethernetInterface, updateMessage.getAsPath(), context.getRouter().getInheritTrust());
+                            context.getBgpIdentifier(), ethernetInterface, updateMessage.getAsPath(), (context.getRouter().getInheritTrust() + observedTrust) / 2);
                     context.getRouter().getRoutingTable().insertRow(newRoute);
                     LOGGER.fine(context.getRouter().getHostname() + ": inserting row " + newRoute.toString());
                 }
