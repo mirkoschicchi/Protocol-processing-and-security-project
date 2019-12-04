@@ -41,7 +41,6 @@ public class RoutingTableImpl implements RoutingTable {
                 // 2) best inherit trust
                 // 3) local routes (AS_PATH length)
                 // 4) metric (if not 0)
-                System.out.println("\nNeighbor trust: " + row.getNeighborTrust());
                 if (prefixLength > longestMatch) {
                     longestMatch = prefixLength;
                     greaterTrust = row.getNeighborTrust();
