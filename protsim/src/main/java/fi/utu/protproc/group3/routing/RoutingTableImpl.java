@@ -28,6 +28,7 @@ public class RoutingTableImpl implements RoutingTable {
     @Override
     public TableRow getRowByDestinationAddress(IPAddress destinationAddress) {
         int longestMatch = 0;
+        int greaterInheritTrust = 0;
         int shortestAsPath = Integer.MAX_VALUE;
         int shortestMetric = Integer.MAX_VALUE;
 
@@ -37,13 +38,19 @@ public class RoutingTableImpl implements RoutingTable {
             if (prefixLength >= longestMatch
                     && NetworkAddress.isMatch(row.getPrefix(), destinationAddress)) {
                 // 1) longest prefix length
-                // 2) local routes (AS_PATH length)
-                // 3) metric (if not 0)
+                // 2) best inherit trust
+                // 3) local routes (AS_PATH length)
+                // 4) metric (if not 0)
                 if (prefixLength > longestMatch) {
                     longestMatch = prefixLength;
-
-                    shortestMetric = row.getMetric() == 0 ? Integer.MAX_VALUE : row.getMetric();
+                    greaterInheritTrust = row.getNeighborInheritTrust();
                     shortestAsPath = row.getAsPathLength();
+                    shortestMetric = row.getMetric() == 0 ? Integer.MAX_VALUE : row.getMetric();
+                    result = row;
+                } else if (row.getNeighborInheritTrust() > greaterInheritTrust) {
+                    greaterInheritTrust = row.getNeighborInheritTrust();
+                    shortestAsPath = row.getAsPathLength();
+                    shortestMetric = row.getMetric() == 0 ? Integer.MAX_VALUE : row.getMetric();
                     result = row;
                 } else if (row.getAsPathLength() < shortestAsPath) {
                     shortestAsPath = row.getAsPathLength();

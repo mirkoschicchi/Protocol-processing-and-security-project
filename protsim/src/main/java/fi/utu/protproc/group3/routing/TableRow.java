@@ -16,8 +16,8 @@ public interface TableRow {
     }
 
     static TableRowImpl create(NetworkAddress prefix, IPAddress nextHop, int metric, int bgpPeer,
-                               EthernetInterface eInterface, List<List<Short>> asPath) {
-        return new TableRowImpl(prefix, nextHop, metric, bgpPeer, eInterface, asPath);
+                               EthernetInterface eInterface, List<List<Short>> asPath, int neighborInheritTrust) {
+        return new TableRowImpl(prefix, nextHop, metric, bgpPeer, eInterface, asPath, neighborInheritTrust);
     }
 
     // From cat /etc/iproute2/rt_protos
@@ -51,5 +51,5 @@ public interface TableRow {
     EthernetInterface getEInterface();
     List<List<Short>> getAsPath();
     int getAsPathLength();
-
+    int getNeighborInheritTrust();
 }

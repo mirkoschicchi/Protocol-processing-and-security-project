@@ -53,8 +53,8 @@ public class RoutingTableTest {
 
         var table = RoutingTable.create();
 
-        var r1 = TableRow.create(NetworkAddress.parse("fe80:1::/64"), IPAddress.parse("fe80:1::1"), 100, 0, null, asPath1);
-        var r2 = TableRow.create(NetworkAddress.parse("0::/0"), IPAddress.parse("0::1"), 100, 0, null, asPath1);
+        var r1 = TableRow.create(NetworkAddress.parse("fe80:1::/64"), IPAddress.parse("fe80:1::1"), 100, 0, null, asPath1, 5);
+        var r2 = TableRow.create(NetworkAddress.parse("0::/0"), IPAddress.parse("0::1"), 100, 0, null, asPath1, 5);
 
         table.insertRow(r1);
 
@@ -70,12 +70,16 @@ public class RoutingTableTest {
         assertEquals(r2, table.getRowByDestinationAddress(IPAddress.parse("fe80:3::1")));
         assertEquals(r2, table.getRowByDestinationAddress(IPAddress.parse("fe00::1")));
 
-        var r3 = TableRow.create(NetworkAddress.parse("fe80:1::/64"), IPAddress.parse("fe80:1::1"), 90, 0, null, asPath1);
+        var r3 = TableRow.create(NetworkAddress.parse("fe80:1::/64"), IPAddress.parse("fe80:1::1"), 90, 0, null, asPath1, 5);
         table.insertRow(r3);
         assertEquals(r3, table.getRowByDestinationAddress(IPAddress.parse("fe80:1::")));
 
-        var r4 = TableRow.create(NetworkAddress.parse("fe80:1::/64"), IPAddress.parse("fe80:1::1"), 90, 0, null, asPath2);
+        var r4 = TableRow.create(NetworkAddress.parse("fe80:1::/64"), IPAddress.parse("fe80:1::1"), 90, 0, null, asPath2, 5);
         table.insertRow(r4);
         assertEquals(r4, table.getRowByDestinationAddress(IPAddress.parse("fe80:1::")));
+
+        var r5 = TableRow.create(NetworkAddress.parse("fe80:1::/64"), IPAddress.parse("fe80:1::1"), 90, 0, null, asPath2, 10);
+        table.insertRow(r5);
+        assertEquals(r5, table.getRowByDestinationAddress(IPAddress.parse("fe80:1::")));
     }
 }
