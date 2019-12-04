@@ -17,7 +17,6 @@ public interface RoutingTable {
     short TABLEID_DEFAULT = 253;
     short TABLEID_UNSPEC = 0;
 
-    short getTableId();
     Collection<TableRow> getRows();
 
     /**
@@ -33,6 +32,8 @@ public interface RoutingTable {
      * @return
      */
     TableRow getRowByPrefix(NetworkAddress prefix);
+
+    void removeBgpEntries(int bgpIdentifier, NetworkAddress prefix);
 
     /**
      * Insert a new row in the table
@@ -51,8 +52,4 @@ public interface RoutingTable {
      */
     void flush();
 
-    /**
-     * Show entire content of routing table
-     */
-    void show();
 }

@@ -6,10 +6,7 @@ import fi.utu.protproc.group3.simulator.EthernetInterface;
 import fi.utu.protproc.group3.utils.IPAddress;
 import reactor.core.Disposable;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Random;
+import java.util.*;
 import java.util.logging.Logger;
 
 public class DatagramHandler {
@@ -64,7 +61,7 @@ public class DatagramHandler {
 
     public void onMessage(byte[] pdu) {
         var frame = EthernetFrame.parse(pdu);
-        if (frame.getType() == EthernetFrame.TYPE_IPV6) {
+        if (Arrays.equals(frame.getDestination(), ethernetInterface.getAddress()) && frame.getType() == EthernetFrame.TYPE_IPV6) {
             var packet = IPv6Packet.parse(frame.getPayload());
             if (packet.getNextHeader() == 0x6) {
                 var datagram = TCPDatagram.parse(packet.getPayload());
@@ -124,7 +121,7 @@ public class DatagramHandler {
                     state.status = ConnectionStatus.Closed;
                     state.connection.closed();
                 } else if (state.status == ConnectionStatus.Established) {
-                    if (datagram.getPayload() != null) {
+                    if (datagram.getPayload() != null && datagram.getPayload().length > 0) {
                         state.connection.messageReceived(datagram.getPayload());
                     }
                 } else if (flags == TCPDatagram.ACK) {
@@ -190,6 +187,11 @@ public class DatagramHandler {
             return super.equals(obj);
         }
 
+        @Override
+        public String toString() {
+            return "[" + localIp + "]:" + (localPort & 0xffff) + " -> [" + remoteIp + "]:" + (remotePort & 0xffff);
+        }
+
         public IPAddress getLocalIp() {
             return localIp;
         }
@@ -220,7 +222,6 @@ public class DatagramHandler {
         private final Connection connection;
         private ConnectionStatus status;
         private int seqN;
-        private int peerSeqN;
         private int ackN;
 
         public ConnectionState(ConnectionDescriptor descriptor, DatagramHandler handler, Connection connection) {
@@ -238,12 +239,12 @@ public class DatagramHandler {
         }
 
         public void update(TCPDatagram datagram) {
-            this.peerSeqN = datagram.getSeqN();
+            ackN = datagram.getSeqN();
 
             if (datagram.getPayload() == null || datagram.getPayload().length == 0) {
-                this.peerSeqN++;
+                ackN++;
             } else {
-                this.peerSeqN += datagram.getPayload().length;
+                ackN += datagram.getPayload().length;
             }
         }
 
@@ -252,11 +253,11 @@ public class DatagramHandler {
         }
 
         public void send(byte[] message, short flags) {
-            if (this.ackN != this.peerSeqN &&  (flags & (TCPDatagram.SYN | TCPDatagram.RST)) == 0) {
+            if ((flags & (TCPDatagram.SYN | TCPDatagram.RST)) == 0) {
                 flags |= TCPDatagram.ACK;
             }
 
-            var ackN = (flags & (TCPDatagram.ACK | TCPDatagram.SYN)) != 0 ? this.peerSeqN : 0;
+            var ackN = (flags & (TCPDatagram.ACK | TCPDatagram.SYN)) != 0 ? this.ackN : 0;
             var datagram = TCPDatagram.create(descriptor.localPort, descriptor.remotePort, this.seqN, ackN, flags,
                     (short) 0xffff, message);
 
@@ -282,6 +283,14 @@ public class DatagramHandler {
         public void close() {
             status = ConnectionStatus.Closing;
             send(null, TCPDatagram.FIN);
+        }
+
+        public ConnectionDescriptor getDescriptor() {
+            return descriptor;
+        }
+
+        public ConnectionStatus getStatus() {
+            return status;
         }
     }
 }

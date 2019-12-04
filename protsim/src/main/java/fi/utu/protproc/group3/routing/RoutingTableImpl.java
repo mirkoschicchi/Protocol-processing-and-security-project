@@ -6,87 +6,109 @@ import fi.utu.protproc.group3.utils.NetworkAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 
 public class RoutingTableImpl implements RoutingTable {
-    // Don't know if we need it
-    private short tableId;
-
-    private Collection<TableRow> rows;
-
-    public RoutingTableImpl() {
-        this.rows = new ArrayList<TableRow>();
-    }
-
-    @Override
-    public short getTableId() {
-        return tableId;
-    }
+    private Collection<TableRow> rows = new ArrayList<>();
+    private ReadWriteLock lock = new ReentrantReadWriteLock();
 
     @Override
     public Collection<TableRow> getRows() {
-        return Collections.unmodifiableCollection(rows);
+        var rl = lock.readLock();
+        rl.lock();
+        try {
+            return rows.stream().collect(Collectors.toUnmodifiableList());
+        } finally {
+            rl.unlock();
+        }
     }
 
     @Override
     public TableRow getRowByDestinationAddress(IPAddress destinationAddress) {
         int longestMatch = 0;
-        int shortestAsPath = 999999999;
-        int shortestMetric = 999999999;
-        TableRow routeRow = null;
-        for(TableRow row: getRows()) {
-            int matchLength = NetworkAddress.matchLength(row.getPrefix(), destinationAddress);
+        int shortestAsPath = Integer.MAX_VALUE;
+        int shortestMetric = Integer.MAX_VALUE;
 
-            if (matchLength > 0) {
-                if (matchLength > longestMatch) {
-                    longestMatch = matchLength;
+        TableRow result = null;
+        for(TableRow row: getRows()) {
+            var prefixLength = row.getPrefix().getPrefixLength();
+            if (prefixLength >= longestMatch
+                    && NetworkAddress.isMatch(row.getPrefix(), destinationAddress)) {
+                // 1) longest prefix length
+                // 2) local routes (AS_PATH length)
+                // 3) metric (if not 0)
+                if (prefixLength > longestMatch) {
+                    longestMatch = prefixLength;
+
+                    shortestMetric = row.getMetric() == 0 ? Integer.MAX_VALUE : row.getMetric();
+                    shortestAsPath = row.getAsPathLength();
+                    result = row;
+                } else if (row.getAsPathLength() < shortestAsPath) {
+                    shortestAsPath = row.getAsPathLength();
+                    shortestMetric = row.getMetric() == 0 ? Integer.MAX_VALUE : row.getMetric();
+                    result = row;
+                } else if (row.getAsPathLength() == shortestAsPath && row.getMetric() < shortestMetric) {
                     shortestMetric = row.getMetric();
-                    shortestAsPath = row.getAsPathLength();
-                    routeRow = row;
-                } else if (matchLength == longestMatch && row.getMetric() < shortestMetric) {
-                    shortestMetric = row.getMetric();
-                    shortestAsPath = row.getAsPathLength();
-                    routeRow = row;
-                } else if (matchLength == longestMatch && row.getMetric() == shortestMetric && row.getAsPathLength() < shortestAsPath) {
-                    shortestAsPath = row.getAsPathLength();
-                    routeRow = row;
+                    result = row;
                 }
             }
         }
-        return routeRow;
+
+        return result;
     }
 
     @Override
     public TableRow getRowByPrefix(NetworkAddress prefix) {
-        TableRow row = null;
-
-        for(TableRow r: getRows()) {
+        TableRow result = null;
+        for(TableRow r : getRows()) {
             if(r.getPrefix().equals(prefix)) {
-                row = r;
+                result = r;
             }
         }
-        return row;
+        return result;
+    }
+
+    @Override
+    public void removeBgpEntries(int bgpIdentifier, NetworkAddress prefix) {
+        var wl = lock.writeLock();
+        wl.lock();
+        try {
+            if (prefix == null) {
+                rows.removeIf(r -> r.getBgpPeer() == bgpIdentifier);
+            } else {
+                rows.removeIf(r -> r.getBgpPeer() == bgpIdentifier && r.getPrefix().equals(prefix));
+            }
+        } finally {
+            wl.unlock();
+        }
     }
 
     @Override
     public void insertRow(TableRow row) {
-        rows.add(row);
+        var wl = lock.writeLock();
+        wl.lock();
+        try {
+            rows.add(row);
+        } finally {
+            wl.unlock();
+        }
     }
 
     @Override
     public void deleteRow(TableRow row) {
-        rows.remove(row);
+        var wl = lock.writeLock();
+        wl.lock();
+        try {
+            rows.remove(row);
+        } finally {
+            wl.unlock();
+        }
     }
 
     @Override
     public void flush() {
         rows = null;
-    }
-
-    @Override
-    public void show() {
-        System.out.println("Table ID: " + tableId);
-        for(TableRow row : rows) {
-            row.show();
-        }
     }
 }

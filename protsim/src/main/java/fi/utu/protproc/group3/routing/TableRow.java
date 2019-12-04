@@ -52,5 +52,4 @@ public interface TableRow {
     List<List<Short>> getAsPath();
     int getAsPathLength();
 
-    void show();
 }

@@ -1,13 +1,10 @@
 package fi.utu.protproc.group3.nodes;
 
 import fi.utu.protproc.group3.configuration.NodeConfiguration;
-import fi.utu.protproc.group3.protocols.tcp.Connection;
+import fi.utu.protproc.group3.protocols.http.SimpleHttpServer;
 import fi.utu.protproc.group3.protocols.tcp.Server;
-import fi.utu.protproc.group3.simulator.EthernetInterface;
 import fi.utu.protproc.group3.simulator.Network;
 import fi.utu.protproc.group3.simulator.SimulationBuilderContext;
-
-import java.io.UnsupportedEncodingException;
 
 public class ServerNodeImpl extends NetworkNodeImpl implements ServerNode {
     private Server httpServer;
@@ -20,7 +17,7 @@ public class ServerNodeImpl extends NetworkNodeImpl implements ServerNode {
     public void start() {
         super.start();
 
-        this.httpServer = Server.listen(getInterface(), (short) 80, SimpleHttpServerConnection.class);
+        this.httpServer = Server.listen(getInterface(), SimpleHttpServer.DEFAULT_PORT, SimpleHttpServer.class);
     }
 
     @Override
@@ -30,30 +27,4 @@ public class ServerNodeImpl extends NetworkNodeImpl implements ServerNode {
         super.shutdown();
     }
 
-    public static class SimpleHttpServerConnection extends Connection {
-        public SimpleHttpServerConnection(EthernetInterface ethernetInterface) {
-            super(ethernetInterface);
-        }
-
-        @Override
-        public void messageReceived(byte[] message) {
-            super.messageReceived(message);
-
-            try {
-                var body = "<h1>Hello from " + ethernetInterface.getHost().getHostname() + "</h1>" +
-                        "<p>Your request:</p>" +
-                        "<pre>" + new String(message, "UTF-8") + "</pre>";
-
-                var reply = "HTTP/1.0 418 I'm a simple http server\r\n" +
-                        "Content-Type: text/html\r\n" +
-                        "Content-Length: " + body.length() + "\r\n" +
-                        "Connection: close\r\n" +
-                        "\r\n" + body;
-
-                send(reply.getBytes());
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
-        }
-    }
 }

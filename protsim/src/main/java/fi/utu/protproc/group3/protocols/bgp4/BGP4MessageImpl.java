@@ -1,9 +1,11 @@
 package fi.utu.protproc.group3.protocols.bgp4;
 
-import fi.utu.protproc.group3.utils.*;
+import fi.utu.protproc.group3.utils.IPAddress;
+import fi.utu.protproc.group3.utils.NetworkAddress;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public abstract class BGP4MessageImpl implements BGP4Message {
@@ -17,16 +19,18 @@ public abstract class BGP4MessageImpl implements BGP4Message {
         this.type = type;
     }
 
-    private static void getNetworkAddressesList(ByteBuffer buf, List<NetworkAddress> netAddrList, int elemNum) {
+    private static NetworkAddress parseNetworkAddressesFromBuffer(ByteBuffer buf) {
         int prefLen;
         IPAddress addr;
-        for (short i = 0; i < elemNum; i++) {
-            byte[] app = new byte[16];
-            prefLen = buf.get();
-            buf.get(app);
-            addr = new IPAddress(app);
-            netAddrList.add(new NetworkAddress(addr, prefLen));
-        }
+        prefLen = buf.get();
+        int byteNum = (prefLen % 8 > 0) ? prefLen / 8 + 1 : prefLen / 8;
+        byte[] app = new byte[byteNum];
+        buf.get(app);
+        byte[] wrapper = new byte[16];
+        Arrays.fill(wrapper, (byte) 0x00);
+        System.arraycopy(app, 0, wrapper, 0, app.length);
+        addr = new IPAddress(wrapper);
+        return new NetworkAddress(addr, prefLen);
     }
 
     @Override
@@ -80,7 +84,10 @@ public abstract class BGP4MessageImpl implements BGP4Message {
 
                 //  withdrawnRoutes
                 short withdrawnRoutesLength = buf.getShort();
-                getNetworkAddressesList(buf, withdrawnRoutes, withdrawnRoutesLength / 17);
+                while(withdrawnRoutesLength > 0) {
+                    withdrawnRoutes.add(parseNetworkAddressesFromBuffer(buf));
+                    withdrawnRoutesLength -= 1 + withdrawnRoutes.get(withdrawnRoutes.size() -1).getRequiredBytesForPrefix();
+                }
 
                 // Total Path Attribute Length
                 buf.getShort();
@@ -107,15 +114,14 @@ public abstract class BGP4MessageImpl implements BGP4Message {
 
                 // nextHop
                 buf.getInt();
-                prefLen = buf.get();
                 buf.get(tmp);
-                addr = new IPAddress(tmp);
-                NetworkAddress nextHop = new NetworkAddress(addr, prefLen);
+                IPAddress nextHop = new IPAddress(tmp);
 
                 List<NetworkAddress> networkLayerReachabilityInformation
                         = new ArrayList<NetworkAddress>();
-                //int nlriLen = buf.capacity() - 23 - 5 - 4 - valueLen - 21;
-                getNetworkAddressesList(buf, networkLayerReachabilityInformation, buf.remaining() / 17);
+                while(buf.remaining() > 0) {
+                    networkLayerReachabilityInformation.add(parseNetworkAddressesFromBuffer(buf));
+                }
 
                 return BGP4MessageUpdate.create(withdrawnRoutes, origin, asPath, nextHop,
                         networkLayerReachabilityInformation);

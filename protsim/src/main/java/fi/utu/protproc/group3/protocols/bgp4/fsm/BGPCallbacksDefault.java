@@ -1,6 +1,6 @@
-package fi.utu.protproc.group3.finitestatemachine;
+package fi.utu.protproc.group3.protocols.bgp4.fsm;
 
-public class InternalFSMCallbacksImpl implements InternalFSMCallbacks {
+public class BGPCallbacksDefault implements BGPCallbacks {
     @Override
     public void connectRemotePeer() {
 
@@ -32,7 +32,7 @@ public class InternalFSMCallbacksImpl implements InternalFSMCallbacks {
     }
 
     @Override
-    public void sendNotificationMessage(byte errorCode) {
+    public void sendNotificationMessage(byte errorCode, byte subErrorCode, byte[] data) {
 
     }
 

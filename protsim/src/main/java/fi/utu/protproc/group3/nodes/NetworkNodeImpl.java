@@ -7,14 +7,13 @@ import fi.utu.protproc.group3.simulator.*;
 import fi.utu.protproc.group3.utils.AddressGenerator;
 import fi.utu.protproc.group3.utils.IPAddress;
 import reactor.core.Disposable;
-import reactor.core.publisher.Flux;
 
-import java.net.UnknownHostException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 public abstract class NetworkNodeImpl implements NetworkNode, SimpleNode {
-    protected final Simulation simulation;
+    public final Simulation simulation;
     protected final String hostname;
     protected final List<EthernetInterface> interfaces = new ArrayList<>();
 
@@ -43,7 +42,7 @@ public abstract class NetworkNodeImpl implements NetworkNode, SimpleNode {
         this.hostname = context.generator().hostName(configuration != null ? configuration.getName() : null);
     }
 
-    private Disposable messageListener;
+    private List<Disposable> messageListeners;
 
     @Override
     public String getHostname() {
@@ -73,23 +72,14 @@ public abstract class NetworkNodeImpl implements NetworkNode, SimpleNode {
 
     @Override
     public void start() {
-        if (messageListener != null) {
+        if (messageListeners != null) {
             throw new UnsupportedOperationException("Node is already running.");
         }
 
         // Subscribe to all server interfaces
-        messageListener = Flux
-                .merge(
-                        (Iterable<Flux<byte[]>>) interfaces.stream()
-                                .map(i -> i.getFlux().doOnEach(pdu -> {
-                                    try {
-                                        packetReceived(i, pdu.get());
-                                    } catch (UnknownHostException e) {
-                                        e.printStackTrace();
-                                    }
-                                }))::iterator
-                )
-                .subscribe();
+        messageListeners = interfaces.stream()
+                .map(i -> i.getFlux().subscribe(pdu -> this.packetReceived(i, pdu)))
+                .collect(Collectors.toUnmodifiableList());
 
         interfaces.forEach(i -> i.getTCPHandler().start());
     }
@@ -98,18 +88,20 @@ public abstract class NetworkNodeImpl implements NetworkNode, SimpleNode {
     public void shutdown() {
         interfaces.forEach(i -> i.getTCPHandler().stop());
 
-        if (messageListener != null) {
-            messageListener.dispose();
-            messageListener = null;
+        if (messageListeners != null) {
+            for (var listener : messageListeners) {
+                listener.dispose();
+            }
+            messageListeners = null;
         }
     }
 
     @Override
     public boolean nodeIsRunning() {
-        return messageListener != null;
+        return messageListeners != null;
     }
 
-    protected void packetReceived(EthernetInterface intf, byte[] pdu) throws UnknownHostException {
+    protected void packetReceived(EthernetInterface intf, byte[] pdu) {
         // NOP
     }
 

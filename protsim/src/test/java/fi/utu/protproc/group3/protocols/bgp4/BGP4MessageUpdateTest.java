@@ -1,6 +1,7 @@
 package fi.utu.protproc.group3.protocols.bgp4;
 
 import fi.utu.protproc.group3.utils.AddressGenerator;
+import fi.utu.protproc.group3.utils.IPAddress;
 import fi.utu.protproc.group3.utils.NetworkAddress;
 import org.junit.jupiter.api.Test;
 
@@ -26,7 +27,7 @@ public class BGP4MessageUpdateTest {
             aspath.add(aspathSample);
         }
         var message = BGP4MessageUpdate.create(randomNetList, BGP4MessageUpdate.ORIGIN_FROM_IGP, aspath,
-                ag.networkAddress("2001:4860:4860::8887/32"), randomNetList);
+                ag.networkAddress("2001:4860:4860::8887/32").getAddress(), randomNetList);
         assertNotNull(message);
 
         var bytes = message.serialize();
@@ -40,18 +41,42 @@ public class BGP4MessageUpdateTest {
         var cont = 0;
         for (NetworkAddress addr : message.getWithdrawnRoutes()) {
             assertEquals(addr.getPrefixLength(), parsedMsg.getWithdrawnRoutes().get(cont).getPrefixLength());
-            assertEquals(addr.getAddress(), parsedMsg.getWithdrawnRoutes().get(cont).getAddress());
+            assertTrue(NetworkAddress.isMatch(addr, parsedMsg.getWithdrawnRoutes().get(cont).getAddress()));
             cont++;
         }
         assertSame(message.getOrigin(), parsedMsg.getOrigin());
         assertEquals(message.getAsPath(), parsedMsg.getAsPath());
-        assertEquals(message.getNextHop().getPrefixLength(), parsedMsg.getNextHop().getPrefixLength());
-        assertEquals(message.getNextHop().getAddress(), parsedMsg.getNextHop().getAddress());
+        assertEquals(message.getNextHop(), parsedMsg.getNextHop());
         cont = 0;
         for (NetworkAddress addr : message.getNetworkLayerReachabilityInformation()) {
             assertEquals(addr.getPrefixLength(), parsedMsg.getNetworkLayerReachabilityInformation().get(cont).getPrefixLength());
-            assertEquals(addr.getAddress(), parsedMsg.getNetworkLayerReachabilityInformation().get(cont).getAddress());
+            assertTrue(NetworkAddress.isMatch(addr, parsedMsg.getNetworkLayerReachabilityInformation().get(cont).getAddress()));
             cont++;
+        }
+    }
+
+    @Test
+    public void asPathWithMultipleElements() {
+        var expected = BGP4MessageUpdate.create(
+                List.of(),
+                BGP4MessageUpdate.ORIGIN_FROM_ESP,
+                List.of(
+                        List.of((short) 11, (short) 12, (short) 13),
+                        List.of((short) 21, (short) 22, (short) 23),
+                        List.of((short) 31, (short) 32, (short) 33)
+                ),
+                IPAddress.parse("fe80::1"),
+                List.of()
+        );
+
+        var actual = (BGP4MessageUpdate) BGP4Message.parse(expected.serialize());
+
+        assertEquals(3, actual.getAsPath().size());
+        for (var i = 0; i < 3; i++) {
+            assertEquals(3, actual.getAsPath().get(i).size());
+            assertEquals((short) 1 + (i + 1) * 10, (short) actual.getAsPath().get(i).get(0));
+            assertEquals((short) 2 + (i + 1) * 10, (short) actual.getAsPath().get(i).get(1));
+            assertEquals((short) 3 + (i + 1) * 10, (short) actual.getAsPath().get(i).get(2));
         }
     }
 

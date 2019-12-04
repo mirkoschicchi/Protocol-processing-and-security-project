@@ -170,7 +170,7 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
                                 RouterNode nextHop = nodePath.get(2).getAttribute(GraphAttributes.OBJECT);
                                 var nextHopIntf = nextHop.getInterfaces().stream().filter(i -> i.getNetwork() == network).findAny();
                                 if (nextHop.getAutonomousSystem() != router.getAutonomousSystem() || network.getAutonomousSystem() != router.getAutonomousSystem()) {
-                                    System.out.println("Route from " + router.getHostname() + " to network " + network.getNetworkName() + " goes across AS boundaries. No static routes generated.");
+                                    System.err.println("Route from " + router.getHostname() + " to network " + network.getNetworkName() + " goes across AS boundaries. No static routes generated.");
                                 } else if (outIntf.isPresent() && nextHopIntf.isPresent()) {
                                     router.getRoutingTable().insertRow(TableRow.create(
                                             target.getNetworkAddress(),

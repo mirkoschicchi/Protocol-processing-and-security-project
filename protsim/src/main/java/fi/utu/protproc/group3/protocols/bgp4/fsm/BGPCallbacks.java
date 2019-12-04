@@ -1,6 +1,6 @@
-package fi.utu.protproc.group3.finitestatemachine;
+package fi.utu.protproc.group3.protocols.bgp4.fsm;
 
-public interface InternalFSMCallbacks {
+public interface BGPCallbacks {
 
     /**
      * Instantiate a connection to a remote peer
@@ -20,7 +20,7 @@ public interface InternalFSMCallbacks {
 
     void sendKeepaliveMessage();
 
-    void sendNotificationMessage(byte errorCode);
+    void sendNotificationMessage(byte errorCode, byte subErrorCode, byte[] data);
 
     void performPeerOscillationDamping();
 
