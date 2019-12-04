@@ -38,7 +38,7 @@ public class ServerClientTest extends LanScenarioTest {
         try {
             assertTrue(connectedEvent.await(1, TimeUnit.SECONDS));
             assertNotNull(TestConnection.lastConnection);
-            assertEquals(1, TestConnection.lastConnection.state);
+            assertTrue(TestConnection.lastConnection.connected.await(1, TimeUnit.SECONDS));
         } catch (InterruptedException e) {
             fail(e);
         }
@@ -69,7 +69,7 @@ public class ServerClientTest extends LanScenarioTest {
         try {
             assertTrue(connectedEvent.await(1, TimeUnit.SECONDS));
             assertNotNull(TestConnection.lastConnection);
-            assertEquals(2, TestConnection.lastConnection.state);
+            assertTrue(TestConnection.lastConnection.firstMessage.await(1, TimeUnit.SECONDS));
         } catch (InterruptedException e) {
             fail(e);
         }
@@ -106,7 +106,7 @@ public class ServerClientTest extends LanScenarioTest {
         try {
             assertTrue(repliedEvent.await(1, TimeUnit.SECONDS));
             assertNotNull(TestConnection.lastConnection);
-            assertEquals(2, TestConnection.lastConnection.state);
+            assertTrue(TestConnection.lastConnection.firstMessage.await(1, TimeUnit.SECONDS));
         } catch (InterruptedException e) {
             fail(e);
         }
@@ -144,12 +144,12 @@ public class ServerClientTest extends LanScenarioTest {
         try {
             assertTrue(connectedEvent.await(1, TimeUnit.SECONDS));
             assertNotNull(TestConnection.lastConnection);
-            assertEquals(1, TestConnection.lastConnection.state);
+            assertTrue(TestConnection.lastConnection.connected.await(1, TimeUnit.SECONDS));
 
             clientConnection.close();
 
             assertTrue(disconnectedEvent.await(1, TimeUnit.SECONDS));
-            assertEquals(0, TestConnection.lastConnection.state);
+            assertTrue(TestConnection.lastConnection.closed.await(1, TimeUnit.SECONDS));
         } catch (InterruptedException e) {
             fail(e);
         }
@@ -166,7 +166,9 @@ public class ServerClientTest extends LanScenarioTest {
     static class TestConnection extends Connection {
         private static TestConnection lastConnection;
         private static byte[] nextReply;
-        public int state;
+        public CountDownLatch connected = new CountDownLatch(1);
+        public CountDownLatch firstMessage = new CountDownLatch(1);
+        public CountDownLatch closed = new CountDownLatch(1);
         public byte[] lastMessage;
 
         public TestConnection(EthernetInterface ethernetInterface) {
@@ -179,13 +181,17 @@ public class ServerClientTest extends LanScenarioTest {
         public void connected(DatagramHandler.ConnectionState connectionState) {
             super.connected(connectionState);
 
-            state = 1;
+            connected.countDown();
         }
 
         @Override
         public void messageReceived(byte[] message) {
-            state = 2;
+            if (lastMessage == null) {
+                firstMessage.countDown();
+            }
+
             lastMessage = message;
+
             if (nextReply != null) {
                 send(nextReply);
             }
@@ -195,7 +201,7 @@ public class ServerClientTest extends LanScenarioTest {
         public void closed() {
             super.closed();
 
-            state = 0;
+            closed.countDown();
         }
     }
 }
