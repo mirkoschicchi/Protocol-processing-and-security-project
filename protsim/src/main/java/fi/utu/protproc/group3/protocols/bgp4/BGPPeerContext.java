@@ -74,6 +74,11 @@ public class BGPPeerContext {
                 connection.send(BGP4MessageNotification.create(errorCode, subErrorCode, data).serialize());
             }
 
+            @Override
+            public void sendTrustRateMessage(int inheritTrust) {
+                connection.send(BGP4MessageTrustRate.create(inheritTrust).serialize());
+            }
+
             // Handling for local routes
             @Override
             public void completeBGPPeerInitialization() {

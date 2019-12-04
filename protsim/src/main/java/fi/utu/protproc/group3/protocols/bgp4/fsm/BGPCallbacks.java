@@ -22,6 +22,8 @@ public interface BGPCallbacks {
 
     void sendNotificationMessage(byte errorCode, byte subErrorCode, byte[] data);
 
+    void sendTrustRateMessage(int inheritTrust);
+
     void performPeerOscillationDamping();
 
     void closeBGPConnection();

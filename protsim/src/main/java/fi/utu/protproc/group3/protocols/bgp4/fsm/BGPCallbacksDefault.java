@@ -37,6 +37,11 @@ public class BGPCallbacksDefault implements BGPCallbacks {
     }
 
     @Override
+    public void sendTrustRateMessage(int inheritTrust) {
+
+    }
+
+    @Override
     public void performPeerOscillationDamping() {
 
     }
