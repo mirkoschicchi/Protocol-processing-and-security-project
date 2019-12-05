@@ -174,6 +174,10 @@ public class BGPPeerContext {
         observedTrust = Math.min(observedTrust*v, 1.0);
     }
 
+    public double getObservedTrust() {
+        return observedTrust;
+    }
+
     public double getTrust() {
         return (inherentTrust + observedTrust) / 2.0;
     }

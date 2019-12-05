@@ -5,6 +5,7 @@ import fi.utu.protproc.group3.protocols.EthernetFrame;
 import fi.utu.protproc.group3.protocols.IPv6Packet;
 import fi.utu.protproc.group3.protocols.bgp4.BGPPeerContext;
 import fi.utu.protproc.group3.protocols.bgp4.BGPServer;
+import fi.utu.protproc.group3.protocols.bgp4.trust.TrustAgentServer;
 import fi.utu.protproc.group3.routing.RoutingTable;
 import fi.utu.protproc.group3.routing.RoutingTableImpl;
 import fi.utu.protproc.group3.routing.TableRow;
@@ -16,10 +17,7 @@ import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 
 import java.time.Duration;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
     private final int autonomousSystem;
@@ -27,6 +25,7 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
     private final int bgpIdentifier;
     private final Map<IPAddress, BGPPeerContext> peerings = new HashMap<>();
     private final BGPServer bgpServer = new BGPServer(this, Collections.unmodifiableMap(peerings));
+    private final TrustAgentServer trustAgentServer = new TrustAgentServer(this, Collections.unmodifiableMap(peerings));
 
     public RouterNodeImpl(SimulationBuilderContext context, RouterConfiguration configuration) {
         super(context, configuration);
@@ -118,6 +117,7 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
         super.start();
 
         bgpServer.start();
+        trustAgentServer.start();
 
         if (peerings.size() == 0) {
             createPeerings();
@@ -145,6 +145,7 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
         }
 
         bgpServer.shutdown();
+        trustAgentServer.shutdown();
 
         super.shutdown();
     }
