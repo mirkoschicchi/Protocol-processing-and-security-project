@@ -7,6 +7,7 @@ import fi.utu.protproc.group3.protocols.tcp.Connection;
 import fi.utu.protproc.group3.routing.TableRow;
 import fi.utu.protproc.group3.simulator.EthernetInterface;
 import fi.utu.protproc.group3.utils.IPAddress;
+import fi.utu.protproc.group3.utils.NetworkAddress;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 
@@ -71,6 +72,14 @@ public class BGPPeerContext {
             @Override
             public void sendNotificationMessage(byte errorCode, byte subErrorCode, byte[] data) {
                 connection.send(BGP4MessageNotification.create(errorCode, subErrorCode, data).serialize());
+            }
+
+            @Override
+            public void sendUpdateMessage(List<NetworkAddress> withdrawnRoutes, byte origin,
+                                          List<List<Short>> asPath, IPAddress nextHop,
+                                          List<NetworkAddress> networkLayerReachabilityInformation) {
+                connection.send(BGP4MessageUpdate.create(withdrawnRoutes, origin, asPath, nextHop,
+                        networkLayerReachabilityInformation).serialize());
             }
 
             // Handling for local routes

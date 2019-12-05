@@ -1,5 +1,10 @@
 package fi.utu.protproc.group3.protocols.bgp4.fsm;
 
+import fi.utu.protproc.group3.utils.IPAddress;
+import fi.utu.protproc.group3.utils.NetworkAddress;
+
+import java.util.List;
+
 public interface BGPCallbacks {
 
     /**
@@ -22,7 +27,9 @@ public interface BGPCallbacks {
 
     void sendNotificationMessage(byte errorCode, byte subErrorCode, byte[] data);
 
-    void sendTrustRateMessage(int inheritTrust);
+    void sendUpdateMessage(List<NetworkAddress> withdrawnRoutes, byte origin,
+                                  List<List<Short>> asPath, IPAddress nextHop,
+                                  List<NetworkAddress> networkLayerReachabilityInformation);
 
     void performPeerOscillationDamping();
 

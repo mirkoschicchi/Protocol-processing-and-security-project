@@ -1,5 +1,10 @@
 package fi.utu.protproc.group3.protocols.bgp4.fsm;
 
+import fi.utu.protproc.group3.utils.IPAddress;
+import fi.utu.protproc.group3.utils.NetworkAddress;
+
+import java.util.List;
+
 public class BGPCallbacksDefault implements BGPCallbacks {
     @Override
     public void connectRemotePeer() {
@@ -37,7 +42,9 @@ public class BGPCallbacksDefault implements BGPCallbacks {
     }
 
     @Override
-    public void sendTrustRateMessage(int inheritTrust) {
+    public void sendUpdateMessage(List<NetworkAddress> withdrawnRoutes, byte origin,
+                                  List<List<Short>> asPath, IPAddress nextHop,
+                                  List<NetworkAddress> networkLayerReachabilityInformation) {
 
     }
 

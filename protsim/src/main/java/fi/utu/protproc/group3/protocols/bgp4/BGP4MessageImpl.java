@@ -81,13 +81,7 @@ public abstract class BGP4MessageImpl implements BGP4Message {
                 byte[] tmp = new byte[16];
                 IPAddress addr;
                 int prefLen = 0;
-
-                //  withdrawnRoutes
-                short withdrawnRoutesLength = buf.getShort();
-                while(withdrawnRoutesLength > 0) {
-                    withdrawnRoutes.add(parseNetworkAddressesFromBuffer(buf));
-                    withdrawnRoutesLength -= 1 + withdrawnRoutes.get(withdrawnRoutes.size() -1).getRequiredBytesForPrefix();
-                }
+                buf.getShort();     // withdrawnRoutesLength
 
                 // Total Path Attribute Length
                 buf.getShort();
@@ -112,15 +106,31 @@ public abstract class BGP4MessageImpl implements BGP4Message {
                     asPath.add(asSet);
                 }
 
+                // MP_REACH_NLRI
+                buf.getShort();
+                short byteLength = buf.getShort();
+                buf.getShort(); buf.get();  // AFI and SAFI
+                byteLength -= 3;
                 // nextHop
-                buf.getInt();
+                buf.get();
                 buf.get(tmp);
                 IPAddress nextHop = new IPAddress(tmp);
+                byteLength = (short) (byteLength - (1 + nextHop.toArray().length));
+                buf.get(); byteLength--;
 
                 List<NetworkAddress> networkLayerReachabilityInformation
                         = new ArrayList<NetworkAddress>();
+                while(byteLength > 0) {
+                    NetworkAddress prefix = parseNetworkAddressesFromBuffer(buf);
+                    networkLayerReachabilityInformation.add(prefix);
+                    byteLength -= (1 + prefix.getRequiredBytesForPrefix());
+                }
+
+                // MP_UNREACH_NLRI
+                buf.getInt();
+                buf.getShort(); buf.get();  // AFI and SAFI
                 while(buf.remaining() > 0) {
-                    networkLayerReachabilityInformation.add(parseNetworkAddressesFromBuffer(buf));
+                    withdrawnRoutes.add(parseNetworkAddressesFromBuffer(buf));
                 }
 
                 return BGP4MessageUpdate.create(withdrawnRoutes, origin, asPath, nextHop,
