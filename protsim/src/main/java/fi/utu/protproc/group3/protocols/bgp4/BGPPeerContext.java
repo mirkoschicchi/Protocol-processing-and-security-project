@@ -20,17 +20,20 @@ public class BGPPeerContext {
     private final IPAddress peer;
     private final BGPStateMachine fsm;
     private final BGPConnection connection;
+    private final Collection<IPAddress> secondDegreeNeighbors;
     private final List<BGPPeerContext> distributionList = new ArrayList<>();
+    private final Set<IPAddress> secondDegreePeers = new HashSet<>();
     private int bgpIdentifier;
     private Disposable updateSendProcess;
     private double inherentTrust = Math.random();
     private double observedTrust = 0.5;
 
-    public BGPPeerContext(RouterNode router, EthernetInterface ethernetInterface, IPAddress peer) {
+    public BGPPeerContext(RouterNode router, EthernetInterface ethernetInterface, IPAddress peer, Collection<IPAddress> secondDegreeNeighbors) {
         this.router = router;
         this.ethernetInterface = ethernetInterface;
         this.peer = peer;
         this.connection = new BGPConnection(ethernetInterface, this);
+        this.secondDegreeNeighbors = secondDegreeNeighbors;
 
         var context = this;
         var isInitiator = ethernetInterface.getIpAddress().toArray()[15] < peer.toArray()[15];
@@ -180,5 +183,9 @@ public class BGPPeerContext {
 
     public double getTrust() {
         return (inherentTrust + observedTrust) / 2.0;
+    }
+
+    public Set<IPAddress> getSecondDegreePeers() {
+        return secondDegreePeers;
     }
 }

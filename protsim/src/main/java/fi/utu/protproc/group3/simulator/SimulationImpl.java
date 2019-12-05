@@ -3,7 +3,6 @@ package fi.utu.protproc.group3.simulator;
 import fi.utu.protproc.group3.configuration.SimulationConfiguration;
 import fi.utu.protproc.group3.graph.GraphAttributes;
 import fi.utu.protproc.group3.nodes.*;
-import fi.utu.protproc.group3.routing.TableRow;
 import fi.utu.protproc.group3.utils.AddressGenerator;
 import org.graphstream.algorithm.APSP;
 import org.graphstream.graph.Node;
@@ -138,6 +137,28 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
 
         generateStaticRoutes(autonomousSystems);
 
+        nodes.values().stream()
+                .filter(n -> n instanceof RouterNode)
+                .map(n -> (RouterNode) n)
+                .forEach(router -> {
+                    var configurator = router.getConfigurator();
+                    for (var intf : router.getInterfaces()) {
+                        for (var peerDev : intf.getNetwork().getDevices()) {
+                            if (peerDev != intf && peerDev.getHost() instanceof RouterNode) {
+                                var secondDegreeNeighbors = peerDev.getHost().getInterfaces().stream()
+                                        .flatMap(i -> i.getNetwork().getDevices().stream())
+                                        .filter(i -> i.getHost() instanceof RouterNode && i.getHost() != router)
+                                        .map(i -> i.getIpAddress())
+                                        .collect(Collectors.toUnmodifiableList());
+
+                                configurator.createPeering(intf, peerDev.getIpAddress(), secondDegreeNeighbors);
+                            }
+                        }
+                    }
+
+                    configurator.finalizeConfiguration();
+                });
+
         return simulation;
     }
 
@@ -155,6 +176,7 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
                 .forEach(as -> {
                     as.routers.stream().forEach(r -> {
                         var router = (RouterNode) r.getAttribute(GraphAttributes.OBJECT);
+                        var configurator = router.getConfigurator();
                         var apspInfo = (APSP.APSPInfo) r.getAttribute(APSP.APSPInfo.ATTRIBUTE_NAME);
                         as.networks.stream().forEach(net -> {
                             var target = (Network) net.getAttribute(GraphAttributes.OBJECT);
@@ -169,16 +191,10 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
                                 if (nextHop.getAutonomousSystem() != router.getAutonomousSystem() || network.getAutonomousSystem() != router.getAutonomousSystem()) {
                                     System.err.println("Route from " + router.getHostname() + " to network " + network.getNetworkName() + " goes across AS boundaries. No static routes generated.");
                                 } else if (outIntf.isPresent() && nextHopIntf.isPresent()) {
-                                    router.getRoutingTable().insertRow(TableRow.create(
-                                            target.getNetworkAddress(),
-                                            nextHopIntf.get().getIpAddress(),
-                                            metric, outIntf.get()
-                                    ));
+                                    configurator.createStaticRoute(target.getNetworkAddress(), outIntf.get(), nextHopIntf.get().getIpAddress(), metric);
                                 }
                             } else {
-                                router.getRoutingTable().insertRow(TableRow.create(
-                                        target.getNetworkAddress(), null, metric, outIntf.get()
-                                ));
+                                configurator.createStaticRoute(target.getNetworkAddress(), outIntf.get(), null, metric);
                             }
                         });
                     });

@@ -5,7 +5,6 @@ import fi.utu.protproc.group3.protocols.EthernetFrame;
 import fi.utu.protproc.group3.protocols.IPv6Packet;
 import fi.utu.protproc.group3.protocols.bgp4.BGPPeerContext;
 import fi.utu.protproc.group3.protocols.bgp4.BGPServer;
-import fi.utu.protproc.group3.protocols.bgp4.trust.TrustAgentServer;
 import fi.utu.protproc.group3.routing.RoutingTable;
 import fi.utu.protproc.group3.routing.RoutingTableImpl;
 import fi.utu.protproc.group3.routing.TableRow;
@@ -13,19 +12,26 @@ import fi.utu.protproc.group3.simulator.EthernetInterface;
 import fi.utu.protproc.group3.simulator.EthernetInterfaceImpl;
 import fi.utu.protproc.group3.simulator.SimulationBuilderContext;
 import fi.utu.protproc.group3.utils.IPAddress;
+import fi.utu.protproc.group3.utils.NetworkAddress;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 
 import java.time.Duration;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
-public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
+//import fi.utu.protproc.group3.protocols.bgp4.trust.TrustAgentServer;
+
+public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode, RouterNode.Configurator {
     private final int autonomousSystem;
     private static int nextBgpIdentifier = 1;
     private final int bgpIdentifier;
     private final Map<IPAddress, BGPPeerContext> peerings = new HashMap<>();
     private final BGPServer bgpServer = new BGPServer(this, Collections.unmodifiableMap(peerings));
-    private final TrustAgentServer trustAgentServer = new TrustAgentServer(this, Collections.unmodifiableMap(peerings));
+    //    private final TrustAgentServer trustAgentServer = new TrustAgentServer(this, Collections.unmodifiableMap(peerings));
+    private boolean configurationFinalized;
 
     public RouterNodeImpl(SimulationBuilderContext context, RouterConfiguration configuration) {
         super(context, configuration);
@@ -51,6 +57,15 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
     @Override
     public Collection<EthernetInterface> getInterfaces() {
         return Collections.unmodifiableCollection(interfaces);
+    }
+
+    @Override
+    public Configurator getConfigurator() {
+        if (configurationFinalized) {
+            throw new UnsupportedOperationException("Configuration has been finalized.");
+        }
+
+        return this;
     }
 
     @Override
@@ -114,15 +129,17 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
 
     @Override
     public void start() {
+        if (!configurationFinalized) {
+            throw new UnsupportedOperationException("Configuration has not been finalized.");
+        }
+
         super.start();
 
         bgpServer.start();
         trustAgentServer.start();
 
-        if (peerings.size() == 0) {
-            createPeerings();
-        }
-
+        // Delay starting the peerings by 1s to ensure all the BGP servers have been started. Otherwise we'll have to
+        // wait for the first timeout, which takes an additional 30s of startup time.
         var ref = new Object() {
             Disposable startPeerings = null;
         };
@@ -155,14 +172,28 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
         return bgpIdentifier;
     }
 
-    private void createPeerings() {
-        for (var intf : interfaces) {
-            for (var peerDev : intf.getNetwork().getDevices()) {
-                if (peerDev != intf && peerDev.getHost() instanceof RouterNode) {
-                    var context = new BGPPeerContext(this, intf, peerDev.getIpAddress());
-                    peerings.put(peerDev.getIpAddress(), context);
-                }
-            }
+    @Override
+    public void createPeering(EthernetInterface ethernetInterface, IPAddress neighbor, Collection<IPAddress> secondDegreeNeighbors) {
+        if (configurationFinalized) {
+            throw new UnsupportedOperationException("Configuration has been finalized.");
+        }
+
+        peerings.put(neighbor, new BGPPeerContext(this, ethernetInterface, neighbor, secondDegreeNeighbors));
+    }
+
+    @Override
+    public void createStaticRoute(NetworkAddress networkAddress, EthernetInterface intf, IPAddress nextHop, int metric) {
+        if (configurationFinalized) {
+            throw new UnsupportedOperationException("Configuration has been finalized.");
+        }
+
+        getRoutingTable().insertRow(TableRow.create(networkAddress, nextHop, metric, intf));
+    }
+
+    @Override
+    public void finalizeConfiguration() {
+        if (configurationFinalized) {
+            throw new UnsupportedOperationException("Configuration has been finalized.");
         }
 
         for (var peer : peerings.keySet()) {
@@ -173,5 +204,7 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode {
                 }
             }
         }
+
+        configurationFinalized = true;
     }
 }
