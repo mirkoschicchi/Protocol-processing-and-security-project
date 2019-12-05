@@ -5,6 +5,8 @@ import fi.utu.protproc.group3.protocols.EthernetFrame;
 import fi.utu.protproc.group3.protocols.IPv6Packet;
 import fi.utu.protproc.group3.protocols.bgp4.BGPPeerContext;
 import fi.utu.protproc.group3.protocols.bgp4.BGPServer;
+import fi.utu.protproc.group3.protocols.bgp4.trust.TrustAgentServer;
+import fi.utu.protproc.group3.protocols.bgp4.trust.TrustManager;
 import fi.utu.protproc.group3.routing.RoutingTable;
 import fi.utu.protproc.group3.routing.RoutingTableImpl;
 import fi.utu.protproc.group3.routing.TableRow;
@@ -30,8 +32,9 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode, Route
     private final int bgpIdentifier;
     private final Map<IPAddress, BGPPeerContext> peerings = new HashMap<>();
     private final BGPServer bgpServer = new BGPServer(this, Collections.unmodifiableMap(peerings));
-    //    private final TrustAgentServer trustAgentServer = new TrustAgentServer(this, Collections.unmodifiableMap(peerings));
+    private final TrustAgentServer trustAgentServer = new TrustAgentServer(this, Collections.unmodifiableMap(peerings));
     private boolean configurationFinalized;
+    private TrustManager trustManager;
 
     public RouterNodeImpl(SimulationBuilderContext context, RouterConfiguration configuration) {
         super(context, configuration);
@@ -137,6 +140,7 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode, Route
 
         bgpServer.start();
         trustAgentServer.start();
+        trustManager.start();
 
         // Delay starting the peerings by 1s to ensure all the BGP servers have been started. Otherwise we'll have to
         // wait for the first timeout, which takes an additional 30s of startup time.
@@ -161,8 +165,9 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode, Route
             peering.stop();
         }
 
-        bgpServer.shutdown();
+        trustManager.shutdown();
         trustAgentServer.shutdown();
+        bgpServer.shutdown();
 
         super.shutdown();
     }
@@ -204,6 +209,8 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode, Route
                 }
             }
         }
+
+        trustManager = new TrustManager(this, peerings.values());
 
         configurationFinalized = true;
     }
