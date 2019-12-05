@@ -3,6 +3,7 @@ package fi.utu.protproc.group3.protocols.tcp;
 import fi.utu.protproc.group3.simulator.EthernetInterface;
 import fi.utu.protproc.group3.utils.IPAddress;
 
+import java.io.IOException;
 import java.util.Objects;
 
 public abstract class Connection {
