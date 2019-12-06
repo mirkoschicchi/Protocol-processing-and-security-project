@@ -2,40 +2,101 @@ package fi.utu.protproc.group3.userinterface;
 
 import fi.utu.protproc.group3.nodes.NetworkNode;
 import fi.utu.protproc.group3.nodes.RouterNode;
-import fi.utu.protproc.group3.routing.TableRow;
-import fi.utu.protproc.group3.simulator.Simulation;
+import fi.utu.protproc.group3.simulator.UserInterfaceManager;
 import fi.utu.protproc.group3.utils.SimulationReference;
 import javafx.application.Application;
-import javafx.beans.property.*;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Group;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.Pane;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
-import org.graphstream.ui.swingViewer.ViewPanel;
 import org.graphstream.ui.view.View;
 import org.graphstream.ui.view.Viewer;
 
-import java.awt.*;
-import java.util.Collection;
 import javafx.embed.swing.SwingNode;
+import org.graphstream.ui.view.ViewerListener;
+import org.graphstream.ui.view.ViewerPipe;
 
 import javax.swing.*;
+import java.util.HashMap;
+import java.util.Map;
 
 public class UserGUI extends Application {
+
+    private Map<String, NetworkNode> nodes;
+    private RouterNode selectedNode;
 
     @Override
     public void start(Stage primaryStage) throws Exception {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/main.fxml"));
         Parent root = loader.load();
 
+        nodes = new HashMap<>();
+        nodes = SimulationReference.nodes;
+
         Viewer viewer = SimulationReference.simulation.getViewer();
         SwingNode node = (SwingNode) root.lookup("#swingnode");
         View view = viewer.getDefaultView();
 
+        RowController rowController = loader.getController();
+
+        ViewerPipe pipe = viewer.newViewerPipe();
+        pipe.addAttributeSink(viewer.getGraphicGraph());
+
+        pipe.addViewerListener(new ViewerListener() {
+            @Override
+            public void viewClosed(String s) {
+
+            }
+
+            @Override
+            public void buttonPushed(String s) {
+                if (nodes.containsKey(s)) {
+                    selectedNode = (RouterNode) nodes.get(s);
+                    Text routerLabel = (Text) root.lookup("#routerLabel");
+                    routerLabel.setText(s);
+                    rowController.setRouter((RouterNode) selectedNode);
+                }
+            }
+
+            @Override
+            public void buttonReleased(String s) {
+
+            }
+        });
+
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while(true) {
+                    pipe.pump();
+                }
+
+            }
+        });
+
+        Button actionBtn = (Button) root.lookup("#actionBtn");
+        actionBtn.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                if (selectedNode != null && selectedNode.nodeIsRunning()) {
+                    selectedNode.shutdown();
+                    SimulationReference.simulation.getGraph().getNode(selectedNode.getHostname()).addAttribute("ui.style", "stroke-mode: plain; stroke-width: 3px; stroke-color: red;");
+                    System.out.println("Node SHUTDOWN: " + selectedNode.getHostname());
+                    actionBtn.setText("Start up");
+                } else if(selectedNode != null && !selectedNode.nodeIsRunning()) {
+                    selectedNode.start();
+                    SimulationReference.simulation.getGraph().getNode(selectedNode.getHostname()).addAttribute("ui.style", "stroke-mode: none;");
+                    System.out.println("Node START: " + selectedNode.getHostname());
+                }
+            }
+        });
+        thread.start();
         AnchorPane.setTopAnchor(node, 0d);
         AnchorPane.setBottomAnchor(node, 0d);
         AnchorPane.setLeftAnchor(node, 0d);
@@ -43,27 +104,10 @@ public class UserGUI extends Application {
 
         node.setContent((JComponent) view);
         Scene scene = new Scene(root, 900, 900);
-
         primaryStage.setTitle("BGP simulator");
         primaryStage.setScene(scene);
 
         primaryStage.show();
     }
 
-   public void showRoutingTable(RouterNode router) {
-        Collection<TableRow> rows = router.getRoutingTable().getRows();
-        for(TableRow row: rows) {
-            StringProperty destNetworkAddress = new SimpleStringProperty(row.getPrefix().toString());
-            StringProperty nextHop = new SimpleStringProperty(row.getNextHop().toString());
-            DoubleProperty metric = new SimpleDoubleProperty(row.getCalculatedMetric());
-            StringProperty ethernetInterface = new SimpleStringProperty(row.getEInterface().toString());
-        }
-    }
-
-
-
-   /* public static void main(String[] args) {
-        // Here you can work with args - command line parameters
-        launch();
-    }*/
 }

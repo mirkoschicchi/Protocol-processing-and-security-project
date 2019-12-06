@@ -5,12 +5,13 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
+<?import javafx.scene.text.Text?>
 <BorderPane xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="fi.utu.protproc.group3.userinterface.RowController">
    <right>
       <VBox spacing="20.0" style="-fx-background-color: orange;" BorderPane.alignment="TOP_RIGHT">
          <children>
-            <Label text="Router 1" />
-            <Button mnemonicParsing="false" text="Shutdown" />
+            <Text text="Router 1" fx:id="routerLabel"/>
+            <Button mnemonicParsing="false" text="Shutdown" fx:id="actionBtn"/>
              <Button fx:id="showBtn" mnemonicParsing="false" text="Show routing table" />
             <TableView fx:id="table" prefHeight="188.0" prefWidth="583.0">
               <columns>

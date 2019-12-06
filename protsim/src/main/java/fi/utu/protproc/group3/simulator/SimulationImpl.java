@@ -313,9 +313,8 @@ public class SimulationImpl implements SimulationBuilder, Simulation{
 
                 //new UserInterfaceManager(viewer, graph, nodes);
                 SimulationReference.simulation = this;
+                SimulationReference.nodes = nodes;
                 Application.launch(UserGUI.class);
-                //UserGUI gui = new UserGUI(this);
-                //gui.launch();
             } catch (IOException e) {
                 e.printStackTrace();
             }
