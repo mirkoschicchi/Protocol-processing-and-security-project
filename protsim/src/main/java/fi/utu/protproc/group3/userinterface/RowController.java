@@ -2,8 +2,10 @@ package fi.utu.protproc.group3.userinterface;
 
 import fi.utu.protproc.group3.nodes.NetworkNode;
 import fi.utu.protproc.group3.nodes.RouterNode;
+import fi.utu.protproc.group3.nodes.RouterNodeImpl;
 import fi.utu.protproc.group3.routing.RoutingTable;
 import fi.utu.protproc.group3.routing.TableRow;
+import fi.utu.protproc.group3.utils.SimulationReference;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -36,14 +38,15 @@ public class RowController implements Initializable {
     private TableColumn<RoutingTableModel, String> asPathColumn;
 
     private RouterNode router;
-
     RoutingTable routingTable;
     Collection<TableRow> rows;
     ArrayList<RoutingTableModel> rowModels = new ArrayList<>();
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        Platform.runLater(() -> {
+        if(router != null) {
+            rows = null;
+            rowModels = new ArrayList<>();
             routingTable = router.getRoutingTable();
             rows = routingTable.getRows();
             for(TableRow row: rows) {
@@ -60,9 +63,7 @@ public class RowController implements Initializable {
             metricColumn.setCellValueFactory(new PropertyValueFactory<>("metric"));
             ethernetInterfaceColumn.setCellValueFactory(new PropertyValueFactory<>("ethernetInterface"));
             asPathColumn.setCellValueFactory(new PropertyValueFactory<>("asPath"));
-        });
-
-
+        }
     }
 
     public RouterNode getRouter() {

@@ -12,6 +12,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TableView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
@@ -43,7 +44,7 @@ public class UserGUI extends Application {
         SwingNode node = (SwingNode) root.lookup("#swingnode");
         View view = viewer.getDefaultView();
 
-        RowController rowController = loader.getController();
+        Button actionBtn = (Button) root.lookup("#actionBtn");
 
         ViewerPipe pipe = viewer.newViewerPipe();
         pipe.addAttributeSink(viewer.getGraphicGraph());
@@ -58,9 +59,17 @@ public class UserGUI extends Application {
             public void buttonPushed(String s) {
                 if (nodes.containsKey(s)) {
                     selectedNode = (RouterNode) nodes.get(s);
+                    if(selectedNode.nodeIsRunning()) {
+                        actionBtn.setText("Shutdown");
+                    } else {
+                        actionBtn.setText("Start up");
+                    }
                     Text routerLabel = (Text) root.lookup("#routerLabel");
                     routerLabel.setText(s);
-                    rowController.setRouter((RouterNode) selectedNode);
+                    System.out.println(selectedNode.getHostname());
+                    RowController rowController = loader.getController();
+                    rowController.setRouter(selectedNode);
+                    rowController.initialize(null, null);
                 }
             }
 
@@ -80,7 +89,6 @@ public class UserGUI extends Application {
             }
         });
 
-        Button actionBtn = (Button) root.lookup("#actionBtn");
         actionBtn.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent actionEvent) {
@@ -93,10 +101,12 @@ public class UserGUI extends Application {
                     selectedNode.start();
                     SimulationReference.simulation.getGraph().getNode(selectedNode.getHostname()).addAttribute("ui.style", "stroke-mode: none;");
                     System.out.println("Node START: " + selectedNode.getHostname());
+                    actionBtn.setText("Shutdown");
                 }
             }
         });
         thread.start();
+
         AnchorPane.setTopAnchor(node, 0d);
         AnchorPane.setBottomAnchor(node, 0d);
         AnchorPane.setLeftAnchor(node, 0d);
