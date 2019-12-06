@@ -18,12 +18,7 @@ public interface Simulation {
         return result.load(configuration);
     }
 
-    /**
-     * Gets the root logger used for this simulation.
-     */
-    Logger getRootLogger();
-
-    <T extends NetworkNode> T getNode(String name);
+    NetworkNode getNode(String name);
 
     /**
      * Gets all the nodes in the current simulation.

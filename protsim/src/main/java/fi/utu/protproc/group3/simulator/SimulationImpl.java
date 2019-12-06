@@ -14,6 +14,7 @@ import reactor.core.scheduler.Schedulers;
 
 import java.io.*;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
 import java.util.logging.Logger;
@@ -21,20 +22,14 @@ import java.util.stream.Collectors;
 
 public class SimulationImpl implements SimulationBuilder, Simulation {
     private final Random random = new Random(1337);
-    private final Logger rootLogger;
     private final Map<String, Network> networks = new HashMap<>();
     private final Map<String, NetworkNode> nodes = new HashMap<>();
-    private String description;
     private String name;
     private FileOutputStream pcapStream;
     private Map<Network, Integer> pcapInterfaces;
     private List<ServerNode> servers;
     private MultiGraph graph;
     private Viewer viewer;
-
-    public SimulationImpl() {
-        this.rootLogger = Logger.getAnonymousLogger();
-    }
 
     @Override
     public Simulation load(SimulationConfiguration configuration) {
@@ -55,18 +50,12 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
             }
 
             @Override
-            public <T extends NetworkNode> T node(String name) {
-                return (T) nodes.get(name);
-            }
-
-            @Override
             public Simulation simulation() {
                 return simulation;
             }
         };
 
         name = configuration.getName();
-        description = configuration.getDescription();
         System.setProperty("org.graphstream.ui.renderer", "org.graphstream.ui.j2dviewer.J2DGraphRenderer");
 
         graph = new MultiGraph(name);
@@ -200,13 +189,8 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
     }
 
     @Override
-    public Logger getRootLogger() {
-        return rootLogger;
-    }
-
-    @Override
-    public <T extends NetworkNode> T getNode(String name) {
-        return (T) nodes.get(name);
+    public NetworkNode getNode(String name) {
+        return nodes.get(name);
     }
 
     @Override
@@ -307,7 +291,7 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
             var stylePath = new File(System.getProperty("user.dir"), "styles");
             try {
                 var styleSheet = new BufferedInputStream(new FileInputStream(new File(stylePath, "style.css")));
-                var css = new String(styleSheet.readAllBytes(), "UTF-8").replace("url('./", "url('" + stylePath.getAbsolutePath().replace('\\', '/') + "/");
+                var css = new String(styleSheet.readAllBytes(), StandardCharsets.UTF_8).replace("url('./", "url('" + stylePath.getAbsolutePath().replace('\\', '/') + "/");
                 graph.setAttribute("ui.stylesheet", css);
 
                 viewer = graph.display();
@@ -378,7 +362,7 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
             var buf = ByteBuffer.allocate(20 + pdu.length)
                     .putInt(index)
                     .putInt((int) (timeStamp >> 32))
-                    .putInt((int) (timeStamp & 0xffffffff))
+                    .putInt((int) (timeStamp))
                     .putInt(pdu.length)
                     .putInt(pdu.length)
                     .put(pdu);

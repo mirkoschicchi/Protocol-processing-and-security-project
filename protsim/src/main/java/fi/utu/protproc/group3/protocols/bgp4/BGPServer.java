@@ -12,13 +12,11 @@ import java.util.Map;
 
 public class BGPServer implements Server {
     public static final short PORT = (short) 179;
-    private final Collection<EthernetInterface> interfaces;
     private final Map<IPAddress, BGPPeerContext> peerings;
     private final RouterNode router;
 
     public BGPServer(RouterNode router, Map<IPAddress, BGPPeerContext> peerings) {
         this.router = router;
-        this.interfaces = router.getInterfaces();
         this.peerings = peerings;
     }
 

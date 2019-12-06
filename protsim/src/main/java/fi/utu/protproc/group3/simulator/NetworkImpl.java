@@ -14,7 +14,6 @@ public class NetworkImpl implements Network {
     private FluxSink<byte[]> input;
     private final Flux<byte[]> output;
     private final List<EthernetInterface> interfaces = new ArrayList<>();
-    private final Simulation simulation;
     private final NetworkAddress networkAddress;
     private final String networkName;
 
@@ -22,7 +21,6 @@ public class NetworkImpl implements Network {
         Objects.requireNonNull(context);
         Objects.requireNonNull(configuration);
 
-        this.simulation = context.simulation();
         this.networkAddress = context.generator().networkAddress(configuration.getAddress());
         this.networkName = context.generator().hostName(configuration.getName());
         this.autonomousSystem = configuration.getAutonomousSystem();

@@ -51,7 +51,7 @@ public class DatagramHandler {
         for (var i = 0; i < 100; i++) {
             var srcPort = (short) (rnd.nextLong() & 0x7fff | 0x8000);
             var descriptor = new ConnectionDescriptor(route.getInterface().getIpAddress(), ipAddress, srcPort, port);
-            state = new ConnectionState(descriptor, this, connection);
+            state = new ConnectionState(descriptor, connection);
             if (stateTable.putIfAbsent(descriptor, state) == null) {
                 // YAY, port is free
                 valid = true;
@@ -97,7 +97,7 @@ public class DatagramHandler {
                         if (server != null) {
                             var connection = server.accept(descriptor);
                             if (connection != null) {
-                                state = new ConnectionState(descriptor, this, connection);
+                                state = new ConnectionState(descriptor, connection);
                                 state.update(datagram);
 
                                 stateTable.put(descriptor, state);
@@ -231,19 +231,16 @@ public class DatagramHandler {
 
     public class ConnectionState {
         private final ConnectionDescriptor descriptor;
-        private final DatagramHandler handler;
         private final Connection connection;
         private ConnectionStatus status;
         private int seqN;
         private int ackN;
 
-        public ConnectionState(ConnectionDescriptor descriptor, DatagramHandler handler, Connection connection) {
+        public ConnectionState(ConnectionDescriptor descriptor, Connection connection) {
             Objects.requireNonNull(descriptor);
-            Objects.requireNonNull(handler);
             Objects.requireNonNull(connection);
 
             this.descriptor = descriptor;
-            this.handler = handler;
             this.connection = connection;
             this.status = ConnectionStatus.Setup;
 

@@ -150,7 +150,7 @@ public abstract class NetworkNodeImpl implements NetworkNode, SimpleNode {
         }
 
         EthernetInterface intf = route.getInterface();
-        byte[] destMac = null;
+        byte[] destMac;
         if (route.getNextHop() != null) {
             destMac = intf.resolveIpAddress(route.getNextHop());
         } else {

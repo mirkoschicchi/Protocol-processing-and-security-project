@@ -24,9 +24,7 @@ public abstract class ScenarioBasedTest {
             if (res != null) res.close();
         }
 
-        var result = Simulation.create(config);
-
-        return result;
+        return Simulation.create(config);
     }
 
     protected abstract String getSimulation();

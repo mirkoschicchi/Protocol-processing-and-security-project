@@ -17,12 +17,10 @@ import java.util.stream.Collectors;
 
 public class TrustAgentServer implements Server {
     public static final short PORT = (short) 8080;
-    private final Map<IPAddress, EthernetInterface> interfaces;
     private final RouterNode router;
     private final Collection<BGPPeerContext> peerings;
 
     public TrustAgentServer(RouterNode router, Collection<BGPPeerContext> peerings) {
-        this.interfaces = router.getInterfaces().stream().collect(Collectors.toMap(EthernetInterface::getIpAddress, i -> i));
         this.router = router;
         this.peerings = peerings;
     }
@@ -63,9 +61,7 @@ public class TrustAgentServer implements Server {
             for (var i = 0; i < listLength; i++) {
                 var peer = byteBufferReceived.getInt();
                 var peering = peerings.stream().filter(p -> p.getBgpIdentifier() == peer).findAny();
-                if (peering.isPresent()) {
-                    mapPeerAndObservedTrust.put(peering.get().getPeer(), peering.get().getObservedTrust());
-                }
+                peering.ifPresent(bgpPeerContext -> mapPeerAndObservedTrust.put(bgpPeerContext.getPeer(), bgpPeerContext.getObservedTrust()));
             }
 
             ByteBuffer byteBufferToSend = ByteBuffer.allocate(1 + mapPeerAndObservedTrust.size() * (16 + 8));
