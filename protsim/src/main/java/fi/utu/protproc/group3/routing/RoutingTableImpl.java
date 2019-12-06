@@ -5,7 +5,6 @@ import fi.utu.protproc.group3.utils.NetworkAddress;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
@@ -27,7 +26,7 @@ public class RoutingTableImpl implements RoutingTable {
 
     @Override
     public TableRow getRowByDestinationAddress(IPAddress destinationAddress) {
-        int longestMatch = 0;
+        int longestMatch = -1;
         double shortestMetric = Integer.MAX_VALUE;
 
         TableRow result = null;

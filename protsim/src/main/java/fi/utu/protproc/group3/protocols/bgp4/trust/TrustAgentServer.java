@@ -1,5 +1,6 @@
 package fi.utu.protproc.group3.protocols.bgp4.trust;
 
+import fi.utu.protproc.group3.nodes.NetworkNode;
 import fi.utu.protproc.group3.nodes.RouterNode;
 import fi.utu.protproc.group3.protocols.bgp4.BGPPeerContext;
 import fi.utu.protproc.group3.protocols.tcp.Connection;
@@ -17,43 +18,35 @@ import java.util.stream.Collectors;
 public class TrustAgentServer implements Server {
     public static final short PORT = (short) 8080;
     private final Map<IPAddress, EthernetInterface> interfaces;
+    private final RouterNode router;
     private final Collection<BGPPeerContext> peerings;
 
     public TrustAgentServer(RouterNode router, Collection<BGPPeerContext> peerings) {
         this.interfaces = router.getInterfaces().stream().collect(Collectors.toMap(EthernetInterface::getIpAddress, i -> i));
+        this.router = router;
         this.peerings = peerings;
     }
 
     @Override
     public void start() {
-        for (var intf : interfaces.values()) {
-            intf.getTCPHandler().listen(PORT, this);
-        }
+        router.getTcpHandler().listen(PORT, this);
     }
 
     @Override
     public Connection accept(DatagramHandler.ConnectionDescriptor descriptor) {
-        EthernetInterface ethernetInterface = interfaces.get(descriptor.getLocalIp());
-
-        if (ethernetInterface != null) {
-            return new TrustAgentServerConnection(ethernetInterface, peerings);
-        } else {
-            return null;
-        }
+        return new TrustAgentServerConnection(router, peerings);
     }
 
     @Override
     public void shutdown() {
-        for (var intf : interfaces.values()) {
-            intf.getTCPHandler().close(this);
-        }
+        router.getTcpHandler().close(this);
     }
 
     static class TrustAgentServerConnection extends Connection {
         private final Collection<BGPPeerContext> peerings;
 
-        public TrustAgentServerConnection(EthernetInterface ethernetInterface, Collection<BGPPeerContext> peerings) {
-            super(ethernetInterface);
+        public TrustAgentServerConnection(NetworkNode node, Collection<BGPPeerContext> peerings) {
+            super(node);
 
             this.peerings = peerings;
         }

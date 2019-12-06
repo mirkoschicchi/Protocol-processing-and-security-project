@@ -1,7 +1,6 @@
 package fi.utu.protproc.group3.simulator;
 
 import fi.utu.protproc.group3.nodes.NetworkNode;
-import fi.utu.protproc.group3.protocols.tcp.DatagramHandler;
 import fi.utu.protproc.group3.utils.IPAddress;
 import reactor.core.publisher.Flux;
 
@@ -26,8 +25,6 @@ public interface EthernetInterface {
      */
     byte[] resolveIpAddress(IPAddress address);
 
-    byte[] getDefaultRouter();
-
     /**
      * Transmits a PDU to the given MAC address
      * @param frame The frame to transmit
@@ -46,6 +43,4 @@ public interface EthernetInterface {
     Network getNetwork();
 
     NetworkNode getHost();
-
-    DatagramHandler getTCPHandler();
 }

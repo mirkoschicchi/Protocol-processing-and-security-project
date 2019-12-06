@@ -1,27 +1,27 @@
 package fi.utu.protproc.group3.protocols.tcp;
 
-import fi.utu.protproc.group3.simulator.EthernetInterface;
+import fi.utu.protproc.group3.nodes.NetworkNode;
 
 public class ReflectiveServer implements Server {
-    protected final EthernetInterface ethernetInterface;
     private final short port;
     private final Class<? extends Connection> connectionHandler;
+    private final NetworkNode node;
 
-    protected ReflectiveServer(EthernetInterface ethernetInterface, short port, Class<? extends Connection> connectionHandler) {
-        this.ethernetInterface = ethernetInterface;
+    protected ReflectiveServer(NetworkNode node, short port, Class<? extends Connection> connectionHandler) {
+        this.node = node;
         this.port = port;
         this.connectionHandler = connectionHandler;
     }
 
     @Override
     public void start() {
-        ethernetInterface.getTCPHandler().listen(port, this);
+        node.getTcpHandler().listen(port, this);
     }
 
     @Override
     public Connection accept(DatagramHandler.ConnectionDescriptor descriptor) {
         try {
-            return connectionHandler.getConstructor(EthernetInterface.class).newInstance(ethernetInterface);
+            return connectionHandler.getConstructor(NetworkNode.class).newInstance(node);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -31,6 +31,6 @@ public class ReflectiveServer implements Server {
 
     @Override
     public void shutdown() {
-        ethernetInterface.getTCPHandler().close(this);
+        node.getTcpHandler().close(this);
     }
 }

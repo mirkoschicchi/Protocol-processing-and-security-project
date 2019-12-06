@@ -1,5 +1,6 @@
 package fi.utu.protproc.group3.protocols.bgp4.trust;
 
+import fi.utu.protproc.group3.nodes.NetworkNode;
 import fi.utu.protproc.group3.protocols.tcp.Connection;
 import fi.utu.protproc.group3.protocols.tcp.DatagramHandler;
 import fi.utu.protproc.group3.simulator.EthernetInterface;
@@ -18,8 +19,8 @@ public class TrustAgentClient extends Connection {
     private final Set<Integer> peers;
     private final Consumer<Map<Integer, Double>> dataReceived;
 
-    public TrustAgentClient(EthernetInterface ethernetInterface, IPAddress remoteIp, Set<Integer> peers, Consumer<Map<Integer, Double>> dataReceived) {
-        super(ethernetInterface);
+    public TrustAgentClient(NetworkNode node, IPAddress remoteIp, Set<Integer> peers, Consumer<Map<Integer, Double>> dataReceived) {
+        super(node);
         this.remoteIp = remoteIp;
 
         this.peers = peers;
@@ -27,8 +28,8 @@ public class TrustAgentClient extends Connection {
     }
 
     @Override
-    public void connected(DatagramHandler.ConnectionState connectionState) {
-        super.connected(connectionState);
+    public void connected(EthernetInterface ethernetInterface, DatagramHandler.ConnectionState connectionState) {
+        super.connected(ethernetInterface, connectionState);
 
         requestScores();
     }

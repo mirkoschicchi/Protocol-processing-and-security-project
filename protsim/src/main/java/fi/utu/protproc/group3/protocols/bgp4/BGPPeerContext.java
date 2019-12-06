@@ -33,7 +33,7 @@ public class BGPPeerContext {
         this.router = router;
         this.ethernetInterface = ethernetInterface;
         this.peer = peer;
-        this.connection = new BGPConnection(ethernetInterface, this);
+        this.connection = new BGPConnection(router, this);
         this.secondDegreePeers = new HashSet<>(secondDegreePeers);
         var context = this;
         var isInitiator = ethernetInterface.getIpAddress().toArray()[15] < peer.toArray()[15];
@@ -140,7 +140,7 @@ public class BGPPeerContext {
         var withdrawnRoutes = new ArrayList<TableRow>();
         var currentRoutes = router.getRoutingTable().getRows().stream()
                 .filter(r -> r.getBgpPeer() == 0)
-                .filter(r -> r.getEInterface() != ethernetInterface)
+                .filter(r -> r.getInterface() != ethernetInterface)
                 .collect(Collectors.toUnmodifiableSet());
 
         for (var route : currentRoutes) {

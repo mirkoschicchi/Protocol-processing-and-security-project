@@ -193,8 +193,6 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
                                 } else if (outIntf.isPresent() && nextHopIntf.isPresent()) {
                                     configurator.createStaticRoute(target.getNetworkAddress(), outIntf.get(), nextHopIntf.get().getIpAddress(), metric);
                                 }
-                            } else {
-                                configurator.createStaticRoute(target.getNetworkAddress(), outIntf.get(), null, metric);
                             }
                         });
                     });

@@ -1,5 +1,6 @@
 package fi.utu.protproc.group3.protocols.bgp4;
 
+import fi.utu.protproc.group3.nodes.NetworkNode;
 import fi.utu.protproc.group3.protocols.bgp4.fsm.BGPStateMachine;
 import fi.utu.protproc.group3.protocols.tcp.Connection;
 import fi.utu.protproc.group3.protocols.tcp.DatagramHandler;
@@ -15,15 +16,15 @@ public class BGPConnection extends Connection {
 
     private static final Logger LOGGER = Logger.getLogger(BGPConnection.class.getName());
 
-    public BGPConnection(EthernetInterface ethernetInterface, BGPPeerContext context) {
-        super(ethernetInterface);
-
+    public BGPConnection(NetworkNode node, BGPPeerContext context) {
+        super(node);
         this.context = context;
     }
 
+
     @Override
-    public void connected(DatagramHandler.ConnectionState connectionState) {
-        super.connected(connectionState);
+    public void connected(EthernetInterface ethernetInterface, DatagramHandler.ConnectionState connectionState) {
+        super.connected(ethernetInterface, connectionState);
 
         // HACK HACK: Make sure the FSM is started, since it could not yet be started during the initial startup
         // Otherwise we'd have to wait for 30s for the retry of the OPEN message. This is caused by our simulated

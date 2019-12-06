@@ -17,7 +17,7 @@ public class ServerNodeImpl extends NetworkNodeImpl implements ServerNode {
     public void start() {
         super.start();
 
-        this.httpServer = Server.listen(getInterface(), SimpleHttpServer.DEFAULT_PORT, SimpleHttpServer.class);
+        this.httpServer = Server.listen(this, SimpleHttpServer.DEFAULT_PORT, SimpleHttpServer.class);
     }
 
     @Override
@@ -26,5 +26,4 @@ public class ServerNodeImpl extends NetworkNodeImpl implements ServerNode {
 
         super.shutdown();
     }
-
 }

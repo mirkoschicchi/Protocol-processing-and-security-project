@@ -96,7 +96,7 @@ public class TunTapNodeImpl extends NetworkNodeImpl {
             try {
                 var packet = device.read();
                 if (packet.isIpv6()) {
-                    send(IPv6Packet.parse(packet.bytes()));
+                    sendPacket(IPv6Packet.parse(packet.bytes()));
                 }
             } catch (IOException e) {
                 e.printStackTrace();

@@ -57,7 +57,7 @@ public class TableRowImpl implements TableRow {
     }
 
     @Override
-    public EthernetInterface getEInterface() {
+    public EthernetInterface getInterface() {
         return eInterface;
     }
 

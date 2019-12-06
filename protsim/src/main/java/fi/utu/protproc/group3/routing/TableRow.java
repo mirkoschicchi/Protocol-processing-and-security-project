@@ -48,7 +48,8 @@ public interface TableRow {
     IPAddress getNextHop();
     double getCalculatedMetric();
     int getBgpPeer();
-    EthernetInterface getEInterface();
+
+    EthernetInterface getInterface();
     List<List<Short>> getAsPath();
     int getAsPathLength();
 

@@ -1,5 +1,6 @@
 package fi.utu.protproc.group3.protocols.tcp;
 
+import fi.utu.protproc.group3.nodes.NetworkNode;
 import fi.utu.protproc.group3.scenarios.LanScenarioTest;
 import fi.utu.protproc.group3.simulator.EthernetInterface;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,20 +14,20 @@ import static org.junit.jupiter.api.Assertions.*;
 public class ServerClientTest extends LanScenarioTest {
     @Test
     public void listenServer() {
-        var tcpServer = Server.listen(server.getInterface(), (short) 80, TestConnection.class);
+        var tcpServer = Server.listen(server, (short) 80, TestConnection.class);
 
         assertNotNull(tcpServer);
     }
 
     @Test
     public void openConnection() {
-        var tcpServer = Server.listen(server.getInterface(), (short) 80, TestConnection.class);
+        var tcpServer = Server.listen(server, (short) 80, TestConnection.class);
         var connectedEvent = new CountDownLatch(1);
 
-        var clientConnection = new Connection(client.getInterface()) {
+        var clientConnection = new Connection(client) {
             @Override
-            public void connected(DatagramHandler.ConnectionState connectionState) {
-                super.connected(connectionState);
+            public void connected(EthernetInterface ethernetInterface, DatagramHandler.ConnectionState connectionState) {
+                super.connected(ethernetInterface, connectionState);
                 connectedEvent.countDown();
             }
         };
@@ -49,13 +50,13 @@ public class ServerClientTest extends LanScenarioTest {
 
     @Test
     public void sendMessage() {
-        var tcpServer = Server.listen(server.getInterface(), (short) 80, TestConnection.class);
+        var tcpServer = Server.listen(server, (short) 80, TestConnection.class);
         var connectedEvent = new CountDownLatch(1);
 
-        var clientConnection = new Connection(client.getInterface()) {
+        var clientConnection = new Connection(client) {
             @Override
-            public void connected(DatagramHandler.ConnectionState connectionState) {
-                super.connected(connectionState);
+            public void connected(EthernetInterface ethernetInterface, DatagramHandler.ConnectionState connectionState) {
+                super.connected(ethernetInterface, connectionState);
 
                 connectedEvent.countDown();
                 send("Test".getBytes());
@@ -80,14 +81,14 @@ public class ServerClientTest extends LanScenarioTest {
 
     @Test
     public void sendReply() {
-        var tcpServer = Server.listen(server.getInterface(), (short) 80, TestConnection.class);
+        var tcpServer = Server.listen(server, (short) 80, TestConnection.class);
 
         var repliedEvent = new CountDownLatch(1);
 
-        var clientConnection = new Connection(client.getInterface()) {
+        var clientConnection = new Connection(client) {
             @Override
-            public void connected(DatagramHandler.ConnectionState connectionState) {
-                super.connected(connectionState);
+            public void connected(EthernetInterface ethernetInterface, DatagramHandler.ConnectionState connectionState) {
+                super.connected(ethernetInterface, connectionState);
                 send("Test".getBytes());
             }
 
@@ -117,14 +118,14 @@ public class ServerClientTest extends LanScenarioTest {
 
     @Test
     public void closeConnection() {
-        var tcpServer = Server.listen(server.getInterface(), (short) 80, TestConnection.class);
+        var tcpServer = Server.listen(server, (short) 80, TestConnection.class);
         var connectedEvent = new CountDownLatch(1);
         var disconnectedEvent = new CountDownLatch(1);
 
-        var clientConnection = new Connection(client.getInterface()) {
+        var clientConnection = new Connection(client) {
             @Override
-            public void connected(DatagramHandler.ConnectionState connectionState) {
-                super.connected(connectionState);
+            public void connected(EthernetInterface ethernetInterface, DatagramHandler.ConnectionState connectionState) {
+                super.connected(ethernetInterface, connectionState);
 
                 connectedEvent.countDown();
             }
@@ -171,15 +172,15 @@ public class ServerClientTest extends LanScenarioTest {
         public CountDownLatch closed = new CountDownLatch(1);
         public byte[] lastMessage;
 
-        public TestConnection(EthernetInterface ethernetInterface) {
-            super(ethernetInterface);
+        public TestConnection(NetworkNode node) {
+            super(node);
 
             lastConnection = this;
         }
 
         @Override
-        public void connected(DatagramHandler.ConnectionState connectionState) {
-            super.connected(connectionState);
+        public void connected(EthernetInterface ethernetInterface, DatagramHandler.ConnectionState connectionState) {
+            super.connected(ethernetInterface, connectionState);
 
             connected.countDown();
         }

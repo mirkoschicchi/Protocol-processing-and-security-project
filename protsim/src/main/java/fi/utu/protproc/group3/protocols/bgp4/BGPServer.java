@@ -24,9 +24,7 @@ public class BGPServer implements Server {
 
     @Override
     public void start() {
-        for (var intf : interfaces) {
-            intf.getTCPHandler().listen(PORT, this);
-        }
+        router.getTcpHandler().listen(PORT, this);
     }
 
     @Override
@@ -43,8 +41,6 @@ public class BGPServer implements Server {
 
     @Override
     public void shutdown() {
-        for (var intf : interfaces) {
-            intf.getTCPHandler().close(this);
-        }
+        router.getTcpHandler().close(this);
     }
 }

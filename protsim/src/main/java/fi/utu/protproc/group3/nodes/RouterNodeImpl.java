@@ -7,8 +7,6 @@ import fi.utu.protproc.group3.protocols.bgp4.BGPPeerContext;
 import fi.utu.protproc.group3.protocols.bgp4.BGPServer;
 import fi.utu.protproc.group3.protocols.bgp4.trust.TrustAgentServer;
 import fi.utu.protproc.group3.protocols.bgp4.trust.TrustManager;
-import fi.utu.protproc.group3.routing.RoutingTable;
-import fi.utu.protproc.group3.routing.RoutingTableImpl;
 import fi.utu.protproc.group3.routing.TableRow;
 import fi.utu.protproc.group3.simulator.EthernetInterface;
 import fi.utu.protproc.group3.simulator.EthernetInterfaceImpl;
@@ -53,7 +51,6 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode, Route
         }
     }
 
-    private final RoutingTable routingTable = new RoutingTableImpl();
 
     @Override
     public Collection<EthernetInterface> getInterfaces() {
@@ -67,11 +64,6 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode, Route
         }
 
         return this;
-    }
-
-    @Override
-    public RoutingTable getRoutingTable() {
-        return routingTable;
     }
 
     @Override
@@ -97,12 +89,12 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode, Route
             }
 
             // Get the MAC address of the next hop
-            TableRow row = this.routingTable.getRowByDestinationAddress(packet.getDestinationIP());
+            TableRow row = getRoutingTable().getRowByDestinationAddress(packet.getDestinationIP());
 
             // If we found a valid routing entry
             if (row != null) {
                 // Get the exit interface
-                var exitIntf = row.getEInterface();
+                var exitIntf = row.getInterface();
 
                 // Get the MAC address of the interface to which to forward the packet
                 IPAddress nextHop = row.getNextHop();
