@@ -12,6 +12,7 @@ import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import org.graphstream.ui.swingViewer.ViewPanel;
@@ -35,8 +36,11 @@ public class UserGUI extends Application {
         SwingNode node = (SwingNode) root.lookup("#swingnode");
         View view = viewer.getDefaultView();
 
-        node.resize(300, 300);
-        ((JComponent) view).setBackground(Color.BLACK);
+        AnchorPane.setTopAnchor(node, 0d);
+        AnchorPane.setBottomAnchor(node, 0d);
+        AnchorPane.setLeftAnchor(node, 0d);
+        AnchorPane.setRightAnchor(node, 0d);
+
         node.setContent((JComponent) view);
         Scene scene = new Scene(root, 900, 900);
 

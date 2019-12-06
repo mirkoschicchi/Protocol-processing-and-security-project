@@ -30,9 +30,9 @@
       </VBox>
    </right>
    <center>
-      <FlowPane fx:id="pane" prefHeight="310.0" prefWidth="517.0" style="-fx-background-color: cyan;" BorderPane.alignment="CENTER">
+      <AnchorPane fx:id="pane" prefHeight="310.0" prefWidth="517.0" style="-fx-background-color: cyan;" BorderPane.alignment="CENTER">
          <children>
             <SwingNode fx:id="swingnode" layoutX="371.0" layoutY="138.0" />
-         </children></FlowPane>
+         </children></AnchorPane>
    </center>
 </BorderPane>
