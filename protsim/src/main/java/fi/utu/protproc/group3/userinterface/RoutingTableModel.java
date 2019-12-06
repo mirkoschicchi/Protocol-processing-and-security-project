@@ -14,7 +14,7 @@ public class RoutingTableModel {
         this.prefixProperty = row.getPrefix() != null ? new SimpleStringProperty(row.getPrefix().toString()) : new SimpleStringProperty("");
         this.nextHopProperty = row.getNextHop() != null ? new SimpleStringProperty(row.getNextHop().toString()) : new SimpleStringProperty("");
         this.metricProperty = new SimpleDoubleProperty(row.getCalculatedMetric());
-        this.ethernetInterfaceProperty = row.getEInterface() != null ? new SimpleStringProperty(row.getEInterface().toString()) : new SimpleStringProperty("");
+        this.ethernetInterfaceProperty = row.getInterface() != null ? new SimpleStringProperty(row.getInterface().toString()) : new SimpleStringProperty("");
         this.asPathProperty = row.getAsPath() != null ? new SimpleStringProperty(row.getAsPath().toString()) : new SimpleStringProperty("");
     }
 

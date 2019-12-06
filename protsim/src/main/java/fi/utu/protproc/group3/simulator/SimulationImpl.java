@@ -3,7 +3,6 @@ package fi.utu.protproc.group3.simulator;
 import fi.utu.protproc.group3.configuration.SimulationConfiguration;
 import fi.utu.protproc.group3.graph.GraphAttributes;
 import fi.utu.protproc.group3.nodes.*;
-import fi.utu.protproc.group3.routing.TableRow;
 import fi.utu.protproc.group3.userinterface.UserGUI;
 import fi.utu.protproc.group3.utils.AddressGenerator;
 import fi.utu.protproc.group3.utils.SimulationReference;
@@ -21,28 +20,24 @@ import reactor.core.scheduler.Schedulers;
 
 import java.io.*;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-public class SimulationImpl implements SimulationBuilder, Simulation{
+public class SimulationImpl implements SimulationBuilder, Simulation {
+    private static final Logger LOGGER = Logger.getLogger(SimulationImpl.class.getName());
+
     private final Random random = new Random(1337);
-    private final Logger rootLogger;
     private final Map<String, Network> networks = new HashMap<>();
     private final Map<String, NetworkNode> nodes = new HashMap<>();
-    private String description;
-    private String name;
+    private final Object pcapLock = new Object();
     private FileOutputStream pcapStream;
     private Map<Network, Integer> pcapInterfaces;
     private List<ServerNode> servers;
     private MultiGraph graph;
     private Viewer viewer;
-
-    public SimulationImpl() {
-        this.rootLogger = Logger.getAnonymousLogger();
-        SimulationReference.simulation = this;
-    }
 
     @Override
     public Simulation load(SimulationConfiguration configuration) {
@@ -63,21 +58,14 @@ public class SimulationImpl implements SimulationBuilder, Simulation{
             }
 
             @Override
-            public <T extends NetworkNode> T node(String name) {
-                return (T) nodes.get(name);
-            }
-
-            @Override
             public Simulation simulation() {
                 return simulation;
             }
         };
 
-        name = configuration.getName();
-        description = configuration.getDescription();
         System.setProperty("org.graphstream.ui.renderer", "org.graphstream.ui.j2dviewer.J2DGraphRenderer");
 
-        graph = new MultiGraph(name);
+        graph = new MultiGraph(configuration.getName());
 
         var autonomousSystems = new HashMap<Integer, AutonomousSystem>();
 
@@ -145,6 +133,28 @@ public class SimulationImpl implements SimulationBuilder, Simulation{
 
         generateStaticRoutes(autonomousSystems);
 
+        nodes.values().stream()
+                .filter(n -> n instanceof RouterNode)
+                .map(n -> (RouterNode) n)
+                .forEach(router -> {
+                    var configurator = router.getConfigurator();
+                    for (var intf : router.getInterfaces()) {
+                        for (var peerDev : intf.getNetwork().getDevices()) {
+                            if (peerDev != intf && peerDev.getHost() instanceof RouterNode) {
+                                var secondDegreeNeighbors = peerDev.getHost().getInterfaces().stream()
+                                        .flatMap(i -> i.getNetwork().getDevices().stream())
+                                        .filter(i -> i.getHost() instanceof RouterNode && i.getHost() != router && i != peerDev)
+                                        .map(EthernetInterface::getIpAddress)
+                                        .collect(Collectors.toUnmodifiableList());
+
+                                configurator.createPeering(intf, peerDev.getIpAddress(), secondDegreeNeighbors);
+                            }
+                        }
+                    }
+
+                    configurator.finalizeConfiguration();
+                });
+
         return simulation;
     }
 
@@ -159,47 +169,33 @@ public class SimulationImpl implements SimulationBuilder, Simulation{
 
         autonomousSystems.values().stream()
                 .filter(as -> as.id != 0 && as.networks.size() >= 1 && as.routers.size() >= 1)
-                .forEach(as -> {
-                    as.routers.stream().forEach(r -> {
-                        var router = (RouterNode) r.getAttribute(GraphAttributes.OBJECT);
-                        var apspInfo = (APSP.APSPInfo) r.getAttribute(APSP.APSPInfo.ATTRIBUTE_NAME);
-                        as.networks.stream().forEach(net -> {
-                            var target = (Network) net.getAttribute(GraphAttributes.OBJECT);
-                            var path = apspInfo.getShortestPathTo(net.getId());
-                            var nodePath = path.getNodePath();
-                            var network = (Network) nodePath.get(1).getAttribute(GraphAttributes.OBJECT);
-                            var outIntf = router.getInterfaces().stream().filter(i -> i.getNetwork() == network).findAny();
-                            var metric = (int) Math.ceil(path.getPathWeight(GraphAttributes.Edges.METRIC));
-                            if (nodePath.size() > 2) {
-                                RouterNode nextHop = nodePath.get(2).getAttribute(GraphAttributes.OBJECT);
-                                var nextHopIntf = nextHop.getInterfaces().stream().filter(i -> i.getNetwork() == network).findAny();
-                                if (nextHop.getAutonomousSystem() != router.getAutonomousSystem() || network.getAutonomousSystem() != router.getAutonomousSystem()) {
-                                    System.err.println("Route from " + router.getHostname() + " to network " + network.getNetworkName() + " goes across AS boundaries. No static routes generated.");
-                                } else if (outIntf.isPresent() && nextHopIntf.isPresent()) {
-                                    router.getRoutingTable().insertRow(TableRow.create(
-                                            target.getNetworkAddress(),
-                                            nextHopIntf.get().getIpAddress(),
-                                            metric, outIntf.get()
-                                    ));
-                                }
-                            } else {
-                                router.getRoutingTable().insertRow(TableRow.create(
-                                        target.getNetworkAddress(), null, metric, outIntf.get()
-                                ));
+                .forEach(as -> as.routers.forEach(r -> {
+                    var router = (RouterNode) r.getAttribute(GraphAttributes.OBJECT);
+                    var configurator = router.getConfigurator();
+                    var apspInfo = (APSP.APSPInfo) r.getAttribute(APSP.APSPInfo.ATTRIBUTE_NAME);
+                    as.networks.forEach(net -> {
+                        var target = (Network) net.getAttribute(GraphAttributes.OBJECT);
+                        var path = apspInfo.getShortestPathTo(net.getId());
+                        var nodePath = path.getNodePath();
+                        var network = (Network) nodePath.get(1).getAttribute(GraphAttributes.OBJECT);
+                        var outIntf = router.getInterfaces().stream().filter(i -> i.getNetwork() == network).findAny();
+                        var metric = (int) Math.ceil(path.getPathWeight(GraphAttributes.Edges.METRIC));
+                        if (nodePath.size() > 2) {
+                            RouterNode nextHop = nodePath.get(2).getAttribute(GraphAttributes.OBJECT);
+                            var nextHopIntf = nextHop.getInterfaces().stream().filter(i -> i.getNetwork() == network).findAny();
+                            if (nextHop.getAutonomousSystem() != router.getAutonomousSystem() || network.getAutonomousSystem() != router.getAutonomousSystem()) {
+                                System.err.println("Route from " + router.getHostname() + " to network " + network.getNetworkName() + " goes across AS boundaries. No static routes generated.");
+                            } else if (outIntf.isPresent() && nextHopIntf.isPresent()) {
+                                configurator.createStaticRoute(target.getNetworkAddress(), outIntf.get(), nextHopIntf.get().getIpAddress(), metric);
                             }
-                        });
+                        }
                     });
-                });
+                }));
     }
 
     @Override
-    public Logger getRootLogger() {
-        return rootLogger;
-    }
-
-    @Override
-    public <T extends NetworkNode> T getNode(String name) {
-        return (T) nodes.get(name);
+    public NetworkNode getNode(String name) {
+        return nodes.get(name);
     }
 
     @Override
@@ -281,7 +277,7 @@ public class SimulationImpl implements SimulationBuilder, Simulation{
                         (capture.stream().map(n -> n.getFlux().doOnEach(pdu -> this.recordPacket(n, pdu.get()))))::iterator
                 ).subscribe();
             } catch (IOException e) {
-                rootLogger.severe("Error while opening PCAP file: " + e);
+                LOGGER.severe("Error while opening PCAP file: " + e);
                 pcapStream = null;
             }
         }
@@ -300,7 +296,7 @@ public class SimulationImpl implements SimulationBuilder, Simulation{
             var stylePath = new File(System.getProperty("user.dir"), "styles");
             try {
                 var styleSheet = new BufferedInputStream(new FileInputStream(new File(stylePath, "style.css")));
-                var css = new String(styleSheet.readAllBytes(), "UTF-8").replace("url('./", "url('" + stylePath.getAbsolutePath().replace('\\', '/') + "/");
+                var css = new String(styleSheet.readAllBytes(), StandardCharsets.UTF_8).replace("url('./", "url('" + stylePath.getAbsolutePath().replace('\\', '/') + "/");
                 graph.setAttribute("ui.stylesheet", css);
 
                 //viewer = graph.display();
@@ -362,7 +358,7 @@ public class SimulationImpl implements SimulationBuilder, Simulation{
             try {
                 pcapStream.close();
             } catch (IOException e) {
-                rootLogger.severe("Error while closing PCAP file: " + e);
+                LOGGER.severe("Error while closing PCAP file: " + e);
             } finally {
                 pcapStream = null;
             }
@@ -381,12 +377,12 @@ public class SimulationImpl implements SimulationBuilder, Simulation{
             var buf = ByteBuffer.allocate(20 + pdu.length)
                     .putInt(index)
                     .putInt((int) (timeStamp >> 32))
-                    .putInt((int) (timeStamp & 0xffffffff))
+                    .putInt((int) (timeStamp))
                     .putInt(pdu.length)
                     .putInt(pdu.length)
                     .put(pdu);
 
-            synchronized (pcapStream) {
+            synchronized (pcapLock) {
                 writeBlock(6, buf);
             }
         }
@@ -400,11 +396,12 @@ public class SimulationImpl implements SimulationBuilder, Simulation{
         return viewer;
     }
 
-    class AutonomousSystem {
-        public final int id;
-        public final Set<Node> routers = new HashSet<>();
-        public final Set<Node> networks = new HashSet<>();
-        public AutonomousSystem(int id) {
+    static class AutonomousSystem {
+        final int id;
+        final Set<Node> routers = new HashSet<>();
+        final Set<Node> networks = new HashSet<>();
+
+        AutonomousSystem(int id) {
             this.id = id;
         }
     }

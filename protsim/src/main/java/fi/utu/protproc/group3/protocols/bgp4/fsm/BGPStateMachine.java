@@ -14,15 +14,15 @@ import java.util.logging.Logger;
 
 public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPStateMachine.State, BGPStateMachine.Event, BGPStateMachine.EventContext> {
     public static final short DEFAULT_HOLD_TIME = 90;
+    public static final Object LOCK = new Object();
 
     private static final Logger LOGGER = Logger.getLogger(BGPStateMachine.class.getName());
-    private static StateMachineBuilder<BGPStateMachine, State, Event, EventContext> builder;
+    private static final StateMachineBuilder<BGPStateMachine, State, Event, EventContext> builder;
 
     static {
         builder = StateMachineBuilderFactory.create(
                 BGPStateMachine.class, State.class, Event.class, EventContext.class,
-                new Class<?>[]{BGPCallbacks.class}
-        );
+                BGPCallbacks.class);
 
         // IDLE
         {
@@ -152,8 +152,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     public static BGPStateMachine newInstance(BGPCallbacks callbacks) {
-        var result = builder.newStateMachine(State.Idle, callbacks);
-        return result;
+        return builder.newStateMachine(State.Idle, callbacks);
     }
 
     public enum Event {
@@ -171,11 +170,11 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
         Idle, Connect, Active, OpenSent, OpenConfirm, Established,
     }
 
-    public static class EventContext {
+    static class EventContext {
         private final BGPPeerContext context;
         private final BGP4Message message;
 
-        public EventContext(BGPPeerContext context, BGP4Message message) {
+        EventContext(BGPPeerContext context, BGP4Message message) {
             this.context = context;
             this.message = message;
         }
@@ -189,21 +188,21 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
         }
     }
 
-    int connectRetryCounter = 0;
-    int connectRetryTime = 120;
-    int holdTime = DEFAULT_HOLD_TIME;
-    int keepaliveTime = 30;
+    private int connectRetryCounter = 0;
+    private int connectRetryTime = 120;
+    private int holdTime = DEFAULT_HOLD_TIME;
+    private int keepaliveTime = 30;
 
-    Timer connectRetryTimer = new Timer();
-    Timer holdTimer = new Timer();
-    Timer keepaliveTimer = new Timer();
+    private Timer connectRetryTimer = new Timer();
+    private Timer holdTimer = new Timer();
+    private Timer keepaliveTimer = new Timer();
 
     // Optional attributes
-    int delayOpenTime = 120; // Not sure
-    Timer delayOpenTimer = new Timer();
+    private int delayOpenTime = 120; // Not sure
+    private Timer delayOpenTimer = new Timer();
     boolean delayOpen = true;
-    boolean dampPeerOscillations = false;
-    boolean sendNOTIFICATIONwithoutOPEN = false;
+    private final boolean dampPeerOscillations = false;
+    private final boolean sendNOTIFICATIONwithoutOPEN = false;
 
     private final BGPCallbacks callbacks;
 
@@ -213,7 +212,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
         this.callbacks = callbacks;
     }
 
-    void restartConnectRetryTimer() {
+    private void restartConnectRetryTimer() {
         connectRetryTimer.cancel();
         connectRetryTimer = new Timer();
 
@@ -234,7 +233,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
         connectRetryTimer.schedule(connectRetryTimerTask, 0, 1000);
     }
 
-    void restartDelayOpenTimer() {
+    private void restartDelayOpenTimer() {
         delayOpenTimer.cancel();
         delayOpenTimer = new Timer();
 
@@ -255,7 +254,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
         delayOpenTimer.schedule(delayOpenTimerTask, 0, 1000);
     }
 
-    void restartHoldTimer(int time) {
+    private void restartHoldTimer(int time) {
         holdTimer.cancel();
         holdTimer = new Timer();
 
@@ -277,7 +276,7 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
         holdTimer.schedule(holdTimerTask, 0, 1000);
     }
 
-    void restartKeepaliveTimer() {
+    private void restartKeepaliveTimer() {
         keepaliveTimer.cancel();
         keepaliveTimer = new Timer();
 

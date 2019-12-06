@@ -1,7 +1,7 @@
 package fi.utu.protproc.group3.protocols.tcp;
 
+import fi.utu.protproc.group3.nodes.NetworkNode;
 import fi.utu.protproc.group3.scenarios.LanScenarioTest;
-import fi.utu.protproc.group3.simulator.EthernetInterface;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -12,18 +12,18 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ServerClientTest extends LanScenarioTest {
     @Test
-    public void listenServer() {
-        var tcpServer = Server.listen(server.getInterface(), (short) 80, TestConnection.class);
+    void listenServer() {
+        var tcpServer = Server.listen(server, (short) 80, TestConnection.class);
 
         assertNotNull(tcpServer);
     }
 
     @Test
-    public void openConnection() {
-        var tcpServer = Server.listen(server.getInterface(), (short) 80, TestConnection.class);
+    void openConnection() {
+        var tcpServer = Server.listen(server, (short) 80, TestConnection.class);
         var connectedEvent = new CountDownLatch(1);
 
-        var clientConnection = new Connection(client.getInterface()) {
+        var clientConnection = new Connection(client) {
             @Override
             public void connected(DatagramHandler.ConnectionState connectionState) {
                 super.connected(connectionState);
@@ -48,11 +48,11 @@ public class ServerClientTest extends LanScenarioTest {
     }
 
     @Test
-    public void sendMessage() {
-        var tcpServer = Server.listen(server.getInterface(), (short) 80, TestConnection.class);
+    void sendMessage() {
+        var tcpServer = Server.listen(server, (short) 80, TestConnection.class);
         var connectedEvent = new CountDownLatch(1);
 
-        var clientConnection = new Connection(client.getInterface()) {
+        var clientConnection = new Connection(client) {
             @Override
             public void connected(DatagramHandler.ConnectionState connectionState) {
                 super.connected(connectionState);
@@ -79,12 +79,12 @@ public class ServerClientTest extends LanScenarioTest {
     }
 
     @Test
-    public void sendReply() {
-        var tcpServer = Server.listen(server.getInterface(), (short) 80, TestConnection.class);
+    void sendReply() {
+        var tcpServer = Server.listen(server, (short) 80, TestConnection.class);
 
         var repliedEvent = new CountDownLatch(1);
 
-        var clientConnection = new Connection(client.getInterface()) {
+        var clientConnection = new Connection(client) {
             @Override
             public void connected(DatagramHandler.ConnectionState connectionState) {
                 super.connected(connectionState);
@@ -116,12 +116,12 @@ public class ServerClientTest extends LanScenarioTest {
     }
 
     @Test
-    public void closeConnection() {
-        var tcpServer = Server.listen(server.getInterface(), (short) 80, TestConnection.class);
+    void closeConnection() {
+        var tcpServer = Server.listen(server, (short) 80, TestConnection.class);
         var connectedEvent = new CountDownLatch(1);
         var disconnectedEvent = new CountDownLatch(1);
 
-        var clientConnection = new Connection(client.getInterface()) {
+        var clientConnection = new Connection(client) {
             @Override
             public void connected(DatagramHandler.ConnectionState connectionState) {
                 super.connected(connectionState);
@@ -158,7 +158,7 @@ public class ServerClientTest extends LanScenarioTest {
     }
 
     @BeforeEach
-    public void clearConnection() {
+    void clearConnection() {
         TestConnection.lastConnection = null;
         TestConnection.nextReply = null;
     }
@@ -166,13 +166,13 @@ public class ServerClientTest extends LanScenarioTest {
     static class TestConnection extends Connection {
         private static TestConnection lastConnection;
         private static byte[] nextReply;
-        public CountDownLatch connected = new CountDownLatch(1);
-        public CountDownLatch firstMessage = new CountDownLatch(1);
-        public CountDownLatch closed = new CountDownLatch(1);
-        public byte[] lastMessage;
+        final CountDownLatch connected = new CountDownLatch(1);
+        final CountDownLatch firstMessage = new CountDownLatch(1);
+        final CountDownLatch closed = new CountDownLatch(1);
+        byte[] lastMessage;
 
-        public TestConnection(EthernetInterface ethernetInterface) {
-            super(ethernetInterface);
+        public TestConnection(NetworkNode node) {
+            super(node);
 
             lastConnection = this;
         }

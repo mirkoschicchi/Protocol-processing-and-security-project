@@ -6,10 +6,13 @@ networks:
     autonomousSystem: 1000
     address: "2001:1:ffff:ffff::0/64"
   - name: t2a # first tier 2 ISP
+    autonomousSystem: 1000
     address: "2002:1:ffff:ffff::0/64"
   - name: t2b # first tier 2 ISP
+    autonomousSystem: 1000
     address: "2002:2:ffff:ffff::0/64"
   - name: t2c # first tier 2 ISP
+    autonomousSystem: 1000
     address: "2002:3:ffff:ffff::0/64"
   - name: net1 # first test net (servers)
     address: "2003:1::0/64"

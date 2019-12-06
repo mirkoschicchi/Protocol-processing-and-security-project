@@ -6,13 +6,11 @@ import fi.utu.protproc.group3.protocols.tcp.TCPDatagram;
 import fi.utu.protproc.group3.utils.StringUtils;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
-
 import static org.junit.jupiter.api.Assertions.*;
 
-public class BGP4MessageKeepaliveTest {
+class BGP4MessageKeepaliveTest {
     @Test
-    public void createMessage() {
+    void createMessage() {
         var message = BGP4MessageKeepalive.create();
 
         assertNotNull(message);
@@ -20,16 +18,16 @@ public class BGP4MessageKeepaliveTest {
         var bytes = message.serialize();
 
         assertNotNull(bytes);
-        assertTrue(bytes.length == 19);
+        assertEquals(19, bytes.length);
 
         var parsedMsg = BGP4Message.parse(bytes);
-        assertTrue(Arrays.equals(message.getMarker(), parsedMsg.getMarker()));
+        assertArrayEquals(message.getMarker(), parsedMsg.getMarker());
         assertSame(message.getType(), parsedMsg.getType());
         assertSame(message.getLength(), parsedMsg.getLength());
     }
 
     @Test
-    public void parseMessage() {
+    void parseMessage() {
         var pdu = StringUtils.parseHexStream("216ba8349d402f202a295c8686dd6000000000270680200300040000000026ae89569c37dd812003000300000000e6c4a65b959c0758303900b30760cd4b0000000050000000a6540000ffffffffffffffffffffffffffffffff001304");
         var frame = EthernetFrame.parse(pdu);
         var packet = IPv6Packet.parse(frame.getPayload());

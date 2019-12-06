@@ -1,30 +1,38 @@
 package fi.utu.protproc.group3.protocols.tcp;
 
+import fi.utu.protproc.group3.nodes.NetworkNode;
 import fi.utu.protproc.group3.protocols.EthernetFrame;
 import fi.utu.protproc.group3.protocols.IPv6Packet;
 import fi.utu.protproc.group3.simulator.EthernetInterface;
 import fi.utu.protproc.group3.utils.IPAddress;
 import reactor.core.Disposable;
+import reactor.core.publisher.Flux;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.logging.Logger;
 
 public class DatagramHandler {
     private static final Logger LOGGER = Logger.getLogger("DatagramHandler");
-    private final Map<ConnectionDescriptor, ConnectionState> stateTable = new HashMap<>();
-    private final Map<Short, Server> servers = new HashMap<>();
-    private final EthernetInterface ethernetInterface;
+    private final Map<ConnectionDescriptor, ConnectionState> stateTable = Collections.synchronizedMap(new HashMap<>());
+    private final Map<Short, Server> servers = Collections.synchronizedMap(new HashMap<>());
+    private final NetworkNode node;
+    private final Consumer<IPv6Packet> packetSender;
     private Disposable listener;
 
-    public DatagramHandler(EthernetInterface ethernetInterface) {
-        Objects.requireNonNull(ethernetInterface);
+    public DatagramHandler(NetworkNode node, Consumer<IPv6Packet> packetSender) {
+        this.packetSender = packetSender;
+        Objects.requireNonNull(node);
 
-        this.ethernetInterface = ethernetInterface;
+        this.node = node;
     }
 
     public void start() {
         if (listener == null) {
-            listener = ethernetInterface.getFlux().subscribe(this::onMessage);
+            listener = Flux.merge((Iterable<Flux<byte[]>>)
+                    node.getInterfaces().stream()
+                            .map(i -> i.getFlux().doOnEach(pdu -> onMessage(i, pdu.get())))::iterator
+            ).subscribe();
         }
     }
 
@@ -32,13 +40,18 @@ public class DatagramHandler {
         Objects.requireNonNull(connection);
         Objects.requireNonNull(ipAddress);
 
+        var route = node.getRoutingTable().getRowByDestinationAddress(ipAddress);
+        if (route == null) {
+            throw new UnsupportedOperationException("Could not determine route for " + ipAddress);
+        }
+
         ConnectionState state = null;
         var valid = false;
         var rnd = new Random();
         for (var i = 0; i < 100; i++) {
             var srcPort = (short) (rnd.nextLong() & 0x7fff | 0x8000);
-            var descriptor = new ConnectionDescriptor(ethernetInterface.getIpAddress(), ipAddress, srcPort, port);
-            state = new ConnectionState(descriptor, this, connection);
+            var descriptor = new ConnectionDescriptor(route.getInterface().getIpAddress(), ipAddress, srcPort, port);
+            state = new ConnectionState(descriptor, connection);
             if (stateTable.putIfAbsent(descriptor, state) == null) {
                 // YAY, port is free
                 valid = true;
@@ -50,8 +63,6 @@ public class DatagramHandler {
             throw new IllegalStateException("Could not find available client port.");
         }
 
-        assert state != null;
-
         state.send(null, TCPDatagram.SYN);
     }
 
@@ -59,9 +70,9 @@ public class DatagramHandler {
         servers.put(port, server);
     }
 
-    public void onMessage(byte[] pdu) {
+    private void onMessage(EthernetInterface intf, byte[] pdu) {
         var frame = EthernetFrame.parse(pdu);
-        if (Arrays.equals(frame.getDestination(), ethernetInterface.getAddress()) && frame.getType() == EthernetFrame.TYPE_IPV6) {
+        if (Arrays.equals(frame.getDestination(), intf.getAddress()) && frame.getType() == EthernetFrame.TYPE_IPV6) {
             var packet = IPv6Packet.parse(frame.getPayload());
             if (packet.getNextHeader() == 0x6) {
                 var datagram = TCPDatagram.parse(packet.getPayload());
@@ -84,7 +95,7 @@ public class DatagramHandler {
                         if (server != null) {
                             var connection = server.accept(descriptor);
                             if (connection != null) {
-                                state = new ConnectionState(descriptor, this, connection);
+                                state = new ConnectionState(descriptor, connection);
                                 state.update(datagram);
 
                                 stateTable.put(descriptor, state);
@@ -100,7 +111,6 @@ public class DatagramHandler {
                         state.status = ConnectionStatus.Established;
                         state.connection.connected(state);
                     } else {
-                        LOGGER.warning("TCP connection in setup state has wrong ACKN. Closing.");
                         state.connection.closed();
                         stateTable.remove(state.descriptor);
                     }
@@ -108,7 +118,7 @@ public class DatagramHandler {
                     switch (state.status) {
                         case Established:
                             state.status = ConnectionStatus.Closing;
-                            state.send(null, (short)(TCPDatagram.FIN | TCPDatagram.ACK));
+                            state.send(null, (short) (TCPDatagram.FIN | TCPDatagram.ACK));
                             break;
                         case Closing:
                             state.status = ConnectionStatus.Closed;
@@ -131,9 +141,6 @@ public class DatagramHandler {
                             state.connection.connected(state);
                             break;
                         case Closing:
-                            if (state.seqN != datagram.getAckN()) {
-                                LOGGER.warning("TCP connection in closing state has wrong ACKN. Closing.");
-                            }
                             state.connection.closed();
                             stateTable.remove(state.descriptor);
                             break;
@@ -144,7 +151,7 @@ public class DatagramHandler {
     }
 
     public void close(Server server) {
-        for (var s : servers.entrySet()) {
+        for (var s : new HashSet<>(servers.entrySet())) {
             if (s.getValue() == server) {
                 servers.remove(s.getKey());
             }
@@ -158,11 +165,11 @@ public class DatagramHandler {
         }
     }
 
-    public class ConnectionDescriptor {
+    public static class ConnectionDescriptor {
         private final IPAddress localIp, remoteIp;
         private final short localPort, remotePort;
 
-        public ConnectionDescriptor(IPAddress localIp, IPAddress remoteIp, short localPort, short remotePort) {
+        ConnectionDescriptor(IPAddress localIp, IPAddress remoteIp, short localPort, short remotePort) {
             this.localIp = localIp;
             this.remoteIp = remoteIp;
             this.localPort = localPort;
@@ -209,7 +216,7 @@ public class DatagramHandler {
         }
     }
 
-    enum ConnectionStatus {
+    public enum ConnectionStatus {
         Closed,
         Setup,
         Established,
@@ -218,19 +225,16 @@ public class DatagramHandler {
 
     public class ConnectionState {
         private final ConnectionDescriptor descriptor;
-        private final DatagramHandler handler;
         private final Connection connection;
         private ConnectionStatus status;
         private int seqN;
         private int ackN;
 
-        public ConnectionState(ConnectionDescriptor descriptor, DatagramHandler handler, Connection connection) {
+        ConnectionState(ConnectionDescriptor descriptor, Connection connection) {
             Objects.requireNonNull(descriptor);
-            Objects.requireNonNull(handler);
             Objects.requireNonNull(connection);
 
             this.descriptor = descriptor;
-            this.handler = handler;
             this.connection = connection;
             this.status = ConnectionStatus.Setup;
 
@@ -238,7 +242,7 @@ public class DatagramHandler {
             this.seqN = rnd.nextInt();
         }
 
-        public void update(TCPDatagram datagram) {
+        void update(TCPDatagram datagram) {
             ackN = datagram.getSeqN();
 
             if (datagram.getPayload() == null || datagram.getPayload().length == 0) {
@@ -252,7 +256,7 @@ public class DatagramHandler {
             send(message, (short) 0);
         }
 
-        public void send(byte[] message, short flags) {
+        void send(byte[] message, short flags) {
             if ((flags & (TCPDatagram.SYN | TCPDatagram.RST)) == 0) {
                 flags |= TCPDatagram.ACK;
             }
@@ -261,23 +265,15 @@ public class DatagramHandler {
             var datagram = TCPDatagram.create(descriptor.localPort, descriptor.remotePort, this.seqN, ackN, flags,
                     (short) 0xffff, message);
 
-            var packet = IPv6Packet.create((byte) 0x6, descriptor.localIp, descriptor.remoteIp, datagram.serialize(descriptor.localIp, descriptor.remoteIp));
-
-            var destMac = handler.ethernetInterface.resolveIpAddress(descriptor.remoteIp);
-            if (destMac == null) {
-                destMac = handler.ethernetInterface.getDefaultRouter();
-            }
-
-            var frame = EthernetFrame.create(destMac, handler.ethernetInterface.getAddress(), EthernetFrame.TYPE_IPV6,
-                    packet.serialize());
-
             if (message != null && message.length > 0) {
                 seqN += message.length;
             } else if (flags != TCPDatagram.ACK) {
                 seqN++;
             }
 
-            handler.ethernetInterface.transmit(frame.serialize());
+            var packet = IPv6Packet.create((byte) 0x6, descriptor.localIp, descriptor.remoteIp, datagram.serialize(descriptor.localIp, descriptor.remoteIp));
+
+            packetSender.accept(packet);
         }
 
         public void close() {

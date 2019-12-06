@@ -9,6 +9,8 @@ public final class NetworkAddress {
     private final IPAddress address;
     private final int prefixLength;
 
+    public final static NetworkAddress DEFAULT = parse("::/0");
+
     /**
      * Parses a network address in CIDR notation.
      */

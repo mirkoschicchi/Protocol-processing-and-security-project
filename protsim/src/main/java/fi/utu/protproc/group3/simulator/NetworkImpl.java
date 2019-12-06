@@ -1,7 +1,6 @@
 package fi.utu.protproc.group3.simulator;
 
 import fi.utu.protproc.group3.configuration.NetworkConfiguration;
-import fi.utu.protproc.group3.nodes.RouterNode;
 import fi.utu.protproc.group3.utils.NetworkAddress;
 import reactor.core.publisher.DirectProcessor;
 import reactor.core.publisher.Flux;
@@ -12,10 +11,9 @@ import java.util.*;
 
 public class NetworkImpl implements Network {
     private final int autonomousSystem;
-    private FluxSink<byte[]> input;
+    private final FluxSink<byte[]> input;
     private final Flux<byte[]> output;
     private final List<EthernetInterface> interfaces = new ArrayList<>();
-    private final Simulation simulation;
     private final NetworkAddress networkAddress;
     private final String networkName;
 
@@ -23,7 +21,6 @@ public class NetworkImpl implements Network {
         Objects.requireNonNull(context);
         Objects.requireNonNull(configuration);
 
-        this.simulation = context.simulation();
         this.networkAddress = context.generator().networkAddress(configuration.getAddress());
         this.networkName = context.generator().hostName(configuration.getName());
         this.autonomousSystem = configuration.getAutonomousSystem();
@@ -78,19 +75,6 @@ public class NetworkImpl implements Network {
     @Override
     public int getAutonomousSystem() {
         return autonomousSystem;
-    }
-
-    @Override
-    public EthernetInterface getDefaultRouter() {
-        var routers = interfaces.stream()
-                .filter(i -> i.getHost() instanceof RouterNode)
-                .iterator();
-        var result = routers.next();
-        if (routers.hasNext()) {
-            throw new IllegalStateException("Network has more than one router. Could not determine default router.");
-        }
-
-        return result;
     }
 
     @Override

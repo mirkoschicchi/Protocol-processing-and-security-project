@@ -1,7 +1,6 @@
 package fi.utu.protproc.group3.configuration;
 
 import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.constructor.Constructor;
 
 import java.io.InputStream;
 import java.util.List;

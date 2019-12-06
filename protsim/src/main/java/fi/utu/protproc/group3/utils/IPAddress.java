@@ -1,10 +1,8 @@
 package fi.utu.protproc.group3.utils;
 
 
-import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Objects;
 
 public class IPAddress {
@@ -22,11 +20,11 @@ public class IPAddress {
             var elements = ip.split(":");
             var skipped = 8 - elements.length;
             var pos = 0;
-            for (var i = 0; i < elements.length; i++) {
-                if (elements[i].length() == 0) {
+            for (String element : elements) {
+                if (element.length() == 0) {
                     pos += 2 * (skipped + 1);
                 } else {
-                    int val = Integer.parseInt(elements[i], 16);
+                    int val = Integer.parseInt(element, 16);
                     result[pos] = (byte) ((val & 0xff00) >> 8);
                     result[pos + 1] = (byte) (val & 0xff);
                     pos += 2;

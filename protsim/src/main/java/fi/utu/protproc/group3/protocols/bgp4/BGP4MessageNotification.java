@@ -17,7 +17,7 @@ public interface BGP4MessageNotification extends BGP4Message {
     static BGP4MessageNotification create(byte errorCode, byte errorSubCode, byte[] data) {
         if (data == null) data = new byte[0];
 
-        return new BGP4MessageNotificationImpl((short) (21 + data.length), (byte) BGP4Message.TYPE_NOTIFICATION, errorCode, errorSubCode, data);
+        return new BGP4MessageNotificationImpl((short) (21 + data.length), BGP4Message.TYPE_NOTIFICATION, errorCode, errorSubCode, data);
     }
 
     byte getErrorCode();

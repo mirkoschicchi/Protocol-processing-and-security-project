@@ -41,10 +41,9 @@ public class TunTapNodeImpl extends NetworkNodeImpl {
                     .append("sudo ip tuntap add dev ").append(configuration.getDevice()).append(" mode tun user $USER group $USER\n")
                     .append("sudo ip -6 addr add ").append(getIpAddress()).append('/').append(getInterface().getNetwork().getNetworkAddress().getPrefixLength()).append(" dev ").append(configuration.getDevice()).append("\n")
                     .append("sudo ip link set dev ").append(configuration.getDevice()).append(" up\n");
-            for (var network : simulation.getNetworks()) {
-                if (network != getInterface().getNetwork()) {
-                    helpMsg.append("sudo ip r add " + network.getNetworkAddress() + " dev ").append(configuration.getDevice()).append(" via ").append(getInterface().getNetwork().getDefaultRouter().getIpAddress()).append('\n');
-                }
+
+            for (var route : getRoutingTable().getRows()) {
+                helpMsg.append("sudo ip r add ").append(route.getPrefix()).append(" dev ").append(configuration.getDevice()).append(" via ").append(route.getNextHop()).append('\n');
             }
 
             helpMsg
@@ -96,7 +95,7 @@ public class TunTapNodeImpl extends NetworkNodeImpl {
             try {
                 var packet = device.read();
                 if (packet.isIpv6()) {
-                    send(IPv6Packet.parse(packet.bytes()));
+                    sendPacket(IPv6Packet.parse(packet.bytes()));
                 }
             } catch (IOException e) {
                 e.printStackTrace();

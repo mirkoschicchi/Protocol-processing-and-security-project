@@ -7,12 +7,12 @@ import java.util.Objects;
 
 public class TCPDatagramImpl implements TCPDatagram {
     // RFC-793
-    private short sourcePort;
-    private short destinationPort;
-    private int seqN;
-    private int ackN;
-    private short flags;
-    private short window;
+    private final short sourcePort;
+    private final short destinationPort;
+    private final int seqN;
+    private final int ackN;
+    private final short flags;
+    private final short window;
     private byte[] payload;
     private short checksum;
 

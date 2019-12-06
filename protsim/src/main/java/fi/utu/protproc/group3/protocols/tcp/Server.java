@@ -1,10 +1,10 @@
 package fi.utu.protproc.group3.protocols.tcp;
 
-import fi.utu.protproc.group3.simulator.EthernetInterface;
+import fi.utu.protproc.group3.nodes.NetworkNode;
 
 public interface Server {
-    static ReflectiveServer listen(EthernetInterface ethernetInterface, short port, Class<? extends Connection> connectionHandler) {
-        var result = new ReflectiveServer(ethernetInterface, port, connectionHandler);
+    static ReflectiveServer listen(NetworkNode node, short port, Class<? extends Connection> connectionHandler) {
+        var result = new ReflectiveServer(node, port, connectionHandler);
         result.start();
 
         return result;

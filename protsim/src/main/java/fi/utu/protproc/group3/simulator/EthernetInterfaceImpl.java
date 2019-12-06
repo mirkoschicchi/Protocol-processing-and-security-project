@@ -1,8 +1,6 @@
 package fi.utu.protproc.group3.simulator;
 
 import fi.utu.protproc.group3.nodes.NetworkNode;
-import fi.utu.protproc.group3.nodes.RouterNode;
-import fi.utu.protproc.group3.protocols.tcp.DatagramHandler;
 import fi.utu.protproc.group3.utils.IPAddress;
 import reactor.core.publisher.Flux;
 
@@ -13,7 +11,6 @@ public class EthernetInterfaceImpl implements EthernetInterface {
     private final Network network;
     private final IPAddress ipAddress;
     private final NetworkNode host;
-    private final DatagramHandler tcpHandler = new DatagramHandler(this);
 
     public EthernetInterfaceImpl(NetworkNode host, byte[] address, Network network, IPAddress ipAddress) {
         Objects.requireNonNull(host);
@@ -52,21 +49,6 @@ public class EthernetInterfaceImpl implements EthernetInterface {
     }
 
     @Override
-    public byte[] getDefaultRouter() {
-        var it =getNetwork().getDevices().stream()
-                .filter(i -> i.getHost() instanceof RouterNode)
-                .iterator();
-
-        var result = it.next();
-
-        if (it.hasNext()) {
-            throw new UnsupportedOperationException("Network with multiple routers.");
-        }
-
-        return result.getAddress();
-    }
-
-    @Override
     public void transmit(byte[] frame) {
         Objects.requireNonNull(frame);
 
@@ -88,11 +70,6 @@ public class EthernetInterfaceImpl implements EthernetInterface {
     @Override
     public NetworkNode getHost() {
         return host;
-    }
-
-    @Override
-    public DatagramHandler getTCPHandler() {
-        return tcpHandler;
     }
 
     @Override

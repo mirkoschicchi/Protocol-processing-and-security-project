@@ -10,11 +10,11 @@ import java.util.List;
 
 public abstract class BGP4MessageImpl implements BGP4Message {
     // Marker is set all to 1 following RFC-4271
-    private byte[] marker = {(byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff};
-    private short length;
-    private byte type;
+    private final byte[] marker = {(byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff};
+    private final short length;
+    private final byte type;
 
-    public BGP4MessageImpl(short length, byte type) {
+    BGP4MessageImpl(short length, byte type) {
         this.length = length;
         this.type = type;
     }
@@ -77,7 +77,7 @@ public abstract class BGP4MessageImpl implements BGP4Message {
                 return BGP4MessageOpen.create(myAutonomousSystem, holdTime, bgpIdentifier);
 
             case BGP4Message.TYPE_UPDATE:
-                List<NetworkAddress> withdrawnRoutes = new ArrayList<NetworkAddress>();
+                List<NetworkAddress> withdrawnRoutes = new ArrayList<>();
                 byte[] tmp = new byte[16];
                 IPAddress addr;
                 int prefLen = 0;
@@ -119,7 +119,7 @@ public abstract class BGP4MessageImpl implements BGP4Message {
                 buf.get(); byteLength--;
 
                 List<NetworkAddress> networkLayerReachabilityInformation
-                        = new ArrayList<NetworkAddress>();
+                        = new ArrayList<>();
                 while(byteLength > 0) {
                     NetworkAddress prefix = parseNetworkAddressesFromBuffer(buf);
                     networkLayerReachabilityInformation.add(prefix);

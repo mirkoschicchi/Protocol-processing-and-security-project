@@ -24,7 +24,7 @@ public interface BGP4MessageUpdate extends BGP4Message {
         len += 1 + nextHop.toArray().length;
         for (NetworkAddress addr : networkLayerReachabilityInformation)
             len += (5 + addr.getAddress().toArray().length);
-        return new BGP4MessageUpdateImpl(len, (byte) BGP4Message.TYPE_UPDATE,
+        return new BGP4MessageUpdateImpl(len, BGP4Message.TYPE_UPDATE,
                 withdrawnRoutes, origin, asPath, nextHop, networkLayerReachabilityInformation);
     }
 

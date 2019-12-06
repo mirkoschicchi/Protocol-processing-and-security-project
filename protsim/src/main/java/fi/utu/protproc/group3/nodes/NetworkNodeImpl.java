@@ -3,9 +3,14 @@ package fi.utu.protproc.group3.nodes;
 import fi.utu.protproc.group3.configuration.NodeConfiguration;
 import fi.utu.protproc.group3.protocols.EthernetFrame;
 import fi.utu.protproc.group3.protocols.IPv6Packet;
+import fi.utu.protproc.group3.protocols.tcp.DatagramHandler;
+import fi.utu.protproc.group3.routing.RoutingTable;
+import fi.utu.protproc.group3.routing.RoutingTableImpl;
+import fi.utu.protproc.group3.routing.TableRow;
 import fi.utu.protproc.group3.simulator.*;
 import fi.utu.protproc.group3.utils.AddressGenerator;
 import fi.utu.protproc.group3.utils.IPAddress;
+import fi.utu.protproc.group3.utils.NetworkAddress;
 import reactor.core.Disposable;
 
 import java.util.*;
@@ -13,11 +18,13 @@ import java.util.stream.Collectors;
 
 
 public abstract class NetworkNodeImpl implements NetworkNode, SimpleNode {
-    public final Simulation simulation;
-    protected final String hostname;
-    protected final List<EthernetInterface> interfaces = new ArrayList<>();
+    final Simulation simulation;
+    private final String hostname;
+    final List<EthernetInterface> interfaces = new ArrayList<>();
+    private final RoutingTable routingTable = new RoutingTableImpl();
+    private final DatagramHandler tcpHandler = new DatagramHandler(this, this::sendPacket);
 
-    protected NetworkNodeImpl(SimulationBuilderContext context, NodeConfiguration configuration, Network network) {
+    NetworkNodeImpl(SimulationBuilderContext context, NodeConfiguration configuration, Network network) {
         this(context, configuration);
 
         Objects.requireNonNull(context);
@@ -34,12 +41,12 @@ public abstract class NetworkNodeImpl implements NetworkNode, SimpleNode {
         );
     }
 
-    protected NetworkNodeImpl(SimulationBuilderContext context, NodeConfiguration configuration) {
+    NetworkNodeImpl(SimulationBuilderContext context, NodeConfiguration configuration) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(configuration);
 
         this.simulation = context.simulation();
-        this.hostname = context.generator().hostName(configuration != null ? configuration.getName() : null);
+        this.hostname = context.generator().hostName(configuration.getName());
     }
 
     private List<Disposable> messageListeners;
@@ -52,6 +59,11 @@ public abstract class NetworkNodeImpl implements NetworkNode, SimpleNode {
     @Override
     public Collection<EthernetInterface> getInterfaces() {
         return Collections.unmodifiableCollection(interfaces);
+    }
+
+    @Override
+    public RoutingTable getRoutingTable() {
+        return routingTable;
     }
 
     @Override
@@ -76,17 +88,31 @@ public abstract class NetworkNodeImpl implements NetworkNode, SimpleNode {
             throw new UnsupportedOperationException("Node is already running.");
         }
 
+        for (var intf : interfaces) {
+            routingTable.insertRow(TableRow.create(intf.getNetwork().getNetworkAddress(), null, 0, intf));
+        }
+
+        if (interfaces.size() == 1) {
+            var routers = getInterface().getNetwork().getDevices().stream()
+                    .filter(i -> i.getHost() instanceof RouterNode)
+                    .collect(Collectors.toList());
+
+            if (routers.size() == 1) {
+                routingTable.insertRow(TableRow.create(NetworkAddress.DEFAULT, routers.get(0).getIpAddress(), 0, interfaces.get(0)));
+            }
+        }
+
         // Subscribe to all server interfaces
         messageListeners = interfaces.stream()
                 .map(i -> i.getFlux().subscribe(pdu -> this.packetReceived(i, pdu)))
                 .collect(Collectors.toUnmodifiableList());
 
-        interfaces.forEach(i -> i.getTCPHandler().start());
+        getTcpHandler().start();
     }
 
     @Override
     public void shutdown() {
-        interfaces.forEach(i -> i.getTCPHandler().stop());
+        getTcpHandler().stop();
 
         if (messageListeners != null) {
             for (var listener : messageListeners) {
@@ -97,11 +123,16 @@ public abstract class NetworkNodeImpl implements NetworkNode, SimpleNode {
     }
 
     @Override
+    public DatagramHandler getTcpHandler() {
+        return tcpHandler;
+    }
+
+    @Override
     public boolean nodeIsRunning() {
         return messageListeners != null;
     }
 
-    protected void packetReceived(EthernetInterface intf, byte[] pdu) {
+    void packetReceived(EthernetInterface intf, byte[] pdu) {
         // NOP
     }
 
@@ -110,18 +141,24 @@ public abstract class NetworkNodeImpl implements NetworkNode, SimpleNode {
         return hostname;
     }
 
-    protected void send(IPv6Packet packet) {
+    void sendPacket(IPv6Packet packet) {
         Objects.requireNonNull(packet);
 
-        var ethernetInterface = getInterface();
-        var destMac = ethernetInterface.resolveIpAddress(packet.getDestinationIP());
-        if (destMac == null) {
-            destMac = ethernetInterface.getDefaultRouter();
+        var route = getRoutingTable().getRowByDestinationAddress(packet.getDestinationIP());
+        if (route == null) {
+            throw new UnsupportedOperationException("Could not determine route for " + packet.getDestinationIP());
         }
 
-        var frame = EthernetFrame.create(destMac, ethernetInterface.getAddress(), EthernetFrame.TYPE_IPV6,
-                packet.serialize());
+        EthernetInterface intf = route.getInterface();
+        byte[] destMac;
+        if (route.getNextHop() != null) {
+            destMac = intf.resolveIpAddress(route.getNextHop());
+        } else {
+            destMac = intf.resolveIpAddress(packet.getDestinationIP());
+        }
 
-        ethernetInterface.transmit(frame.serialize());
+        var frame = EthernetFrame.create(destMac, intf.getAddress(), EthernetFrame.TYPE_IPV6, packet.serialize());
+
+        intf.transmit(frame.serialize());
     }
 }

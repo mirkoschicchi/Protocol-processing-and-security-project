@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class NetworkAddressTest {
+class NetworkAddressTest {
 //    @Test
 //    public void parseIPv4CidrNotation() throws UnknownHostException {
 //        var netAddr = NetworkAddress.parse("127.0.0.0/8");
@@ -14,7 +14,7 @@ public class NetworkAddressTest {
 //    }
 
     @Test
-    public void parseIPv6CidrNotation() {
+    void parseIPv6CidrNotation() {
         var netAddr = NetworkAddress.parse("fe80:2001::17:0:0/96");
 
         assertNotNull(netAddr);
@@ -22,7 +22,7 @@ public class NetworkAddressTest {
     }
 
     @Test
-    public void isMatch() {
+    void isMatch() {
         assertTrue(NetworkAddress.isMatch(NetworkAddress.parse("fe80:100::/16"), IPAddress.parse("fe80:1::1")));
         assertTrue(NetworkAddress.isMatch(NetworkAddress.parse("fe80:100::/17"), IPAddress.parse("fe80:1::1")));
         assertTrue(NetworkAddress.isMatch(NetworkAddress.parse("fe80:100::/18"), IPAddress.parse("fe80:1::1")));

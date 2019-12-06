@@ -24,8 +24,6 @@ public interface Network {
 
     /**
      * Gets the flux for the traffic on this network.
-     *
-     * @return
      */
     Flux<byte[]> getFlux();
 
@@ -35,6 +33,4 @@ public interface Network {
     void transmit(byte[] pdu);
 
     int getAutonomousSystem();
-
-    EthernetInterface getDefaultRouter();
 }

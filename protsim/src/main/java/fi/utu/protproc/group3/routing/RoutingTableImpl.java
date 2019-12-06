@@ -5,14 +5,13 @@ import fi.utu.protproc.group3.utils.NetworkAddress;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 public class RoutingTableImpl implements RoutingTable {
     private Collection<TableRow> rows = new ArrayList<>();
-    private ReadWriteLock lock = new ReentrantReadWriteLock();
+    private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
     @Override
     public Collection<TableRow> getRows() {
@@ -27,7 +26,7 @@ public class RoutingTableImpl implements RoutingTable {
 
     @Override
     public TableRow getRowByDestinationAddress(IPAddress destinationAddress) {
-        int longestMatch = 0;
+        int longestMatch = -1;
         double shortestMetric = Integer.MAX_VALUE;
 
         TableRow result = null;
@@ -52,17 +51,6 @@ public class RoutingTableImpl implements RoutingTable {
     }
 
     @Override
-    public TableRow getRowByPrefix(NetworkAddress prefix) {
-        TableRow result = null;
-        for(TableRow r : getRows()) {
-            if(r.getPrefix().equals(prefix)) {
-                result = r;
-            }
-        }
-        return result;
-    }
-
-    @Override
     public void removeBgpEntries(int bgpIdentifier, NetworkAddress prefix) {
         var wl = lock.writeLock();
         wl.lock();
@@ -74,6 +62,18 @@ public class RoutingTableImpl implements RoutingTable {
             }
         } finally {
             wl.unlock();
+        }
+    }
+
+    @Override
+    public void updateBgpTrust(int bgpIdentifier, double trust) {
+        var rl = lock.readLock();
+        rl.lock();
+        try {
+            getRows().stream().filter(r -> r.getBgpPeer() == bgpIdentifier)
+                    .forEach(r -> r.setTrust(trust));
+        } finally {
+            rl.unlock();
         }
     }
 

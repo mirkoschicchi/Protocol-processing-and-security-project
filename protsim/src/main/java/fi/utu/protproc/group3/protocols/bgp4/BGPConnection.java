@@ -1,14 +1,13 @@
 package fi.utu.protproc.group3.protocols.bgp4;
 
+import fi.utu.protproc.group3.nodes.NetworkNode;
 import fi.utu.protproc.group3.protocols.bgp4.fsm.BGPStateMachine;
 import fi.utu.protproc.group3.protocols.tcp.Connection;
 import fi.utu.protproc.group3.protocols.tcp.DatagramHandler;
 import fi.utu.protproc.group3.routing.TableRow;
-import fi.utu.protproc.group3.simulator.EthernetInterface;
 import fi.utu.protproc.group3.utils.NetworkAddress;
 
 import java.util.List;
-import java.util.Random;
 import java.util.logging.Logger;
 
 public class BGPConnection extends Connection {
@@ -16,11 +15,11 @@ public class BGPConnection extends Connection {
 
     private static final Logger LOGGER = Logger.getLogger(BGPConnection.class.getName());
 
-    public BGPConnection(EthernetInterface ethernetInterface, BGPPeerContext context) {
-        super(ethernetInterface);
-
+    public BGPConnection(NetworkNode node, BGPPeerContext context) {
+        super(node);
         this.context = context;
     }
+
 
     @Override
     public void connected(DatagramHandler.ConnectionState connectionState) {
@@ -53,11 +52,10 @@ public class BGPConnection extends Connection {
                 for (NetworkAddress networkAddress : updateMessage.getWithdrawnRoutes()) {
                     context.getRouter().getRoutingTable().removeBgpEntries(context.getBgpIdentifier(), networkAddress);
                 }
-
                 for (NetworkAddress networkAddress : updateMessage.getNetworkLayerReachabilityInformation()) {
                     // Create a new row parsing also the path attributes
                     TableRow newRoute = TableRow.create(networkAddress, updateMessage.getNextHop(), 0,
-                            context.getBgpIdentifier(), ethernetInterface, updateMessage.getAsPath(), context.getTrust());
+                            context.getBgpIdentifier(), context.getEthernetInterface(), updateMessage.getAsPath(), context.getTrust());
                     context.getRouter().getRoutingTable().insertRow(newRoute);
                     LOGGER.fine(context.getRouter().getHostname() + ": inserting row " + newRoute.toString());
                 }

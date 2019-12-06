@@ -52,7 +52,8 @@ public class ClientNodeImpl extends NetworkNodeImpl implements ClientNode {
             var dest = simulation.getRandomServer();
             if (dest != null) {
                 LOGGER.info("Client " + getHostname() + " trying to connect to " + dest.getHostname() + " (" + dest.getIpAddress() + ")");
-                getInterface().getTCPHandler().connect(new SimpleHttpClient(getInterface()), dest.getIpAddress(), SimpleHttpServer.DEFAULT_PORT);
+                var connection = new SimpleHttpClient(this);
+                connection.connect(dest.getIpAddress(), SimpleHttpServer.DEFAULT_PORT);
             }
         }
     }

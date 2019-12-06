@@ -1,25 +1,25 @@
 package fi.utu.protproc.group3.protocols.tcp;
 
-import fi.utu.protproc.group3.simulator.EthernetInterface;
+import fi.utu.protproc.group3.nodes.NetworkNode;
 import fi.utu.protproc.group3.utils.IPAddress;
 
 import java.util.Objects;
 
 public abstract class Connection {
-    protected final EthernetInterface ethernetInterface;
-    public DatagramHandler.ConnectionState connectionState;
+    protected final NetworkNode node;
+    protected DatagramHandler.ConnectionState connectionState;
 
-    public Connection(EthernetInterface ethernetInterface) {
-        Objects.requireNonNull(ethernetInterface);
+    public Connection(NetworkNode node) {
+        Objects.requireNonNull(node);
 
-        this.ethernetInterface = ethernetInterface;
+        this.node = node;
     }
 
     /**
      * Initiates the connection to the given target port.
      */
     public void connect(IPAddress ipAddress, short port) {
-        ethernetInterface.getTCPHandler().connect(this, ipAddress, port);
+        node.getTcpHandler().connect(this, ipAddress, port);
     }
 
     /**
@@ -60,5 +60,9 @@ public abstract class Connection {
      */
     public void closed() {
         // NOP
+    }
+
+    public DatagramHandler.ConnectionState getState() {
+        return connectionState;
     }
 }

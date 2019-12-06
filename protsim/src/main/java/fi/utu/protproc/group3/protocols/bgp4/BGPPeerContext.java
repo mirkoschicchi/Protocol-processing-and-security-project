@@ -22,17 +22,19 @@ public class BGPPeerContext {
     private final BGPStateMachine fsm;
     private final BGPConnection connection;
     private final List<BGPPeerContext> distributionList = new ArrayList<>();
+    private final Set<IPAddress> secondDegreePeers;
     private int bgpIdentifier;
     private Disposable updateSendProcess;
-    private double inherentTrust = Math.random();
+    private final double inherentTrust = Math.random();
     private double observedTrust = 0.5;
+    private final Map<Integer, Double> secondDegreePeersVote = new HashMap<>();
 
-    public BGPPeerContext(RouterNode router, EthernetInterface ethernetInterface, IPAddress peer) {
+    public BGPPeerContext(RouterNode router, EthernetInterface ethernetInterface, IPAddress peer, Collection<IPAddress> secondDegreePeers) {
         this.router = router;
         this.ethernetInterface = ethernetInterface;
         this.peer = peer;
-        this.connection = new BGPConnection(ethernetInterface, this);
-
+        this.connection = new BGPConnection(router, this);
+        this.secondDegreePeers = new HashSet<>(secondDegreePeers);
         var context = this;
         var isInitiator = ethernetInterface.getIpAddress().toArray()[15] < peer.toArray()[15];
         this.fsm = BGPStateMachine.newInstance(new BGPCallbacksDefault() {
@@ -111,7 +113,11 @@ public class BGPPeerContext {
     }
 
     public void fireEvent(BGPStateMachine.Event event) {
-        fsm.fire(event);
+        // Squirrel Foundation seems to have some weird concurrent modification exceptions if multiple threads
+        // fire an event at the same time. A per-FSM lock does not work, so we have to use a global lock here :(.
+        synchronized (BGPStateMachine.LOCK) {
+            fsm.fire(event);
+        }
     }
 
     public void start() {
@@ -138,7 +144,7 @@ public class BGPPeerContext {
         var withdrawnRoutes = new ArrayList<TableRow>();
         var currentRoutes = router.getRoutingTable().getRows().stream()
                 .filter(r -> r.getBgpPeer() == 0)
-                .filter(r -> r.getEInterface() != ethernetInterface)
+                .filter(r -> r.getInterface() != ethernetInterface)
                 .collect(Collectors.toUnmodifiableSet());
 
         for (var route : currentRoutes) {
@@ -156,11 +162,11 @@ public class BGPPeerContext {
 
         if (newRoutes.size() + withdrawnRoutes.size() > 0) {
             var msg = BGP4MessageUpdate.create(
-                    withdrawnRoutes.stream().map(r -> r.getPrefix()).collect(Collectors.toUnmodifiableList()),
+                    withdrawnRoutes.stream().map(TableRow::getPrefix).collect(Collectors.toUnmodifiableList()),
                     BGP4MessageUpdate.ORIGIN_FROM_IGP,
                     List.of(List.of((short) router.getAutonomousSystem()), List.of((short) router.getBGPIdentifier())),
                     ethernetInterface.getIpAddress(),
-                    newRoutes.stream().map(r -> r.getPrefix()).collect(Collectors.toUnmodifiableList())
+                    newRoutes.stream().map(TableRow::getPrefix).collect(Collectors.toUnmodifiableList())
             );
 
             connection.send(msg.serialize());
@@ -183,7 +189,31 @@ public class BGPPeerContext {
         observedTrust = Math.min(observedTrust*v, 1.0);
     }
 
+    public void addSecondDegreePeerVote(Integer sourceBgpIdentifier, double vote) {
+        secondDegreePeersVote.put(sourceBgpIdentifier, vote);
+
+        router.getRoutingTable().updateBgpTrust(bgpIdentifier, getTrust());
+    }
+
+    private double getVotedTrust() {
+        double sum = 0;
+
+        for (var ipAddressDoubleEntry : secondDegreePeersVote.values()) {
+            sum += ipAddressDoubleEntry;
+        }
+
+        return sum / (double)secondDegreePeersVote.size();
+    }
+
+    public double getObservedTrust() {
+        return observedTrust;
+    }
+
     public double getTrust() {
-        return (inherentTrust + observedTrust) / 2.0;
+        return ((inherentTrust + observedTrust) / 2.0 + getVotedTrust()) / 2.0;
+    }
+
+    public Set<IPAddress> getSecondDegreePeers() {
+        return Collections.unmodifiableSet(secondDegreePeers);
     }
 }

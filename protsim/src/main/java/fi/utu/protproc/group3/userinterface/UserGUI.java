@@ -2,24 +2,20 @@ package fi.utu.protproc.group3.userinterface;
 
 import fi.utu.protproc.group3.nodes.NetworkNode;
 import fi.utu.protproc.group3.nodes.RouterNode;
-import fi.utu.protproc.group3.simulator.UserInterfaceManager;
 import fi.utu.protproc.group3.utils.SimulationReference;
 import javafx.application.Application;
+import javafx.embed.swing.SwingNode;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import org.graphstream.ui.view.View;
 import org.graphstream.ui.view.Viewer;
-
-import javafx.embed.swing.SwingNode;
 import org.graphstream.ui.view.ViewerListener;
 import org.graphstream.ui.view.ViewerPipe;
 
