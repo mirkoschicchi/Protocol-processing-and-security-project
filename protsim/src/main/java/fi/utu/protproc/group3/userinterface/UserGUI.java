@@ -1,7 +1,6 @@
 package fi.utu.protproc.group3.userinterface;
 
 import fi.utu.protproc.group3.nodes.NetworkNode;
-import fi.utu.protproc.group3.nodes.RouterNode;
 import fi.utu.protproc.group3.utils.SimulationReference;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -27,7 +26,7 @@ import java.util.Map;
 public class UserGUI extends Application {
 
     private Map<String, NetworkNode> nodes;
-    private RouterNode selectedNode;
+    private NetworkNode selectedNode;
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -54,25 +53,22 @@ public class UserGUI extends Application {
 
             @Override
             public void buttonPushed(String s) {
-                if (nodes.containsKey(s)) {
-                    selectedNode = (RouterNode) nodes.get(s);
-                    if(selectedNode.nodeIsRunning()) {
-                        Platform.runLater(() ->
-                                actionBtn.setText("Shutdown")
-                        );
-
-                    } else {
-                        Platform.runLater(() ->
-                            actionBtn.setText("Start up")
-                        );
+                Platform.runLater(() -> {
+                    if (nodes.containsKey(s)) {
+                        selectedNode = nodes.get(s);
+                        if (selectedNode.nodeIsRunning()) {
+                            actionBtn.setText("Shutdown");
+                        } else {
+                            actionBtn.setText("Start up");
+                        }
+                        Text routerLabel = (Text) root.lookup("#routerLabel");
+                        routerLabel.setText(s);
+                        System.out.println(selectedNode.getHostname());
+                        RowController rowController = loader.getController();
+                        rowController.setRouter(selectedNode);
+                        rowController.initialize(null, null);
                     }
-                    Text routerLabel = (Text) root.lookup("#routerLabel");
-                    routerLabel.setText(s);
-                    System.out.println(selectedNode.getHostname());
-                    RowController rowController = loader.getController();
-                    rowController.setRouter(selectedNode);
-                    rowController.initialize(null, null);
-                }
+                });
             }
 
             @Override

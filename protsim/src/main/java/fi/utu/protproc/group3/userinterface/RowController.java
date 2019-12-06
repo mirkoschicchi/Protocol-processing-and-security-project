@@ -1,12 +1,8 @@
 package fi.utu.protproc.group3.userinterface;
 
 import fi.utu.protproc.group3.nodes.NetworkNode;
-import fi.utu.protproc.group3.nodes.RouterNode;
-import fi.utu.protproc.group3.nodes.RouterNodeImpl;
 import fi.utu.protproc.group3.routing.RoutingTable;
 import fi.utu.protproc.group3.routing.TableRow;
-import fi.utu.protproc.group3.utils.SimulationReference;
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -16,7 +12,9 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.ResourceBundle;
 
 public class RowController implements Initializable {
     @FXML
@@ -37,7 +35,7 @@ public class RowController implements Initializable {
     @FXML
     private TableColumn<RoutingTableModel, String> asPathColumn;
 
-    private RouterNode router;
+    private NetworkNode router;
     RoutingTable routingTable;
     Collection<TableRow> rows;
     ArrayList<RoutingTableModel> rowModels = new ArrayList<>();
@@ -66,11 +64,11 @@ public class RowController implements Initializable {
         }
     }
 
-    public RouterNode getRouter() {
+    public NetworkNode getRouter() {
         return router;
     }
 
-    public void setRouter(RouterNode router) {
+    public void setRouter(NetworkNode router) {
         this.router = router;
     }
 }

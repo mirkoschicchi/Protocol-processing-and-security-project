@@ -1,7 +1,10 @@
 package fi.utu.protproc.group3.userinterface;
 
 import fi.utu.protproc.group3.routing.TableRow;
-import javafx.beans.property.*;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 
 public class RoutingTableModel {
     private StringProperty prefixProperty;
@@ -42,8 +45,8 @@ public class RoutingTableModel {
         this.nextHopProperty.set(nextHopProperty);
     }
 
-    public double getMetricProperty() {
-        return metricProperty.get();
+    public int getMetricProperty() {
+        return (int) metricProperty.get();
     }
 
     public DoubleProperty metricProperty() {
