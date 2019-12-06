@@ -35,6 +35,4 @@ public interface Network {
     void transmit(byte[] pdu);
 
     int getAutonomousSystem();
-
-    EthernetInterface getDefaultRouter();
 }
