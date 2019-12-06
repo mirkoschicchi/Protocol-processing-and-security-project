@@ -4,6 +4,7 @@ import fi.utu.protproc.group3.nodes.NetworkNode;
 import fi.utu.protproc.group3.nodes.RouterNode;
 import fi.utu.protproc.group3.utils.SimulationReference;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.embed.swing.SwingNode;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -56,9 +57,14 @@ public class UserGUI extends Application {
                 if (nodes.containsKey(s)) {
                     selectedNode = (RouterNode) nodes.get(s);
                     if(selectedNode.nodeIsRunning()) {
-                        actionBtn.setText("Shutdown");
+                        Platform.runLater(() ->
+                                actionBtn.setText("Shutdown")
+                        );
+
                     } else {
-                        actionBtn.setText("Start up");
+                        Platform.runLater(() ->
+                            actionBtn.setText("Start up")
+                        );
                     }
                     Text routerLabel = (Text) root.lookup("#routerLabel");
                     routerLabel.setText(s);

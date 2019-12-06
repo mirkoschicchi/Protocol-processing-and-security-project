@@ -10,7 +10,7 @@
    <right>
       <VBox spacing="20.0" prefHeight="Infinity" prefWidth="700" style="-fx-background-color: orange;" BorderPane.alignment="TOP_RIGHT">
          <children>
-            <Text text="Router 1" fx:id="routerLabel"/>
+            <Text text=" " fx:id="routerLabel"/>
             <Button mnemonicParsing="false" text="Shutdown" fx:id="actionBtn"/>
             <TableView fx:id="table" prefHeight="188.0" prefWidth="583.0">
               <columns>
