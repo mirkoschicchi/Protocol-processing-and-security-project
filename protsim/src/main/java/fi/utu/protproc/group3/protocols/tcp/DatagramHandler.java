@@ -1,5 +1,7 @@
 package fi.utu.protproc.group3.protocols.tcp;
 
+import fi.utu.protproc.group3.nodes.NetworkNode;
+import fi.utu.protproc.group3.nodes.RouterNode;
 import fi.utu.protproc.group3.protocols.EthernetFrame;
 import fi.utu.protproc.group3.protocols.IPv6Packet;
 import fi.utu.protproc.group3.simulator.EthernetInterface;
@@ -209,7 +211,7 @@ public class DatagramHandler {
         }
     }
 
-    enum ConnectionStatus {
+    public enum ConnectionStatus {
         Closed,
         Setup,
         Established,
@@ -264,6 +266,15 @@ public class DatagramHandler {
             var packet = IPv6Packet.create((byte) 0x6, descriptor.localIp, descriptor.remoteIp, datagram.serialize(descriptor.localIp, descriptor.remoteIp));
 
             var destMac = handler.ethernetInterface.resolveIpAddress(descriptor.remoteIp);
+
+            var node = handler.ethernetInterface.getHost();
+            if (destMac == null && node instanceof RouterNode) {
+                var route = ((RouterNode) node).getRoutingTable().getRowByDestinationAddress(descriptor.remoteIp);
+                if (route != null && route.getNextHop() != null) {
+                    destMac = handler.ethernetInterface.resolveIpAddress(route.getNextHop());
+                }
+            }
+
             if (destMac == null) {
                 destMac = handler.ethernetInterface.getDefaultRouter();
             }

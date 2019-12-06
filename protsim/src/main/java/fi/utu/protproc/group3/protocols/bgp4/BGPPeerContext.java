@@ -22,17 +22,19 @@ public class BGPPeerContext {
     private final BGPStateMachine fsm;
     private final BGPConnection connection;
     private final List<BGPPeerContext> distributionList = new ArrayList<>();
+    private Set<IPAddress> secondDegreePeers;
     private int bgpIdentifier;
     private Disposable updateSendProcess;
     private double inherentTrust = Math.random();
     private double observedTrust = 0.5;
+    private final Map<Integer, Double> secondDegreePeersVote = new HashMap<>();
 
-    public BGPPeerContext(RouterNode router, EthernetInterface ethernetInterface, IPAddress peer) {
+    public BGPPeerContext(RouterNode router, EthernetInterface ethernetInterface, IPAddress peer, Collection<IPAddress> secondDegreePeers) {
         this.router = router;
         this.ethernetInterface = ethernetInterface;
         this.peer = peer;
         this.connection = new BGPConnection(ethernetInterface, this);
-
+        this.secondDegreePeers = new HashSet<>(secondDegreePeers);
         var context = this;
         var isInitiator = ethernetInterface.getIpAddress().toArray()[15] < peer.toArray()[15];
         this.fsm = BGPStateMachine.newInstance(new BGPCallbacksDefault() {
@@ -183,7 +185,31 @@ public class BGPPeerContext {
         observedTrust = Math.min(observedTrust*v, 1.0);
     }
 
+    public void addSecondDegreePeerVote(Integer secondDegreePeerIPAddress, double vote) {
+        secondDegreePeersVote.put(secondDegreePeerIPAddress, vote);
+
+        router.getRoutingTable().updateBgpTrust(bgpIdentifier, getTrust());
+    }
+
+    public double getVotedTrust() {
+        double sum = 0;
+
+        for (var ipAddressDoubleEntry : secondDegreePeersVote.values()) {
+            sum += ipAddressDoubleEntry;
+        }
+
+        return sum / (double)secondDegreePeersVote.size();
+    }
+
+    public double getObservedTrust() {
+        return observedTrust;
+    }
+
     public double getTrust() {
-        return (inherentTrust + observedTrust) / 2.0;
+        return ((inherentTrust + observedTrust) / 2.0 + getVotedTrust()) / 2.0;
+    }
+
+    public Set<IPAddress> getSecondDegreePeers() {
+        return Collections.unmodifiableSet(secondDegreePeers);
     }
 }

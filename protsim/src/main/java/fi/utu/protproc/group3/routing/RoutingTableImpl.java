@@ -78,6 +78,18 @@ public class RoutingTableImpl implements RoutingTable {
     }
 
     @Override
+    public void updateBgpTrust(int bgpIdentifier, double trust) {
+        var rl = lock.readLock();
+        rl.lock();
+        try {
+            getRows().stream().filter(r -> r.getBgpPeer() == bgpIdentifier)
+                    .forEach(r -> r.setTrust(trust));
+        } finally {
+            rl.unlock();
+        }
+    }
+
+    @Override
     public void insertRow(TableRow row) {
         var wl = lock.writeLock();
         wl.lock();

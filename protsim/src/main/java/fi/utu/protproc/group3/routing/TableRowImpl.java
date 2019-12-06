@@ -72,6 +72,11 @@ public class TableRowImpl implements TableRow {
     }
 
     @Override
+    public void setTrust(double trust) {
+        this.neighborTrust = trust;
+    }
+
+    @Override
     public String toString() {
         var result = new StringBuilder();
         result.append(prefix);

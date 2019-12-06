@@ -8,7 +8,6 @@ import fi.utu.protproc.group3.simulator.EthernetInterface;
 import fi.utu.protproc.group3.utils.NetworkAddress;
 
 import java.util.List;
-import java.util.Random;
 import java.util.logging.Logger;
 
 public class BGPConnection extends Connection {
@@ -53,7 +52,6 @@ public class BGPConnection extends Connection {
                 for (NetworkAddress networkAddress : updateMessage.getWithdrawnRoutes()) {
                     context.getRouter().getRoutingTable().removeBgpEntries(context.getBgpIdentifier(), networkAddress);
                 }
-
                 for (NetworkAddress networkAddress : updateMessage.getNetworkLayerReachabilityInformation()) {
                     // Create a new row parsing also the path attributes
                     TableRow newRoute = TableRow.create(networkAddress, updateMessage.getNextHop(), 0,

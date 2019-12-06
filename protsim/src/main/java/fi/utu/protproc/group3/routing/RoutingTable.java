@@ -35,6 +35,8 @@ public interface RoutingTable {
 
     void removeBgpEntries(int bgpIdentifier, NetworkAddress prefix);
 
+    void updateBgpTrust(int bgpIdentifier, double trust);
+
     /**
      * Insert a new row in the table
      * @param row The row to be inserted
@@ -51,5 +53,4 @@ public interface RoutingTable {
      * Delete the content of the entire table
      */
     void flush();
-
 }

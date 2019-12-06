@@ -51,4 +51,6 @@ public interface TableRow {
     EthernetInterface getEInterface();
     List<List<Short>> getAsPath();
     int getAsPathLength();
+
+    void setTrust(double trust);
 }
