@@ -24,8 +24,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-//import fi.utu.protproc.group3.protocols.bgp4.trust.TrustAgentServer;
-
 public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode, RouterNode.Configurator {
     private final int autonomousSystem;
     private static int nextBgpIdentifier = 1;
@@ -210,7 +208,7 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode, Route
             }
         }
 
-        trustManager = new TrustManager(this, peerings.values());
+        trustManager = new TrustManager(this, peerings);
 
         configurationFinalized = true;
     }

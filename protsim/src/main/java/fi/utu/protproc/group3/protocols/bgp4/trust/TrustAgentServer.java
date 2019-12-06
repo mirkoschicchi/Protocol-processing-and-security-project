@@ -34,8 +34,6 @@ public class TrustAgentServer implements Server {
 
     @Override
     public Connection accept(DatagramHandler.ConnectionDescriptor descriptor) {
-        // get correct ethernet interface from the local ip of the descriptor
-        // and then pass it in new TrustAgentServerConnection(ethernetinterface got now, peerings);
         EthernetInterface ethernetInterface = interfaces.get(descriptor.getLocalIp());
 
         if (ethernetInterface != null) {
@@ -63,9 +61,6 @@ public class TrustAgentServer implements Server {
 
         @Override
         public void messageReceived(byte[] message) {
-            // Parse the message and answer with the score of that IP addresses
-            // I have a router with a list of peerings and I match the IPaddress and it gives me the context (it is a map)
-            // Then send back the scores of every IPaddress with a number of entries + map (IPaddress, score)
             super.messageReceived(message);
 
             ByteBuffer byteBufferReceived = ByteBuffer.wrap(message);

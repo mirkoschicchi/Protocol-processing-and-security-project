@@ -20,21 +20,20 @@ public class BGPPeerContext {
     private final IPAddress peer;
     private final BGPStateMachine fsm;
     private final BGPConnection connection;
-    private final Collection<IPAddress> secondDegreeNeighbors;
     private final List<BGPPeerContext> distributionList = new ArrayList<>();
-    private final Set<IPAddress> secondDegreePeers = new HashSet<>();
+    private Set<IPAddress> secondDegreePeers;
     private int bgpIdentifier;
     private Disposable updateSendProcess;
     private double inherentTrust = Math.random();
     private double observedTrust = 0.5;
+    private final Map<IPAddress, Double> secondDegreePeersVote = new HashMap<>();
 
     public BGPPeerContext(RouterNode router, EthernetInterface ethernetInterface, IPAddress peer, Collection<IPAddress> secondDegreeNeighbors) {
         this.router = router;
         this.ethernetInterface = ethernetInterface;
         this.peer = peer;
         this.connection = new BGPConnection(ethernetInterface, this);
-        this.secondDegreeNeighbors = secondDegreeNeighbors;
-
+        this.secondDegreePeers = new HashSet<>(secondDegreeNeighbors); // the collection secondDegreeNeighbors was not used
         var context = this;
         var isInitiator = ethernetInterface.getIpAddress().toArray()[15] < peer.toArray()[15];
         this.fsm = BGPStateMachine.newInstance(new BGPCallbacksDefault() {
@@ -175,6 +174,24 @@ public class BGPPeerContext {
 
     public void modifyObservedTrust(double v) {
         observedTrust = Math.min(observedTrust*v, 1.0);
+    }
+
+    public void addSecondDegreePeerVote(IPAddress secondDegreePeerIPAddress, double vote) {
+        if (secondDegreePeersVote.isEmpty() || !secondDegreePeersVote.containsKey(secondDegreePeerIPAddress)) {
+            secondDegreePeersVote.put(secondDegreePeerIPAddress, vote);
+        } else {
+            secondDegreePeersVote.replace(secondDegreePeerIPAddress, vote);
+        }
+    }
+
+    public double getVotedTrust() {
+        double sum = 0;
+
+        for (Map.Entry<IPAddress, Double> ipAddressDoubleEntry : secondDegreePeersVote.entrySet()) {
+            sum += ipAddressDoubleEntry.getValue();
+        }
+
+        return sum / (double)secondDegreePeersVote.size();
     }
 
     public double getObservedTrust() {

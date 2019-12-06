@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 public class EthernetInterfaceTest extends SimpleScenarioTest {
     @Test
-    public void transmitAndReceiveFrame() throws IOException {
+    public void transmitAndReceiveFrame() {
         var frame = EthernetFrame.create(
                 client.getInterface().getAddress(),
                 client.getInterface().getAddress(),

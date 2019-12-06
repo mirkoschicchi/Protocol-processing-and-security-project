@@ -53,7 +53,7 @@ public class EthernetInterfaceImpl implements EthernetInterface {
 
     @Override
     public byte[] getDefaultRouter() {
-        var it =getNetwork().getDevices().stream()
+        var it = getNetwork().getDevices().stream()
                 .filter(i -> i.getHost() instanceof RouterNode)
                 .iterator();
 

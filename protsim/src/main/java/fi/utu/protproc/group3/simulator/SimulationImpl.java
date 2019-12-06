@@ -148,7 +148,7 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
                                 var secondDegreeNeighbors = peerDev.getHost().getInterfaces().stream()
                                         .flatMap(i -> i.getNetwork().getDevices().stream())
                                         .filter(i -> i.getHost() instanceof RouterNode && i.getHost() != router)
-                                        .map(i -> i.getIpAddress())
+                                        .map(EthernetInterface::getIpAddress)
                                         .collect(Collectors.toUnmodifiableList());
 
                                 configurator.createPeering(intf, peerDev.getIpAddress(), secondDegreeNeighbors);
