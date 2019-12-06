@@ -78,9 +78,33 @@
           <artifactId>tun-io</artifactId>
           <version>1.0.0</version>
       </dependency>
+      <!-- https://mvnrepository.com/artifact/org.openjfx/javafx-controls -->
+      <dependency>
+          <groupId>org.openjfx</groupId>
+          <artifactId>javafx-controls</artifactId>
+          <version>13</version>
+      </dependency>
+      <!-- https://mvnrepository.com/artifact/org.openjfx/javafx-fxml -->
+      <dependency>
+          <groupId>org.openjfx</groupId>
+          <artifactId>javafx-fxml</artifactId>
+          <version>13</version>
+      </dependency>
+      <dependency>
+          <groupId>org.openjfx</groupId>
+          <artifactId>javafx-swing</artifactId>
+          <version>13-ea+14b</version>
+      </dependency>
+
   </dependencies>
 
   <build>
+  <resources>
+      <resource>
+          <directory>src/main/resources</directory>
+      </resource>
+  </resources>
+
     <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
       <plugins>
         <plugin>
@@ -129,6 +153,14 @@
               <configuration>
                   <source>10</source>
                   <target>10</target>
+              </configuration>
+          </plugin>
+          <plugin>
+              <groupId>org.openjfx</groupId>
+              <artifactId>javafx-maven-plugin</artifactId>
+              <version>0.0.3</version>
+              <configuration>
+                  <mainClass>fi.utu.protproc.group3.userinterface.UserGUI</mainClass>
               </configuration>
           </plugin>
       </plugins>
