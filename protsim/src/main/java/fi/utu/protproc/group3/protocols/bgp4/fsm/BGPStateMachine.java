@@ -14,6 +14,7 @@ import java.util.logging.Logger;
 
 public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPStateMachine.State, BGPStateMachine.Event, BGPStateMachine.EventContext> {
     public static final short DEFAULT_HOLD_TIME = 90;
+    public static final Object LOCK = new Object();
 
     private static final Logger LOGGER = Logger.getLogger(BGPStateMachine.class.getName());
     private static final StateMachineBuilder<BGPStateMachine, State, Event, EventContext> builder;

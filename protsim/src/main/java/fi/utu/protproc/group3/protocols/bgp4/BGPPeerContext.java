@@ -113,7 +113,11 @@ public class BGPPeerContext {
     }
 
     public void fireEvent(BGPStateMachine.Event event) {
-        fsm.fire(event);
+        // Squirrel Foundation seems to have some weird concurrent modification exceptions if multiple threads
+        // fire an event at the same time. A per-FSM lock does not work, so we have to use a global lock here :(.
+        synchronized (BGPStateMachine.LOCK) {
+            fsm.fire(event);
+        }
     }
 
     public void start() {
