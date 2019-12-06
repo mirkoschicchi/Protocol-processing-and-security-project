@@ -1,7 +1,5 @@
 package fi.utu.protproc.group3.configuration;
 
-import fi.utu.protproc.group3.utils.NetworkAddress;
-
 public class InterfaceConfiguration {
     private String name;
     private String network;

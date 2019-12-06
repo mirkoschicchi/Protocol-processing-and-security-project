@@ -3,7 +3,6 @@ package fi.utu.protproc.group3.protocols.http;
 import fi.utu.protproc.group3.nodes.NetworkNode;
 import fi.utu.protproc.group3.protocols.tcp.Connection;
 import fi.utu.protproc.group3.protocols.tcp.DatagramHandler;
-import fi.utu.protproc.group3.simulator.EthernetInterface;
 
 import java.util.logging.Logger;
 
@@ -15,8 +14,8 @@ public class SimpleHttpClient extends Connection {
     }
 
     @Override
-    public void connected(EthernetInterface ethernetInterface, DatagramHandler.ConnectionState connectionState) {
-        super.connected(ethernetInterface, connectionState);
+    public void connected(DatagramHandler.ConnectionState connectionState) {
+        super.connected(connectionState);
 
         send("GET / HTTP/1.0".getBytes());
 

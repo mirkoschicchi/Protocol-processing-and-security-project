@@ -7,7 +7,7 @@ public class ReflectiveServer implements Server {
     private final Class<? extends Connection> connectionHandler;
     private final NetworkNode node;
 
-    protected ReflectiveServer(NetworkNode node, short port, Class<? extends Connection> connectionHandler) {
+    ReflectiveServer(NetworkNode node, short port, Class<? extends Connection> connectionHandler) {
         this.node = node;
         this.port = port;
         this.connectionHandler = connectionHandler;

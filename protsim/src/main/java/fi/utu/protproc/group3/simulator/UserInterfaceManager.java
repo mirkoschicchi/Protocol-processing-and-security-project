@@ -13,11 +13,11 @@ import java.awt.*;
 import java.awt.event.ActionListener;
 import java.util.Map;
 
-public class UserInterfaceManager implements ViewerListener {
+class UserInterfaceManager implements ViewerListener {
     private boolean loop = true;
-    private Map<String, NetworkNode> nodes;
-    private MultiGraph graph;
-    private PopUpDemo menu;
+    private final Map<String, NetworkNode> nodes;
+    private final MultiGraph graph;
+    private final PopUpDemo menu;
 
     public UserInterfaceManager(@NotNull Viewer viewer, MultiGraph graph, Map<String, NetworkNode> nodes) {
         this.nodes = nodes;
@@ -52,7 +52,7 @@ public class UserInterfaceManager implements ViewerListener {
     class PopUpDemo extends JPopupMenu {
         NetworkNode node;
 
-        public PopUpDemo() {
+        PopUpDemo() {
             JMenuItem item;
 
             this.setFont(new Font("TimesRoman", Font.PLAIN, 20));
@@ -77,7 +77,7 @@ public class UserInterfaceManager implements ViewerListener {
             this.setVisible(false);
         }
 
-        ActionListener menuListener = event -> {
+        final ActionListener menuListener = event -> {
             String invAction = event.getActionCommand();
 
             switch (invAction) {
@@ -120,7 +120,7 @@ public class UserInterfaceManager implements ViewerListener {
             }
         };
 
-        public void toggleMenu(NetworkNode node) {
+        void toggleMenu(NetworkNode node) {
             this.node = node;
 
             if (this.isVisible()) {

@@ -33,7 +33,6 @@ public interface EthernetInterface {
 
     /**
      * Gets the queue with received frames.
-     * @return
      */
     Flux<byte[]> getFlux();
 

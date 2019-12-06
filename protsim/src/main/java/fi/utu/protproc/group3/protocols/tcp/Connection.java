@@ -1,7 +1,6 @@
 package fi.utu.protproc.group3.protocols.tcp;
 
 import fi.utu.protproc.group3.nodes.NetworkNode;
-import fi.utu.protproc.group3.simulator.EthernetInterface;
 import fi.utu.protproc.group3.utils.IPAddress;
 
 import java.util.Objects;
@@ -9,7 +8,6 @@ import java.util.Objects;
 public abstract class Connection {
     protected final NetworkNode node;
     protected DatagramHandler.ConnectionState connectionState;
-    protected EthernetInterface ethernetInterface;
 
     public Connection(NetworkNode node) {
         Objects.requireNonNull(node);
@@ -27,9 +25,8 @@ public abstract class Connection {
     /**
      * Callback after connection has been established.
      */
-    public void connected(EthernetInterface ethernetInterface, DatagramHandler.ConnectionState connectionState) {
+    public void connected(DatagramHandler.ConnectionState connectionState) {
         this.connectionState = connectionState;
-        this.ethernetInterface = ethernetInterface;
     }
 
     /**
@@ -63,5 +60,9 @@ public abstract class Connection {
      */
     public void closed() {
         // NOP
+    }
+
+    public DatagramHandler.ConnectionState getState() {
+        return connectionState;
     }
 }

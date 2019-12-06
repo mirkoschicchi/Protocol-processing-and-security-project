@@ -63,8 +63,6 @@ public class DatagramHandler {
             throw new IllegalStateException("Could not find available client port.");
         }
 
-        assert state != null;
-
         state.send(null, TCPDatagram.SYN);
     }
 
@@ -72,7 +70,7 @@ public class DatagramHandler {
         servers.put(port, server);
     }
 
-    public void onMessage(EthernetInterface intf, byte[] pdu) {
+    private void onMessage(EthernetInterface intf, byte[] pdu) {
         var frame = EthernetFrame.parse(pdu);
         if (Arrays.equals(frame.getDestination(), intf.getAddress()) && frame.getType() == EthernetFrame.TYPE_IPV6) {
             var packet = IPv6Packet.parse(frame.getPayload());
@@ -111,9 +109,8 @@ public class DatagramHandler {
                         // Connection is establishing
                         state.send(null, TCPDatagram.ACK);
                         state.status = ConnectionStatus.Established;
-                        state.connection.connected(intf, state);
+                        state.connection.connected(state);
                     } else {
-                        LOGGER.warning("TCP connection in setup state has wrong ACKN. Closing.");
                         state.connection.closed();
                         stateTable.remove(state.descriptor);
                     }
@@ -141,12 +138,9 @@ public class DatagramHandler {
                     switch (state.status) {
                         case Setup:
                             state.status = ConnectionStatus.Established;
-                            state.connection.connected(intf, state);
+                            state.connection.connected(state);
                             break;
                         case Closing:
-                            if (state.seqN != datagram.getAckN()) {
-                                LOGGER.warning("TCP connection in closing state has wrong ACKN. Closing.");
-                            }
                             state.connection.closed();
                             stateTable.remove(state.descriptor);
                             break;
@@ -171,11 +165,11 @@ public class DatagramHandler {
         }
     }
 
-    public class ConnectionDescriptor {
+    public static class ConnectionDescriptor {
         private final IPAddress localIp, remoteIp;
         private final short localPort, remotePort;
 
-        public ConnectionDescriptor(IPAddress localIp, IPAddress remoteIp, short localPort, short remotePort) {
+        ConnectionDescriptor(IPAddress localIp, IPAddress remoteIp, short localPort, short remotePort) {
             this.localIp = localIp;
             this.remoteIp = remoteIp;
             this.localPort = localPort;
@@ -236,7 +230,7 @@ public class DatagramHandler {
         private int seqN;
         private int ackN;
 
-        public ConnectionState(ConnectionDescriptor descriptor, Connection connection) {
+        ConnectionState(ConnectionDescriptor descriptor, Connection connection) {
             Objects.requireNonNull(descriptor);
             Objects.requireNonNull(connection);
 
@@ -248,7 +242,7 @@ public class DatagramHandler {
             this.seqN = rnd.nextInt();
         }
 
-        public void update(TCPDatagram datagram) {
+        void update(TCPDatagram datagram) {
             ackN = datagram.getSeqN();
 
             if (datagram.getPayload() == null || datagram.getPayload().length == 0) {
@@ -262,7 +256,7 @@ public class DatagramHandler {
             send(message, (short) 0);
         }
 
-        public void send(byte[] message, short flags) {
+        void send(byte[] message, short flags) {
             if ((flags & (TCPDatagram.SYN | TCPDatagram.RST)) == 0) {
                 flags |= TCPDatagram.ACK;
             }

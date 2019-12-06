@@ -1,18 +1,17 @@
 package fi.utu.protproc.group3.simulator;
 
-import fi.utu.protproc.group3.scenarios.SimpleScenarioTest;
 import fi.utu.protproc.group3.protocols.EthernetFrame;
+import fi.utu.protproc.group3.scenarios.SimpleScenarioTest;
 import org.junit.jupiter.api.Test;
 import reactor.test.StepVerifier;
 
-import java.io.IOException;
 import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
-public class EthernetInterfaceTest extends SimpleScenarioTest {
+class EthernetInterfaceTest extends SimpleScenarioTest {
     @Test
-    public void transmitAndReceiveFrame() {
+    void transmitAndReceiveFrame() {
         var frame = EthernetFrame.create(
                 client.getInterface().getAddress(),
                 client.getInterface().getAddress(),
@@ -29,7 +28,7 @@ public class EthernetInterfaceTest extends SimpleScenarioTest {
     }
 
     @Test
-    public void resolveAddress() {
+    void resolveAddress() {
         var mac = client.getInterface().resolveIpAddress(client.getIpAddress());
 
         assertArrayEquals(client.getInterface().getAddress(), mac);

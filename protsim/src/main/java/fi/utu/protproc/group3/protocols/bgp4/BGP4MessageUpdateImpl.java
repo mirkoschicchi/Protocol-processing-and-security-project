@@ -10,23 +10,23 @@ import java.util.List;
 public class BGP4MessageUpdateImpl extends BGP4MessageImpl implements BGP4MessageUpdate {
     // Attribute Length is represented by two octets for all types
     // each Attribute type is composed by flags + one type code = 2 byte
-    byte TYPE_FLAGS_WELL_KNOWN_TRANSITIVE = (byte) 0x50;
-    byte TYPE_FLAGS_OPTIONAL_NON_TRANSITIVE = (byte) 0x90;
-    byte TYPE_ORIGIN = (byte) 0x01;
-    byte TYPE_ASPATH = (byte) 0x02;
+    private final byte TYPE_FLAGS_WELL_KNOWN_TRANSITIVE = (byte) 0x50;
+    private final byte TYPE_FLAGS_OPTIONAL_NON_TRANSITIVE = (byte) 0x90;
+    private final byte TYPE_ORIGIN = (byte) 0x01;
+    private final byte TYPE_ASPATH = (byte) 0x02;
     byte TYPE_NEXTHOP = (byte) 0x03;
-    byte TYPE_MP_REACH_NLRI = (byte) 0x0E;   // 14
-    byte TYPE_MP_UNREACH_NLRI = (byte) 0x0F;   // 15
-    byte AS_SET = (byte) 0x01;
+    private final byte TYPE_MP_REACH_NLRI = (byte) 0x0E;   // 14
+    private final byte TYPE_MP_UNREACH_NLRI = (byte) 0x0F;   // 15
+    private final byte AS_SET = (byte) 0x01;
     byte AS_SEQUENCE = (byte) 0x02;
-    byte SAFI_UNICAST = (byte) 0x01;
-    byte AFI_IPV6 = (byte) 0x02;
+    private final byte SAFI_UNICAST = (byte) 0x01;
+    private final byte AFI_IPV6 = (byte) 0x02;
 
-    private List<NetworkAddress> withdrawnRoutes;
-    private byte origin;
-    private List<List<Short>> asPath;
-    private IPAddress nextHop;
-    private List<NetworkAddress> networkLayerReachabilityInformation;
+    private final List<NetworkAddress> withdrawnRoutes;
+    private final byte origin;
+    private final List<List<Short>> asPath;
+    private final IPAddress nextHop;
+    private final List<NetworkAddress> networkLayerReachabilityInformation;
 
     public BGP4MessageUpdateImpl(short length, byte type,
                                  List<NetworkAddress> withdrawnRoutes,

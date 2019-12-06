@@ -3,7 +3,6 @@ package fi.utu.protproc.group3.protocols.http;
 import fi.utu.protproc.group3.nodes.NetworkNode;
 import fi.utu.protproc.group3.protocols.tcp.Connection;
 
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 
 public class SimpleHttpServer extends Connection {

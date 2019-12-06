@@ -12,16 +12,13 @@ import java.io.IOException;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
 
-public abstract class ScenarioBasedTest {
-    protected Simulation simulation;
+abstract class ScenarioBasedTest {
+    private Simulation simulation;
 
     private Simulation load(String scenario) throws IOException {
-        SimulationConfiguration config = null;
-        var res = ScenarioBasedTest.class.getClassLoader().getResourceAsStream("scenarios/" + scenario + ".yaml");
-        try {
+        SimulationConfiguration config;
+        try (var res = ScenarioBasedTest.class.getClassLoader().getResourceAsStream("scenarios/" + scenario + ".yaml")) {
             config = SimulationConfiguration.parse(res);
-        } finally {
-            if (res != null) res.close();
         }
 
         return Simulation.create(config);
@@ -29,7 +26,7 @@ public abstract class ScenarioBasedTest {
 
     protected abstract String getSimulation();
 
-    protected void simulationLoaded() {
+    private void simulationLoaded() {
         Class<?> clazz = getClass();
         while (clazz != null) {
             for (var field : clazz.getDeclaredFields()) {

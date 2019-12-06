@@ -4,10 +4,8 @@ import fi.utu.protproc.group3.nodes.RouterNode;
 import fi.utu.protproc.group3.protocols.tcp.Connection;
 import fi.utu.protproc.group3.protocols.tcp.DatagramHandler;
 import fi.utu.protproc.group3.protocols.tcp.Server;
-import fi.utu.protproc.group3.simulator.EthernetInterface;
 import fi.utu.protproc.group3.utils.IPAddress;
 
-import java.util.Collection;
 import java.util.Map;
 
 public class BGPServer implements Server {

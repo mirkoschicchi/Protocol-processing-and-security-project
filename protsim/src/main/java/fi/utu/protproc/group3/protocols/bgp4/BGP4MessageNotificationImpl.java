@@ -1,12 +1,11 @@
 package fi.utu.protproc.group3.protocols.bgp4;
 
-import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 
 public class BGP4MessageNotificationImpl extends BGP4MessageImpl implements BGP4MessageNotification {
-    private byte errorCode;
-    private byte errorSubCode;
-    private byte[] data;
+    private final byte errorCode;
+    private final byte errorSubCode;
+    private final byte[] data;
 
     public BGP4MessageNotificationImpl(short length, byte type, byte errorCode, byte errorSubCode, byte[] data) {
         super(length, type);

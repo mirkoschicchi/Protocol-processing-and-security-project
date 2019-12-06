@@ -15,10 +15,10 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class BGP4MessageUpdateTest {
+class BGP4MessageUpdateTest {
 
     @Test
-    public void createMessage() {
+    void createMessage() {
         List<List<Short>> aspath = new ArrayList<>();
         List<Short> aspathSample = new ArrayList<>();
         aspathSample.add((short)1);
@@ -36,7 +36,7 @@ public class BGP4MessageUpdateTest {
 
         var bytes = message.serialize();
         assertNotNull(bytes);
-        assertTrue(bytes.length == message.getLength());
+        assertEquals(bytes.length, message.getLength());
 
         var parsedMsg = (BGP4MessageUpdate) BGP4Message.parse(bytes);
         assertArrayEquals(message.getMarker(), parsedMsg.getMarker());
@@ -60,7 +60,7 @@ public class BGP4MessageUpdateTest {
     }
 
     @Test
-    public void asPathWithMultipleElements() {
+    void asPathWithMultipleElements() {
         var expected = BGP4MessageUpdate.create(
                 List.of(),
                 BGP4MessageUpdate.ORIGIN_FROM_ESP,
@@ -85,7 +85,7 @@ public class BGP4MessageUpdateTest {
     }
 
     @Test
-    public void parseMessage() {
+    void parseMessage() {
         var pdu = StringUtils.parseHexStream("2626e470895e2efc2eae45b186dd60000000008a067f20010001ffffffff152fa8993ea34d1020010001ffffffff4000e24ef7fa0477ccf600b3a4d244935b3bf2335010ffff4b1b0000ffffffffffffffffffffffffffffffff0076020000005f500100010050020018010300010002000301030001000200030103000100020003900e0024000201102001486048600000000000000000888700202001486020200148602020014860900f0012000201202001486020200148602020014860"); // todo
         var frame = EthernetFrame.parse(pdu);
         var packet = IPv6Packet.parse(frame.getPayload());

@@ -53,11 +53,6 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode, Route
 
 
     @Override
-    public Collection<EthernetInterface> getInterfaces() {
-        return Collections.unmodifiableCollection(interfaces);
-    }
-
-    @Override
     public Configurator getConfigurator() {
         if (configurationFinalized) {
             throw new UnsupportedOperationException("Configuration has been finalized.");
@@ -88,35 +83,11 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode, Route
                 return;
             }
 
-            // Get the MAC address of the next hop
-            TableRow row = getRoutingTable().getRowByDestinationAddress(packet.getDestinationIP());
+            IPv6Packet newPacket = IPv6Packet.create(packet.getVersion(), packet.getTrafficClass(), packet.getFlowLabel(),
+                    packet.getNextHeader(), (byte) (packet.getHopLimit() - 1),
+                    packet.getSourceIP(), packet.getDestinationIP(), packet.getPayload());
 
-            // If we found a valid routing entry
-            if (row != null) {
-                // Get the exit interface
-                var exitIntf = row.getInterface();
-
-                // Get the MAC address of the interface to which to forward the packet
-                IPAddress nextHop = row.getNextHop();
-                if (nextHop == null) nextHop = packet.getDestinationIP();
-
-                byte[] nextHopMac = exitIntf.resolveIpAddress(nextHop);
-
-                if (nextHopMac == null) {
-                    // TODO: Error handling
-                    return;
-                }
-
-                // Reassemble the IPv6 packet
-                IPv6Packet newPacket = IPv6Packet.create(packet.getVersion(), packet.getTrafficClass(), packet.getFlowLabel(),
-                        packet.getNextHeader(), (byte) (packet.getHopLimit() - 1),
-                        packet.getSourceIP(), packet.getDestinationIP(), packet.getPayload());
-
-                EthernetFrame newFrame = EthernetFrame.create(nextHopMac, exitIntf.getAddress(), frame.getType(), newPacket.serialize());
-
-                // Forward the frame
-                exitIntf.transmit(newFrame.serialize());
-            }
+            sendPacket(newPacket);
         }
     }
 

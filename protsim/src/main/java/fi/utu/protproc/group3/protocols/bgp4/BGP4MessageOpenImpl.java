@@ -3,10 +3,10 @@ package fi.utu.protproc.group3.protocols.bgp4;
 import java.nio.ByteBuffer;
 
 public class BGP4MessageOpenImpl extends BGP4MessageImpl implements BGP4MessageOpen {
-    private byte version;
-    private short myAutonomousSystem;
-    private short holdTime;
-    private int bgpIdentifier;
+    private final byte version;
+    private final short myAutonomousSystem;
+    private final short holdTime;
+    private final int bgpIdentifier;
 
     public BGP4MessageOpenImpl(short length, byte type, byte version, short myAutonomousSystem, short holdTime, int bgpIdentifier) {
         super(length, type);
@@ -37,11 +37,6 @@ public class BGP4MessageOpenImpl extends BGP4MessageImpl implements BGP4MessageO
     }
 
     @Override
-    public byte getOptParmLen() {
-        return (byte) 0x00;
-    }
-
-    @Override
     public byte[] serialize() {
         byte[] serialized;
         serialized = ByteBuffer.allocate(29)
@@ -50,7 +45,8 @@ public class BGP4MessageOpenImpl extends BGP4MessageImpl implements BGP4MessageO
                 .putShort(getMyAutonomousSystem())
                 .putShort(getHoldTime())
                 .putInt(getBGPIdentifier())
-                .put(getOptParmLen()).array();
+                .put((byte) 0) // opt params len
+                .array();
 
         return serialized;
     }

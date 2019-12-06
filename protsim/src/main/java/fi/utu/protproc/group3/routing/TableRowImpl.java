@@ -9,10 +9,10 @@ import java.util.Objects;
 
 
 public class TableRowImpl implements TableRow {
-    private NetworkAddress prefix;
-    private IPAddress nextHop;
-    private int metric;
-    private EthernetInterface eInterface;
+    private final NetworkAddress prefix;
+    private final IPAddress nextHop;
+    private final int metric;
+    private final EthernetInterface eInterface;
     private int bgpPeer;
     private List<List<Short>> asPath;
     private double neighborTrust;
@@ -81,15 +81,15 @@ public class TableRowImpl implements TableRow {
         var result = new StringBuilder();
         result.append(prefix);
         if (eInterface != null) {
-            result.append(" dev " + eInterface.getNetwork().getNetworkName());
+            result.append(" dev ").append(eInterface.getNetwork().getNetworkName());
         }
 
         if (nextHop != null) {
-            result.append(" via " + nextHop);
+            result.append(" via ").append(nextHop);
         }
 
         if (metric > 0) {
-            result.append(" metric " + metric);
+            result.append(" metric ").append(metric);
         }
 
         if (bgpPeer != 0) {

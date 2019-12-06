@@ -11,6 +11,5 @@ public interface BGP4MessageOpen extends BGP4Message {
     short getMyAutonomousSystem();
     short getHoldTime();
     int getBGPIdentifier();
-    byte getOptParmLen();
 
 }

@@ -11,7 +11,7 @@ import java.util.*;
 
 public class NetworkImpl implements Network {
     private final int autonomousSystem;
-    private FluxSink<byte[]> input;
+    private final FluxSink<byte[]> input;
     private final Flux<byte[]> output;
     private final List<EthernetInterface> interfaces = new ArrayList<>();
     private final NetworkAddress networkAddress;

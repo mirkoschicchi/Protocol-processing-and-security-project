@@ -26,13 +26,6 @@ public interface RoutingTable {
      */
     TableRow getRowByDestinationAddress(IPAddress destinationAddress);
 
-    /**
-     * Get the row corresponding to the prefix
-     * @param prefix
-     * @return
-     */
-    TableRow getRowByPrefix(NetworkAddress prefix);
-
     void removeBgpEntries(int bgpIdentifier, NetworkAddress prefix);
 
     void updateBgpTrust(int bgpIdentifier, double trust);

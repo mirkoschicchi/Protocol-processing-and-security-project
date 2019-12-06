@@ -1,9 +1,5 @@
 package fi.utu.protproc.group3.configuration;
 
-import fi.utu.protproc.group3.utils.AddressGenerator;
-import fi.utu.protproc.group3.utils.NetworkAddress;
-
-import java.util.Iterator;
 import java.util.List;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -43,7 +39,7 @@ public class NetworkConfiguration {
         this.clients = clients;
     }
 
-    public int getRandomClients() {
+    private int getRandomClients() {
         return randomClients;
     }
 
@@ -59,7 +55,7 @@ public class NetworkConfiguration {
         this.servers = servers;
     }
 
-    public int getRandomServers() {
+    private int getRandomServers() {
         return randomServers;
     }
 

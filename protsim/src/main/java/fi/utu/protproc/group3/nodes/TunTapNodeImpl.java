@@ -43,7 +43,7 @@ public class TunTapNodeImpl extends NetworkNodeImpl {
                     .append("sudo ip link set dev ").append(configuration.getDevice()).append(" up\n");
 
             for (var route : getRoutingTable().getRows()) {
-                helpMsg.append("sudo ip r add " + route.getPrefix() + " dev ").append(configuration.getDevice()).append(" via ").append(route.getNextHop()).append('\n');
+                helpMsg.append("sudo ip r add ").append(route.getPrefix()).append(" dev ").append(configuration.getDevice()).append(" via ").append(route.getNextHop()).append('\n');
             }
 
             helpMsg

@@ -9,7 +9,7 @@ import java.io.FileInputStream;
 import java.util.concurrent.Callable;
 
 @CommandLine.Command(name = "run", description = "Runs a simulation until stopped by the user")
-public class Simulator implements Callable<Integer> {
+class Simulator implements Callable<Integer> {
     @CommandLine.Parameters(description = "The scenario file to load.")
     private File scenarioFile;
 
@@ -25,11 +25,8 @@ public class Simulator implements Callable<Integer> {
     @Override
     public Integer call() throws Exception {
         SimulationConfiguration config;
-        var fis = new FileInputStream(scenarioFile);
-        try {
+        try (var fis = new FileInputStream(scenarioFile)) {
             config = SimulationConfiguration.parse(fis);
-        } finally {
-            fis.close();
         }
 
         var sim = Simulation.create(config);

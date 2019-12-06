@@ -6,7 +6,7 @@ public class GraphAttributes {
     public static final String LABEL = "label";
     public static final String AUTONOMOUS_SYSTEM = "as";
 
-    public static class Nodes {
+    private static class Nodes {
         
     }
 

@@ -5,8 +5,6 @@ import fi.utu.protproc.group3.nodes.RouterNode;
 import fi.utu.protproc.group3.nodes.ServerNode;
 import fi.utu.protproc.group3.simulator.Network;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
 /**
  * Base class for a simple two-network simulation.
  */

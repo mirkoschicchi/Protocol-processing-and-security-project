@@ -18,13 +18,13 @@ import java.util.stream.Collectors;
 
 
 public abstract class NetworkNodeImpl implements NetworkNode, SimpleNode {
-    public final Simulation simulation;
-    protected final String hostname;
-    protected final List<EthernetInterface> interfaces = new ArrayList<>();
+    final Simulation simulation;
+    private final String hostname;
+    final List<EthernetInterface> interfaces = new ArrayList<>();
     private final RoutingTable routingTable = new RoutingTableImpl();
     private final DatagramHandler tcpHandler = new DatagramHandler(this, this::sendPacket);
 
-    protected NetworkNodeImpl(SimulationBuilderContext context, NodeConfiguration configuration, Network network) {
+    NetworkNodeImpl(SimulationBuilderContext context, NodeConfiguration configuration, Network network) {
         this(context, configuration);
 
         Objects.requireNonNull(context);
@@ -41,12 +41,12 @@ public abstract class NetworkNodeImpl implements NetworkNode, SimpleNode {
         );
     }
 
-    protected NetworkNodeImpl(SimulationBuilderContext context, NodeConfiguration configuration) {
+    NetworkNodeImpl(SimulationBuilderContext context, NodeConfiguration configuration) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(configuration);
 
         this.simulation = context.simulation();
-        this.hostname = context.generator().hostName(configuration != null ? configuration.getName() : null);
+        this.hostname = context.generator().hostName(configuration.getName());
     }
 
     private List<Disposable> messageListeners;
@@ -132,7 +132,7 @@ public abstract class NetworkNodeImpl implements NetworkNode, SimpleNode {
         return messageListeners != null;
     }
 
-    protected void packetReceived(EthernetInterface intf, byte[] pdu) {
+    void packetReceived(EthernetInterface intf, byte[] pdu) {
         // NOP
     }
 
@@ -141,7 +141,7 @@ public abstract class NetworkNodeImpl implements NetworkNode, SimpleNode {
         return hostname;
     }
 
-    protected void sendPacket(IPv6Packet packet) {
+    void sendPacket(IPv6Packet packet) {
         Objects.requireNonNull(packet);
 
         var route = getRoutingTable().getRowByDestinationAddress(packet.getDestinationIP());

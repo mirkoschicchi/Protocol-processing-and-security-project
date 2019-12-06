@@ -1,12 +1,10 @@
 package fi.utu.protproc.group3.simulator;
 
-import fi.utu.protproc.group3.configuration.*;
+import fi.utu.protproc.group3.configuration.SimulationConfiguration;
 import fi.utu.protproc.group3.nodes.NetworkNode;
 import fi.utu.protproc.group3.nodes.ServerNode;
 
-import java.io.IOException;
 import java.util.Collection;
-import java.util.logging.Logger;
 
 /**
  * Represents a running simulation.
@@ -22,7 +20,6 @@ public interface Simulation {
 
     /**
      * Gets all the nodes in the current simulation.
-     * @return
      */
     Collection<NetworkNode> getNodes();
 
@@ -30,7 +27,6 @@ public interface Simulation {
 
     /**
      * Gets all the networks in the current simulation.
-     * @return
      */
     Collection<Network> getNetworks();
 

@@ -5,7 +5,6 @@ import fi.utu.protproc.group3.protocols.bgp4.fsm.BGPStateMachine;
 import fi.utu.protproc.group3.protocols.tcp.Connection;
 import fi.utu.protproc.group3.protocols.tcp.DatagramHandler;
 import fi.utu.protproc.group3.routing.TableRow;
-import fi.utu.protproc.group3.simulator.EthernetInterface;
 import fi.utu.protproc.group3.utils.NetworkAddress;
 
 import java.util.List;
@@ -23,8 +22,8 @@ public class BGPConnection extends Connection {
 
 
     @Override
-    public void connected(EthernetInterface ethernetInterface, DatagramHandler.ConnectionState connectionState) {
-        super.connected(ethernetInterface, connectionState);
+    public void connected(DatagramHandler.ConnectionState connectionState) {
+        super.connected(connectionState);
 
         // HACK HACK: Make sure the FSM is started, since it could not yet be started during the initial startup
         // Otherwise we'd have to wait for 30s for the retry of the OPEN message. This is caused by our simulated
@@ -56,7 +55,7 @@ public class BGPConnection extends Connection {
                 for (NetworkAddress networkAddress : updateMessage.getNetworkLayerReachabilityInformation()) {
                     // Create a new row parsing also the path attributes
                     TableRow newRoute = TableRow.create(networkAddress, updateMessage.getNextHop(), 0,
-                            context.getBgpIdentifier(), ethernetInterface, updateMessage.getAsPath(), context.getTrust());
+                            context.getBgpIdentifier(), context.getEthernetInterface(), updateMessage.getAsPath(), context.getTrust());
                     context.getRouter().getRoutingTable().insertRow(newRoute);
                     LOGGER.fine(context.getRouter().getHostname() + ": inserting row " + newRoute.toString());
                 }

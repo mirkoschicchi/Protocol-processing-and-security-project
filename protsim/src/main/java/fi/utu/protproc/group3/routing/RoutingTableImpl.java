@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 public class RoutingTableImpl implements RoutingTable {
     private Collection<TableRow> rows = new ArrayList<>();
-    private ReadWriteLock lock = new ReentrantReadWriteLock();
+    private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
     @Override
     public Collection<TableRow> getRows() {
@@ -47,17 +47,6 @@ public class RoutingTableImpl implements RoutingTable {
             }
         }
 
-        return result;
-    }
-
-    @Override
-    public TableRow getRowByPrefix(NetworkAddress prefix) {
-        TableRow result = null;
-        for(TableRow r : getRows()) {
-            if(r.getPrefix().equals(prefix)) {
-                result = r;
-            }
-        }
         return result;
     }
 

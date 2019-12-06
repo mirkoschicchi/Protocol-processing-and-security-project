@@ -22,10 +22,10 @@ public class BGPPeerContext {
     private final BGPStateMachine fsm;
     private final BGPConnection connection;
     private final List<BGPPeerContext> distributionList = new ArrayList<>();
-    private Set<IPAddress> secondDegreePeers;
+    private final Set<IPAddress> secondDegreePeers;
     private int bgpIdentifier;
     private Disposable updateSendProcess;
-    private double inherentTrust = Math.random();
+    private final double inherentTrust = Math.random();
     private double observedTrust = 0.5;
     private final Map<Integer, Double> secondDegreePeersVote = new HashMap<>();
 
@@ -158,11 +158,11 @@ public class BGPPeerContext {
 
         if (newRoutes.size() + withdrawnRoutes.size() > 0) {
             var msg = BGP4MessageUpdate.create(
-                    withdrawnRoutes.stream().map(r -> r.getPrefix()).collect(Collectors.toUnmodifiableList()),
+                    withdrawnRoutes.stream().map(TableRow::getPrefix).collect(Collectors.toUnmodifiableList()),
                     BGP4MessageUpdate.ORIGIN_FROM_IGP,
                     List.of(List.of((short) router.getAutonomousSystem()), List.of((short) router.getBGPIdentifier())),
                     ethernetInterface.getIpAddress(),
-                    newRoutes.stream().map(r -> r.getPrefix()).collect(Collectors.toUnmodifiableList())
+                    newRoutes.stream().map(TableRow::getPrefix).collect(Collectors.toUnmodifiableList())
             );
 
             connection.send(msg.serialize());
@@ -185,13 +185,13 @@ public class BGPPeerContext {
         observedTrust = Math.min(observedTrust*v, 1.0);
     }
 
-    public void addSecondDegreePeerVote(Integer secondDegreePeerIPAddress, double vote) {
-        secondDegreePeersVote.put(secondDegreePeerIPAddress, vote);
+    public void addSecondDegreePeerVote(Integer sourceBgpIdentifier, double vote) {
+        secondDegreePeersVote.put(sourceBgpIdentifier, vote);
 
         router.getRoutingTable().updateBgpTrust(bgpIdentifier, getTrust());
     }
 
-    public double getVotedTrust() {
+    private double getVotedTrust() {
         double sum = 0;
 
         for (var ipAddressDoubleEntry : secondDegreePeersVote.values()) {

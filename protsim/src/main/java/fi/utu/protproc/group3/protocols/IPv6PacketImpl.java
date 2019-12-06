@@ -9,14 +9,14 @@ import java.nio.ByteBuffer;
  */
 public class IPv6PacketImpl implements IPv6Packet {
     // RFC 2460
-    private byte version;
-    private byte trafficClass;
-    private int flowLabel;
-    private byte nextHeader;
-    private byte hopLimit;
-    private IPAddress sourceIP;
-    private IPAddress destinationIP;
-    private byte[] payload;
+    private final byte version;
+    private final byte trafficClass;
+    private final int flowLabel;
+    private final byte nextHeader;
+    private final byte hopLimit;
+    private final IPAddress sourceIP;
+    private final IPAddress destinationIP;
+    private final byte[] payload;
 
     IPv6PacketImpl(byte version, byte trafficClass, int flowLabel,
                    byte nextHeader, byte hopLimit, IPAddress sourceIP, IPAddress destinationIP, byte[] payload) {

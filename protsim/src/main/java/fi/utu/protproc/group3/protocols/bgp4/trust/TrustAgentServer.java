@@ -6,14 +6,11 @@ import fi.utu.protproc.group3.protocols.bgp4.BGPPeerContext;
 import fi.utu.protproc.group3.protocols.tcp.Connection;
 import fi.utu.protproc.group3.protocols.tcp.DatagramHandler;
 import fi.utu.protproc.group3.protocols.tcp.Server;
-import fi.utu.protproc.group3.simulator.EthernetInterface;
-import fi.utu.protproc.group3.utils.IPAddress;
 
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class TrustAgentServer implements Server {
     public static final short PORT = (short) 8080;
@@ -43,7 +40,7 @@ public class TrustAgentServer implements Server {
     static class TrustAgentServerConnection extends Connection {
         private final Collection<BGPPeerContext> peerings;
 
-        public TrustAgentServerConnection(NetworkNode node, Collection<BGPPeerContext> peerings) {
+        TrustAgentServerConnection(NetworkNode node, Collection<BGPPeerContext> peerings) {
             super(node);
 
             this.peerings = peerings;
@@ -56,18 +53,19 @@ public class TrustAgentServer implements Server {
             ByteBuffer byteBufferReceived = ByteBuffer.wrap(message);
             byte listLength = byteBufferReceived.get();
 
-            Map<IPAddress, Double> mapPeerAndObservedTrust = new HashMap<>();
+            Map<Integer, Double> mapPeerAndObservedTrust = new HashMap<>();
 
             for (var i = 0; i < listLength; i++) {
                 var peer = byteBufferReceived.getInt();
                 var peering = peerings.stream().filter(p -> p.getBgpIdentifier() == peer).findAny();
-                peering.ifPresent(bgpPeerContext -> mapPeerAndObservedTrust.put(bgpPeerContext.getPeer(), bgpPeerContext.getObservedTrust()));
+                peering.ifPresent(bgpPeerContext -> mapPeerAndObservedTrust.put(peer, bgpPeerContext.getObservedTrust()));
             }
 
-            ByteBuffer byteBufferToSend = ByteBuffer.allocate(1 + mapPeerAndObservedTrust.size() * (16 + 8));
+            ByteBuffer byteBufferToSend = ByteBuffer.allocate(5 + mapPeerAndObservedTrust.size() * (4 + 8));
+            byteBufferToSend.putInt(((RouterNode) node).getBGPIdentifier());
             byteBufferToSend.put((byte) mapPeerAndObservedTrust.size());
-            for (Map.Entry<IPAddress, Double> entry : mapPeerAndObservedTrust.entrySet()) {
-                byteBufferToSend.put(entry.getKey().toArray());
+            for (var entry : mapPeerAndObservedTrust.entrySet()) {
+                byteBufferToSend.putInt(entry.getKey());
                 byteBufferToSend.putDouble(entry.getValue());
             }
 

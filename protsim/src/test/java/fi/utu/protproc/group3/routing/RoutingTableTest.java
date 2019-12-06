@@ -11,7 +11,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-public class RoutingTableTest {
+class RoutingTableTest {
     @Test
     void simpleRouting() {
         var table = RoutingTable.create();
@@ -83,7 +83,7 @@ public class RoutingTableTest {
     }
 
     @Test
-    public void defaultRoute() {
+    void defaultRoute() {
         var table = RoutingTable.create();
 
         var r1 = TableRow.create(NetworkAddress.parse("fe80:1::/64"), IPAddress.parse("fe80:1::1"), 100, null);

@@ -11,9 +11,9 @@ import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class RoutingTests extends SimpleScenarioTest {
+class RoutingTests extends SimpleScenarioTest {
     @Test
-    public void forwardIpPacket() {
+    void forwardIpPacket() {
         var data = "Hello World".getBytes();
 
         var pdu = EthernetFrame.create(

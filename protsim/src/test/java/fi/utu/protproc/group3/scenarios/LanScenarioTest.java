@@ -4,8 +4,6 @@ import fi.utu.protproc.group3.nodes.ClientNode;
 import fi.utu.protproc.group3.nodes.ServerNode;
 import fi.utu.protproc.group3.simulator.Network;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
 public abstract class LanScenarioTest extends ScenarioBasedTest {
     protected Network lan;
     protected ClientNode client;

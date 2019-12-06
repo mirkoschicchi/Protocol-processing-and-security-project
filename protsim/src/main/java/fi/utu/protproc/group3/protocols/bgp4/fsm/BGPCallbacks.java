@@ -5,7 +5,7 @@ import fi.utu.protproc.group3.utils.NetworkAddress;
 
 import java.util.List;
 
-public interface BGPCallbacks {
+interface BGPCallbacks {
 
     /**
      * Instantiate a connection to a remote peer
