@@ -54,7 +54,6 @@ public class UserGUI extends Application {
         pipe.addViewerListener(new ViewerListener() {
             @Override
             public void viewClosed(String s) {
-
             }
 
             @Override
@@ -94,34 +93,30 @@ public class UserGUI extends Application {
 
             @Override
             public void buttonReleased(String s) {
-
             }
         });
 
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while(true) {
-                    pipe.pump();
+        Thread thread = new Thread(() -> {
+            while(true) {
+                try {
+                    pipe.blockingPump();
+                } catch (InterruptedException e) {
+                    break;
                 }
-
             }
         });
 
-        actionBtn.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent actionEvent) {
-                if (selectedNode != null && selectedNode.nodeIsRunning()) {
-                    selectedNode.shutdown();
-                    SimulationReference.simulation.getGraph().getNode(selectedNode.getHostname()).addAttribute("ui.style", "stroke-mode: plain; stroke-width: 3px; stroke-color: red;");
-                    System.out.println("Node SHUTDOWN: " + selectedNode.getHostname());
-                    actionBtn.setText("Start up");
-                } else if(selectedNode != null && !selectedNode.nodeIsRunning()) {
-                    selectedNode.start();
-                    SimulationReference.simulation.getGraph().getNode(selectedNode.getHostname()).addAttribute("ui.style", "stroke-mode: none;");
-                    System.out.println("Node START: " + selectedNode.getHostname());
-                    actionBtn.setText("Shutdown");
-                }
+        actionBtn.setOnAction(actionEvent -> {
+            if (selectedNode != null && selectedNode.nodeIsRunning()) {
+                selectedNode.shutdown();
+                SimulationReference.simulation.getGraph().getNode(selectedNode.getHostname()).addAttribute("ui.style", "stroke-mode: plain; stroke-width: 3px; stroke-color: red;");
+                System.out.println("Node SHUTDOWN: " + selectedNode.getHostname());
+                actionBtn.setText("Start up");
+            } else if(selectedNode != null && !selectedNode.nodeIsRunning()) {
+                selectedNode.start();
+                SimulationReference.simulation.getGraph().getNode(selectedNode.getHostname()).addAttribute("ui.style", "stroke-mode: none;");
+                System.out.println("Node START: " + selectedNode.getHostname());
+                actionBtn.setText("Shutdown");
             }
         });
         thread.start();
