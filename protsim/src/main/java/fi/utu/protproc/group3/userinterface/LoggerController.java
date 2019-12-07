@@ -52,6 +52,7 @@ public class LoggerController implements Initializable {
 
         LogManager.getLogManager().reset();
         Logger rootLogger = LogManager.getLogManager().getLogger("");
+        rootLogger.addHandler(new ConsoleHandler());
         rootLogger.addHandler(handler);
     }
 
