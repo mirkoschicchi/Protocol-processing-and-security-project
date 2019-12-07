@@ -14,10 +14,12 @@ import fi.utu.protproc.group3.utils.NetworkAddress;
 import reactor.core.Disposable;
 
 import java.util.*;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 
 public abstract class NetworkNodeImpl implements NetworkNode, SimpleNode {
+    private static final Logger LOGGER = Logger.getLogger(NetworkNodeImpl.class.getName());
     final Simulation simulation;
     private final String hostname;
     final List<EthernetInterface> interfaces = new ArrayList<>();
@@ -146,7 +148,8 @@ public abstract class NetworkNodeImpl implements NetworkNode, SimpleNode {
 
         var route = getRoutingTable().getRowByDestinationAddress(packet.getDestinationIP());
         if (route == null) {
-            throw new UnsupportedOperationException("Could not determine route for " + packet.getDestinationIP());
+            LOGGER.warning("Cannot route packet from " + hostname + " for " + packet.getDestinationIP() + ". Dropping.");
+            return;
         }
 
         EthernetInterface intf = route.getInterface();
