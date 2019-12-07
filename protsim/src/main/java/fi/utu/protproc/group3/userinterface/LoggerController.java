@@ -5,11 +5,13 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.TextArea;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintStream;
 import java.net.URL;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.concurrent.locks.StampedLock;
+import java.util.logging.*;
 
 public class LoggerController implements Initializable {
     @FXML
@@ -21,13 +23,65 @@ public class LoggerController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        OutputStream out = new OutputStream() {
+        long startTime = System.currentTimeMillis();
+
+        var handler = new Handler() {
             @Override
-            public void write(int b) throws IOException {
-                appendText(String.valueOf((char)b));
+            public synchronized void publish(LogRecord logRecord) {
+                long delta = logRecord.getMillis() - startTime;
+                var time = new Date(delta);
+                var builder = new StringBuilder()
+                        .append(String.format("%1$tM:%1$tS.%2$03d", time, delta % 1000)).append(' ')
+                        .append('[').append(getThreadName(logRecord.getThreadID())).append("] ")
+                        .append(logRecord.getLevel().getName()).append(' ')
+                        .append(logRecord.getLoggerName().substring(logRecord.getLoggerName().lastIndexOf('.')+1)).append(' ')
+                        .append(logRecord.getMessage())
+                        .append('\n');
+
+                appendText(builder.toString());
+            }
+
+            @Override
+            public void flush() {
+            }
+
+            @Override
+            public void close() throws SecurityException {
             }
         };
-        System.setOut(new PrintStream(out, true));
-        System.setErr(new PrintStream(out, true));
+
+        LogManager.getLogManager().reset();
+        Logger rootLogger = LogManager.getLogManager().getLogger("");
+        rootLogger.addHandler(handler);
+    }
+
+    private final Map<Integer, String> threadNames = new HashMap<>();
+    private final StampedLock threadLock = new StampedLock();
+
+    private String getThreadName(int id) {
+        var lock = threadLock.readLock();
+        try {
+            while (!threadNames.containsKey(id)) {
+                var wl = threadLock.tryConvertToWriteLock(lock);
+                if (wl != 0L) {
+                    try {
+                        Thread list[] = new Thread[1000];
+                        var count = Thread.enumerate(list);
+                        for (var i = 0; i < count; i++) {
+                            threadNames.put((int) list[i].getId(), list[i].getName());
+                        }
+                    } finally {
+                        lock = threadLock.tryConvertToReadLock(wl);
+                    }
+                    break;
+                } else {
+                    Thread.yield();
+                }
+            }
+
+            return threadNames.getOrDefault(id, "n/a");
+        } finally {
+            threadLock.unlock(lock);
+        }
     }
 }
