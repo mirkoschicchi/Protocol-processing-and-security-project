@@ -3,14 +3,14 @@ package fi.utu.protproc.group3.userinterface;
 import fi.utu.protproc.group3.routing.TableRow;
 import javafx.beans.property.*;
 
-public class RoutingTableModel {
+public class RouteModel {
     private StringProperty prefixProperty;
     private StringProperty nextHopProperty;
     private IntegerProperty metricProperty;
     private StringProperty ethernetInterfaceProperty;
     private StringProperty asPathProperty;
 
-    public RoutingTableModel(TableRow row) {
+    public RouteModel(TableRow row) {
         this.prefixProperty = row.getPrefix() != null ? new SimpleStringProperty(row.getPrefix().toString()) : new SimpleStringProperty("");
         this.nextHopProperty = row.getNextHop() != null ? new SimpleStringProperty(row.getNextHop().toString()) : new SimpleStringProperty("");
         this.metricProperty = new SimpleIntegerProperty((int) row.getCalculatedMetric());

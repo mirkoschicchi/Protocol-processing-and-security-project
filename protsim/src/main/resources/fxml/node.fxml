@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.text.Text?>
+<AnchorPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="fi.utu.protproc.group3.userinterface.NodeController"
+            prefHeight="400.0" prefWidth="600.0"
+            stylesheets="@../style/style.css">
+    <VBox spacing="30.0">
+        <HBox spacing="10" alignment="CENTER">
+            <Button mnemonicParsing="false" text="Shutdown" fx:id="actionBtn"/>
+        </HBox>
+
+        <HBox>
+            <Label text="Node name: " labelFor="$nodeName" fx:id="nodeNameLabel"/>
+            <Text text=" " fx:id="nodeName"/>
+        </HBox>
+        <HBox>
+            <Label text="Node type: " labelFor="$nodeType" fx:id="nodeTypeLabel"/>
+            <Text text=" " fx:id="nodeType"/>
+        </HBox>
+
+        <VBox spacing="10">
+            <Label text="BGP peers" fx:id="bgpPeersLabel"/>
+            <fx:include source="peers.fxml" fx:id="peers" />
+        </VBox>
+
+        <VBox spacing="10">
+            <Label text="Routing table" fx:id="routingTableLabel"/>
+            <fx:include source="routes.fxml" fx:id="routes"/>
+        </VBox>
+
+        <padding>
+            <Insets bottom="20.0" left="15.0" right="15.0" top="20.0" />
+        </padding>
+    </VBox>
+</AnchorPane>

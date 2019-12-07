@@ -13,7 +13,7 @@ import java.util.ResourceBundle;
 import java.util.concurrent.locks.StampedLock;
 import java.util.logging.*;
 
-public class LoggerController implements Initializable {
+public class LoggingViewController implements Initializable {
     @FXML
     private TextArea loggerPane;
 

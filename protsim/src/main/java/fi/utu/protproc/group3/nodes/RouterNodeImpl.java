@@ -178,7 +178,7 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode, Route
     }
 
     @Override
-    public Map<IPAddress, BGPPeerContext> getPeerings() {
-        return peerings;
+    public Collection<BGPPeerContext> getPeerings() {
+        return Collections.unmodifiableCollection(peerings.values());
     }
 }

@@ -1,20 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
 
-
-<FlowPane xmlns="http://javafx.com/javafx"
-          xmlns:fx="http://javafx.com/fxml"
-          fx:controller="fi.utu.protproc.group3.userinterface.LoggerController"
-          prefHeight="400.0" prefWidth="600.0"
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.layout.AnchorPane?>
+<AnchorPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="fi.utu.protproc.group3.userinterface.LoggingViewController"
+            maxHeight="300"
           >
-    <VBox>
-        <Label text="Console output" fx:id="consoleLabel"/>
-        <TextArea prefWidth="800" prefHeight="200" maxHeight="250" fx:id="loggerPane" editable="false"/>
-    </VBox>
-
-</FlowPane>
+    <TextArea fx:id="loggerPane" editable="false" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"/>
+</AnchorPane>

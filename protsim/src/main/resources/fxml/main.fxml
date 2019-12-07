@@ -6,50 +6,15 @@
 <?import javafx.scene.layout.*?>
 
 <?import javafx.scene.text.Text?>
-<BorderPane xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="fi.utu.protproc.group3.userinterface.RowController" stylesheets="@../style/style.css">
+<BorderPane xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="fi.utu.protproc.group3.userinterface.MainController" stylesheets="@../style/style.css">
    <right>
-      <VBox spacing="30.0" prefHeight="Infinity" prefWidth="700" style="-fx-background-color: #efe9cc;" BorderPane.alignment="TOP_RIGHT">
-         <children>
-             <HBox>
-                 <Label text="Node name: " labelFor="$routerLabel" fx:id="nodeNameLabel"/>
-                 <Text text=" " fx:id="routerLabel"/>
-             </HBox>
-             <HBox>
-                 <Label text="Node type: " labelFor="$nodeType" fx:id="nodeTypeLabel"/>
-                 <Text text=" " fx:id="nodeType"/>
-             </HBox>
-             <HBox spacing="250">
-                 <VBox spacing="10">
-                     <Label text="BGP peers" fx:id="bgpPeersLabel"/>
-                     <fx:include source="peers.fxml"/>
-                 </VBox>
-                 <VBox spacing="10" alignment="CENTER">
-                     <Label text="Action" fx:id="actionLabel"/>
-                     <Button mnemonicParsing="false" text="Shutdown" fx:id="actionBtn"/>
-                 </VBox>
-             </HBox>
-
-
-             <VBox spacing="10">
-                 <Label text="Routing table" fx:id="routingTableLabel"/>
-                 <TableView fx:id="table" minHeight="200" prefHeight="188.0" prefWidth="800.0">
-                     <columns>
-                         <TableColumn fx:id="prefixColumn" prefWidth="150.0" text="Destination" />
-                         <TableColumn fx:id="nextHopColumn" prefWidth="250.0" text="Next hop" />
-                         <TableColumn fx:id="metricColumn" minWidth="20.0" prefWidth="70.0" text="Metric" />
-                         <TableColumn fx:id="ethernetInterfaceColumn" prefWidth="200.0" text="Ethernet interface" />
-                         <TableColumn fx:id="asPathColumn" prefWidth="200.0" text="As Path" />
-                     </columns>
-                     <items>
-                     </items>
-                 </TableView>
-             </VBox>
-             <fx:include source="logger.fxml"/>
-         </children>
-         <padding>
-            <Insets bottom="20.0" left="15.0" right="15.0" top="20.0" />
-         </padding>
-      </VBox>
+       <BorderPane prefHeight="Infinity" prefWidth="700" style="-fx-background-color: #efe9cc;" BorderPane.alignment="TOP_RIGHT">
+           <center>
+               <fx:include source="node.fxml" fx:id="node" BorderPane.alignment="CENTER" />
+           </center>
+           <bottom>
+           </bottom>
+       </BorderPane>
    </right>
    <center>
       <AnchorPane fx:id="pane" prefHeight="310.0" prefWidth="517.0" style="-fx-background-color: cyan;" BorderPane.alignment="CENTER">
@@ -57,4 +22,7 @@
             <SwingNode fx:id="swingnode" layoutX="371.0" layoutY="138.0" />
          </children></AnchorPane>
    </center>
+    <bottom>
+        <fx:include source="logger.fxml" BorderPane.alignment="BOTTOM_CENTER" />
+    </bottom>
 </BorderPane>

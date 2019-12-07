@@ -8,7 +8,6 @@ import fi.utu.protproc.group3.utils.SimulationReference;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.embed.swing.SwingNode;
-import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -35,9 +34,7 @@ public class UserGUI extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/main.fxml"));
-        FXMLLoader peerLoader = new FXMLLoader(getClass().getResource("/fxml/peers.fxml"));
         Parent root = loader.load();
-        peerLoader.load();
 
         nodes = new HashMap<>();
         nodes = SimulationReference.nodes;
@@ -47,6 +44,7 @@ public class UserGUI extends Application {
         View view = viewer.getDefaultView();
 
         Button actionBtn = (Button) root.lookup("#actionBtn");
+        MainController controller = loader.getController();
 
         ViewerPipe pipe = viewer.newViewerPipe();
         pipe.addAttributeSink(viewer.getGraphicGraph());
@@ -58,37 +56,7 @@ public class UserGUI extends Application {
 
             @Override
             public void buttonPushed(String s) {
-                Platform.runLater(() -> {
-                    if (nodes.containsKey(s)) {
-                        selectedNode = nodes.get(s);
-                        if (selectedNode.nodeIsRunning()) {
-                            actionBtn.setText("Shutdown");
-                        } else {
-                            actionBtn.setText("Start up");
-                        }
-                        Text routerLabel = (Text) root.lookup("#routerLabel");
-                        routerLabel.setText(s);
-
-                        Text nodeType = (Text) root.lookup("#nodeType");
-                        if(selectedNode instanceof ClientNode) {
-                            nodeType.setText("Client");
-                        } else if(selectedNode instanceof ServerNode) {
-                            nodeType.setText("Server");
-                        } else if(selectedNode instanceof RouterNode) {
-                            nodeType.setText("Router");
-                        }
-
-                        RowController rowController = loader.getController();
-                        rowController.setRouter(selectedNode);
-                        rowController.initialize(null, null);
-
-                        if(selectedNode instanceof RouterNode) {
-                            PeersController peersController = peerLoader.getController();
-                            peersController.setRouter((RouterNode) selectedNode);
-                            peersController.initialize(null, null);
-                        }
-                    }
-                });
+                Platform.runLater(() -> controller.selectedNodeProperty().set(nodes.get(s)));
             }
 
             @Override

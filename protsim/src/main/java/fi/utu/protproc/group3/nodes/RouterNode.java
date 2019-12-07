@@ -13,7 +13,7 @@ public interface RouterNode extends NetworkNode {
 
     int getAutonomousSystem();
     int getBGPIdentifier();
-    public Map<IPAddress, BGPPeerContext> getPeerings() ;
+    Collection<BGPPeerContext> getPeerings() ;
 
     interface Configurator {
         void createPeering(EthernetInterface ethernetInterface, IPAddress neighbor, Collection<IPAddress> secondDegreeNeighbors);
