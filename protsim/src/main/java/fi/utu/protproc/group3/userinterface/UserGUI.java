@@ -29,7 +29,6 @@ import java.util.Map;
 public class UserGUI extends Application {
 
     private Map<String, NetworkNode> nodes;
-    private NetworkNode selectedNode;
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -43,7 +42,6 @@ public class UserGUI extends Application {
         SwingNode node = (SwingNode) root.lookup("#swingnode");
         View view = viewer.getDefaultView();
 
-        Button actionBtn = (Button) root.lookup("#actionBtn");
         MainController controller = loader.getController();
 
         ViewerPipe pipe = viewer.newViewerPipe();
@@ -71,20 +69,6 @@ public class UserGUI extends Application {
                 } catch (InterruptedException e) {
                     break;
                 }
-            }
-        });
-
-        actionBtn.setOnAction(actionEvent -> {
-            if (selectedNode != null && selectedNode.nodeIsRunning()) {
-                selectedNode.shutdown();
-                SimulationReference.simulation.getGraph().getNode(selectedNode.getHostname()).addAttribute("ui.style", "stroke-mode: plain; stroke-width: 3px; stroke-color: red;");
-                System.out.println("Node SHUTDOWN: " + selectedNode.getHostname());
-                actionBtn.setText("Start up");
-            } else if(selectedNode != null && !selectedNode.nodeIsRunning()) {
-                selectedNode.start();
-                SimulationReference.simulation.getGraph().getNode(selectedNode.getHostname()).addAttribute("ui.style", "stroke-mode: none;");
-                System.out.println("Node START: " + selectedNode.getHostname());
-                actionBtn.setText("Shutdown");
             }
         });
         thread.start();

@@ -4,8 +4,10 @@ import fi.utu.protproc.group3.nodes.ClientNode;
 import fi.utu.protproc.group3.nodes.NetworkNode;
 import fi.utu.protproc.group3.nodes.RouterNode;
 import fi.utu.protproc.group3.nodes.ServerNode;
+import fi.utu.protproc.group3.utils.SimulationReference;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
@@ -57,6 +59,22 @@ public class NodeController implements Initializable {
                 nodeType.setText("Router");
             } else {
                 nodeType.setText("");
+            }
+        });
+
+        actionBtn.addEventHandler(ActionEvent.ACTION, evt -> {
+            var node = this.node.get();
+            if (node != null) {
+                var gn = SimulationReference.simulation.getGraph().getNode(node.getHostname());
+                if (node.nodeIsRunning()) {
+                    node.shutdown();
+                    gn.addAttribute("ui.style", "stroke-mode: plain; stroke-width: 3px; stroke-color: red;");
+                    actionBtn.setText("Start up");
+                } else {
+                    node.start();
+                    gn.addAttribute("ui.style", "stroke-mode: none;");
+                    actionBtn.setText("Shutdown");
+                }
             }
         });
     }

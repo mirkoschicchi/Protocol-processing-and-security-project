@@ -36,7 +36,7 @@ public class PeersController implements Initializable {
         statusColumn.setCellValueFactory(new PropertyValueFactory<>("status"));
 
         router.addListener((obs, oldValue, newValue) -> {
-            if (router != null) {
+            if (router.get() != null) {
                 table.setItems(FXCollections.observableList(newValue.getPeerings().stream().map(PeerModel::new).collect(Collectors.toList())));
             } else {
                 table.getItems().clear();
