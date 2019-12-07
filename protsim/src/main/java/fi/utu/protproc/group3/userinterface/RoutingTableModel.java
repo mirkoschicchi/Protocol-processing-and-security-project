@@ -1,22 +1,19 @@
 package fi.utu.protproc.group3.userinterface;
 
 import fi.utu.protproc.group3.routing.TableRow;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 
 public class RoutingTableModel {
     private StringProperty prefixProperty;
     private StringProperty nextHopProperty;
-    private DoubleProperty metricProperty;
+    private IntegerProperty metricProperty;
     private StringProperty ethernetInterfaceProperty;
     private StringProperty asPathProperty;
 
     public RoutingTableModel(TableRow row) {
         this.prefixProperty = row.getPrefix() != null ? new SimpleStringProperty(row.getPrefix().toString()) : new SimpleStringProperty("");
         this.nextHopProperty = row.getNextHop() != null ? new SimpleStringProperty(row.getNextHop().toString()) : new SimpleStringProperty("");
-        this.metricProperty = new SimpleDoubleProperty(row.getCalculatedMetric());
+        this.metricProperty = new SimpleIntegerProperty((int) row.getCalculatedMetric());
         this.ethernetInterfaceProperty = row.getInterface() != null ? new SimpleStringProperty(row.getInterface().toString()) : new SimpleStringProperty("");
         this.asPathProperty = row.getAsPath() != null ? new SimpleStringProperty(row.getAsPath().toString()) : new SimpleStringProperty("");
     }
@@ -49,7 +46,7 @@ public class RoutingTableModel {
         return (int) metricProperty.get();
     }
 
-    public DoubleProperty metricProperty() {
+    public IntegerProperty metricProperty() {
         return metricProperty;
     }
 

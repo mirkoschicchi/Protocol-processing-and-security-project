@@ -10,7 +10,18 @@
    <right>
       <VBox spacing="20.0" prefHeight="Infinity" prefWidth="700" style="-fx-background-color: orange;" BorderPane.alignment="TOP_RIGHT">
          <children>
-            <Text text=" " fx:id="routerLabel"/>
+             <HBox>
+                 <Label text="Node name: " labelFor="$routerLabel"></Label>
+                 <Text text=" " fx:id="routerLabel"/>
+             </HBox>
+             <HBox>
+                 <Label text="Node type: " labelFor="$nodeType"></Label>
+                 <Text text=" " fx:id="nodeType"/>
+             </HBox>
+             <HBox>
+                 <Label text="FSM status: " labelFor="$fsmStatus"></Label>
+                 <Text text=" " fx:id="fsmStatus"/>
+             </HBox>
             <Button mnemonicParsing="false" text="Shutdown" fx:id="actionBtn"/>
             <TableView fx:id="table" prefHeight="188.0" prefWidth="583.0">
               <columns>

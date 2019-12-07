@@ -1,6 +1,9 @@
 package fi.utu.protproc.group3.userinterface;
 
+import fi.utu.protproc.group3.nodes.ClientNode;
 import fi.utu.protproc.group3.nodes.NetworkNode;
+import fi.utu.protproc.group3.nodes.RouterNode;
+import fi.utu.protproc.group3.nodes.ServerNode;
 import fi.utu.protproc.group3.utils.SimulationReference;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -63,7 +66,17 @@ public class UserGUI extends Application {
                         }
                         Text routerLabel = (Text) root.lookup("#routerLabel");
                         routerLabel.setText(s);
-                        System.out.println(selectedNode.getHostname());
+
+                        Text nodeType = (Text) root.lookup("#nodeType");
+                        if(selectedNode instanceof ClientNode) {
+                            nodeType.setText("Client");
+                        } else if(selectedNode instanceof ServerNode) {
+                            nodeType.setText("Server");
+                        } else if(selectedNode instanceof RouterNode) {
+                            nodeType.setText("Router");
+                        }
+
+
                         RowController rowController = loader.getController();
                         rowController.setRouter(selectedNode);
                         rowController.initialize(null, null);
