@@ -6,34 +6,39 @@
 <?import javafx.scene.layout.*?>
 
 <?import javafx.scene.text.Text?>
-<BorderPane xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="fi.utu.protproc.group3.userinterface.RowController">
+<BorderPane xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="fi.utu.protproc.group3.userinterface.RowController" stylesheets="@../style/style.css">
    <right>
-      <VBox spacing="20.0" prefHeight="Infinity" prefWidth="700" style="-fx-background-color: orange;" BorderPane.alignment="TOP_RIGHT">
+      <VBox spacing="30.0" prefHeight="Infinity" prefWidth="700" style="-fx-background-color: orange;" BorderPane.alignment="TOP_RIGHT">
          <children>
              <HBox>
-                 <Label text="Node name: " labelFor="$routerLabel"></Label>
+                 <Label text="Node name: " labelFor="$routerLabel" fx:id="nodeNameLabel"/>
                  <Text text=" " fx:id="routerLabel"/>
              </HBox>
              <HBox>
-                 <Label text="Node type: " labelFor="$nodeType"></Label>
+                 <Label text="Node type: " labelFor="$nodeType" fx:id="nodeTypeLabel"/>
                  <Text text=" " fx:id="nodeType"/>
              </HBox>
              <HBox>
-                 <Label text="FSM status: " labelFor="$fsmStatus"></Label>
+                 <Label text="BGP peers: " labelFor="$fsmStatus" fx:id="bgpPeersLabel"/>
                  <Text text=" " fx:id="fsmStatus"/>
              </HBox>
             <Button mnemonicParsing="false" text="Shutdown" fx:id="actionBtn"/>
-            <TableView fx:id="table" prefHeight="188.0" prefWidth="583.0">
-              <columns>
-                <TableColumn fx:id="prefixColumn" prefWidth="167.0" text="Destination" />
-                <TableColumn fx:id="nextHopColumn" prefWidth="108.0" text="Next hop" />
-                <TableColumn fx:id="metricColumn" minWidth="0.0" prefWidth="62.0" text="Metric" />
-                <TableColumn fx:id="ethernetInterfaceColumn" prefWidth="152.0" text="Ethernet interface" />
-                  <TableColumn fx:id="asPathColumn" prefWidth="152.0" text="As Path" />
-              </columns>
-                <items>
-            </items>
-            </TableView>
+             <VBox spacing="10">
+                 <Label text="Routing table" fx:id="routingTableLabel"/>
+                 <TableView fx:id="table" prefHeight="188.0" prefWidth="583.0">
+                     <columns>
+                         <TableColumn fx:id="prefixColumn" prefWidth="167.0" text="Destination" />
+                         <TableColumn fx:id="nextHopColumn" prefWidth="108.0" text="Next hop" />
+                         <TableColumn fx:id="metricColumn" minWidth="0.0" prefWidth="62.0" text="Metric" />
+                         <TableColumn fx:id="ethernetInterfaceColumn" prefWidth="152.0" text="Ethernet interface" />
+                         <TableColumn fx:id="asPathColumn" prefWidth="152.0" text="As Path" />
+                     </columns>
+                     <items>
+                     </items>
+                 </TableView>
+             </VBox>
+
+            <fx:include source="logger.fxml"/>
          </children>
          <padding>
             <Insets bottom="20.0" left="15.0" right="15.0" top="20.0" />
