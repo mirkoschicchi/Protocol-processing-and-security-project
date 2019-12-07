@@ -35,7 +35,9 @@ public class UserGUI extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/main.fxml"));
+        FXMLLoader peerLoader = new FXMLLoader(getClass().getResource("/fxml/peers.fxml"));
         Parent root = loader.load();
+        peerLoader.load();
 
         nodes = new HashMap<>();
         nodes = SimulationReference.nodes;
@@ -77,10 +79,15 @@ public class UserGUI extends Application {
                             nodeType.setText("Router");
                         }
 
-
                         RowController rowController = loader.getController();
                         rowController.setRouter(selectedNode);
                         rowController.initialize(null, null);
+
+                        if(selectedNode instanceof RouterNode) {
+                            PeersController peersController = peerLoader.getController();
+                            peersController.setRouter((RouterNode) selectedNode);
+                            peersController.initialize(null, null);
+                        }
                     }
                 });
             }

@@ -216,4 +216,8 @@ public class BGPPeerContext {
     public Set<IPAddress> getSecondDegreePeers() {
         return Collections.unmodifiableSet(secondDegreePeers);
     }
+
+    public BGPStateMachine getFsm() {
+        return fsm;
+    }
 }

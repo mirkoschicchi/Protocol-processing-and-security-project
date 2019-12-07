@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<TableView xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="fi.utu.protproc.group3.userinterface.PeersController"
+            fx:id="table"
+            maxWidth="300"
+            minHeight="100"
+            >
+            <columns>
+                <TableColumn fx:id="peerIPColumn" prefWidth="150.0" text="Peer IP address" />
+                <TableColumn fx:id="connectionStatusColumn" prefWidth="150.0" text="Connection status" />
+            </columns>
+            <items>
+            </items>
+
+</TableView>

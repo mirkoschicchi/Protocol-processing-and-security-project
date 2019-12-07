@@ -14,7 +14,7 @@
           >
     <VBox>
         <Label text="Console output" fx:id="consoleLabel"/>
-        <TextArea prefWidth="800" prefHeight="400" fx:id="loggerPane" editable="false"/>
+        <TextArea prefWidth="800" prefHeight="200" maxHeight="250" fx:id="loggerPane" editable="false"/>
     </VBox>
 
 </FlowPane>
