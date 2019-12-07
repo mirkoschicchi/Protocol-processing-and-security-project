@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.Label?>
+<TableView
+        xmlns="http://javafx.com/javafx"
+        xmlns:fx="http://javafx.com/fxml"
+        fx:id="table"
+        fx:controller="fi.utu.protproc.group3.userinterface.RoutingTableController"
+        minHeight="200" prefHeight="188.0" prefWidth="800.0"
+        editable="false"
+>
+    <columns>
+        <TableColumn fx:id="prefixColumn" prefWidth="150.0" text="Destination" />
+        <TableColumn fx:id="nextHopColumn" prefWidth="250.0" text="Next hop" />
+        <TableColumn fx:id="metricColumn" minWidth="20.0" prefWidth="70.0" text="Metric" />
+        <TableColumn fx:id="ethernetInterfaceColumn" prefWidth="200.0" text="Ethernet interface" />
+        <TableColumn fx:id="asPathColumn" prefWidth="200.0" text="As Path" />
+    </columns>
+    <items>
+    </items>
+</TableView>

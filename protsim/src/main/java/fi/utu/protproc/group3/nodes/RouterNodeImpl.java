@@ -176,4 +176,9 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode, Route
 
         configurationFinalized = true;
     }
+
+    @Override
+    public Collection<BGPPeerContext> getPeerings() {
+        return Collections.unmodifiableCollection(peerings.values());
+    }
 }

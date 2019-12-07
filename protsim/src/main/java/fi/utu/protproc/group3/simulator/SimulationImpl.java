@@ -3,10 +3,16 @@ package fi.utu.protproc.group3.simulator;
 import fi.utu.protproc.group3.configuration.SimulationConfiguration;
 import fi.utu.protproc.group3.graph.GraphAttributes;
 import fi.utu.protproc.group3.nodes.*;
+import fi.utu.protproc.group3.userinterface.UserGUI;
 import fi.utu.protproc.group3.utils.AddressGenerator;
+import fi.utu.protproc.group3.utils.SimulationReference;
+import javafx.application.Application;
 import org.graphstream.algorithm.APSP;
 import org.graphstream.graph.Node;
 import org.graphstream.graph.implementations.MultiGraph;
+import org.graphstream.ui.layout.Layout;
+import org.graphstream.ui.layout.Layouts;
+import org.graphstream.ui.swingViewer.GraphRenderer;
 import org.graphstream.ui.view.Viewer;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
@@ -293,8 +299,18 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
                 var css = new String(styleSheet.readAllBytes(), StandardCharsets.UTF_8).replace("url('./", "url('" + stylePath.getAbsolutePath().replace('\\', '/') + "/");
                 graph.setAttribute("ui.stylesheet", css);
 
-                viewer = graph.display();
-                new UserInterfaceManager(viewer, graph, nodes);
+                //viewer = graph.display();
+                viewer = new Viewer(graph, Viewer.ThreadingModel.GRAPH_IN_ANOTHER_THREAD);
+                GraphRenderer renderer = Viewer.newGraphRenderer();
+                viewer.addView(Viewer.DEFAULT_VIEW_ID, renderer, false);
+                Layout layout = Layouts.newLayoutAlgorithm();
+                viewer.enableAutoLayout(layout);
+
+
+                //new UserInterfaceManager(viewer, graph, nodes);
+                SimulationReference.simulation = this;
+                SimulationReference.nodes = nodes;
+                Application.launch(UserGUI.class);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -370,6 +386,14 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
                 writeBlock(6, buf);
             }
         }
+    }
+
+    public MultiGraph getGraph() {
+        return graph;
+    }
+
+    public Viewer getViewer() {
+        return viewer;
     }
 
     static class AutonomousSystem {

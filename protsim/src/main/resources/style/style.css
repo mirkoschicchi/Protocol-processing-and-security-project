@@ -1,0 +1,46 @@
+#loggerPane {
+    -fx-font-size: 10pt;
+    -fx-background-color: black;
+}
+
+#consoleLabel {
+    -fx-font-size: 18pt;
+    -fx-font-weight: bold;
+}
+
+#nodeNameLabel {
+    -fx-font-size: 16pt;
+    -fx-font-weight: bold;
+}
+
+#nodeTypeLabel {
+    -fx-font-size: 16pt;
+    -fx-font-weight: bold;
+}
+
+#nodeName {
+    -fx-font-size: 16pt;
+}
+
+#nodeType {
+    -fx-font-size: 16pt;
+}
+
+#routingTableLabel {
+    -fx-font-size: 16pt;
+    -fx-font-weight: bold;
+}
+
+#bgpPeersLabel {
+    -fx-font-size: 16pt;
+    -fx-font-weight: bold;
+}
+
+#actionLabel {
+    -fx-font-size: 16pt;
+    -fx-font-weight: bold;
+}
+
+#actionBtn {
+    -fx-font-size: 16pt;
+}

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.embed.swing.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.scene.text.Text?>
+<BorderPane xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="fi.utu.protproc.group3.userinterface.MainController" stylesheets="@../style/style.css">
+   <right>
+       <BorderPane prefHeight="Infinity" prefWidth="700" style="-fx-background-color: #efe9cc;" BorderPane.alignment="TOP_RIGHT">
+           <center>
+               <fx:include source="node.fxml" fx:id="node" BorderPane.alignment="CENTER" />
+           </center>
+           <bottom>
+           </bottom>
+       </BorderPane>
+   </right>
+   <center>
+      <AnchorPane fx:id="pane" prefHeight="310.0" prefWidth="517.0" style="-fx-background-color: cyan;" BorderPane.alignment="CENTER">
+         <children>
+            <SwingNode fx:id="swingnode" layoutX="371.0" layoutY="138.0" />
+         </children></AnchorPane>
+   </center>
+    <bottom>
+        <fx:include source="logger.fxml" BorderPane.alignment="BOTTOM_CENTER" />
+    </bottom>
+</BorderPane>
