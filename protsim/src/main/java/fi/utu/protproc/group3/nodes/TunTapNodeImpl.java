@@ -5,6 +5,7 @@ import fi.utu.protproc.group3.protocols.EthernetFrame;
 import fi.utu.protproc.group3.protocols.IPv6Packet;
 import fi.utu.protproc.group3.simulator.Network;
 import fi.utu.protproc.group3.simulator.SimulationBuilderContext;
+import fi.utu.protproc.group3.utils.NetworkAddress;
 import io.github.isotes.net.tun.io.Packet;
 import io.github.isotes.net.tun.io.TunDevice;
 
@@ -41,9 +42,11 @@ public class TunTapNodeImpl extends NetworkNodeImpl {
                     .append("sudo ip tuntap add dev ").append(configuration.getDevice()).append(" mode tun user $USER group $USER\n")
                     .append("sudo ip -6 addr add ").append(getIpAddress()).append('/').append(getInterface().getNetwork().getNetworkAddress().getPrefixLength()).append(" dev ").append(configuration.getDevice()).append("\n")
                     .append("sudo ip link set dev ").append(configuration.getDevice()).append(" up\n");
-
-            for (var route : getRoutingTable().getRows()) {
-                helpMsg.append("sudo ip r add ").append(route.getPrefix()).append(" dev ").append(configuration.getDevice()).append(" via ").append(route.getNextHop()).append('\n');
+            var defaultRouter = getInterface().getNetwork().getDevices().stream()
+                    .filter(i -> i.getHost() instanceof RouterNode)
+                    .findAny();
+            if (defaultRouter.isPresent()) {
+                helpMsg.append("sudo ip -6 route add ").append(getIpAddress()).append("/32 dev ").append(configuration.getDevice()).append(" via ").append(defaultRouter.get().getIpAddress()).append('\n');
             }
 
             helpMsg
