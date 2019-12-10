@@ -282,6 +282,10 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
             }
         }
 
+        for (var net : networks.values()) {
+            net.start();
+        }
+
         for (var node : nodes.values()) {
             node.start();
         }
@@ -347,6 +351,10 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
     public void stop() {
         for (var node : nodes.values()) {
             node.shutdown();
+        }
+
+        for (var net : networks.values()) {
+            net.shutdown();
         }
 
         if (recording != null) {

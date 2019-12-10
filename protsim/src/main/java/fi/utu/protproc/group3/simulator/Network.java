@@ -5,12 +5,10 @@ import reactor.core.publisher.Flux;
 
 import java.util.Collection;
 
-public interface Network {
+public interface Network extends RuntimeControllable {
     NetworkAddress getNetworkAddress();
 
     void addDevice(EthernetInterface intf);
-
-    void removeDevice(EthernetInterface intf);
 
     /**
      * Gets all devices attached to the network (simulated ARP scan)

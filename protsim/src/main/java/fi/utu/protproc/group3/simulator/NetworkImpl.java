@@ -16,6 +16,7 @@ public class NetworkImpl implements Network {
     private final List<EthernetInterface> interfaces = new ArrayList<>();
     private final NetworkAddress networkAddress;
     private final String networkName;
+    private volatile boolean isOnline;
 
     NetworkImpl(SimulationBuilderContext context, NetworkConfiguration configuration) {
         Objects.requireNonNull(context);
@@ -27,11 +28,27 @@ public class NetworkImpl implements Network {
 
         var processor = DirectProcessor.<byte[]>create().serialize();
         input = processor.sink(FluxSink.OverflowStrategy.BUFFER);
-        output = processor.publish(5)
+        output = processor
+                .filter(p -> isOnline)
+                .publish(5)
                 .autoConnect(0)
                 .publishOn(Schedulers.elastic())
-        //        .subscribeOn(Schedulers.elastic())
         ;
+    }
+
+    @Override
+    public boolean isOnline() {
+        return isOnline;
+    }
+
+    @Override
+    public void start() {
+        isOnline = true;
+    }
+
+    @Override
+    public void shutdown() {
+        isOnline = false;
     }
 
     @Override
@@ -44,13 +61,6 @@ public class NetworkImpl implements Network {
         Objects.requireNonNull(intf);
 
         interfaces.add(intf);
-    }
-
-    @Override
-    public void removeDevice(EthernetInterface intf) {
-        Objects.requireNonNull(intf);
-
-        interfaces.remove(intf);
     }
 
     @Override

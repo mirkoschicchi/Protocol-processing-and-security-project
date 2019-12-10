@@ -21,7 +21,7 @@ public class ClientNodeImpl extends NetworkNodeImpl implements ClientNode {
     private Disposable messageFlux;
 
     @Override
-    public boolean nodeIsRunning() {
+    public boolean isOnline() {
         return messageFlux != null;
     }
 
@@ -33,7 +33,8 @@ public class ClientNodeImpl extends NetworkNodeImpl implements ClientNode {
             throw new UnsupportedOperationException("Client is already running.");
         }
 
-        messageFlux = Flux.interval(Duration.ofSeconds(5))
+        var initialDelay = Math.random() * 5000 + 3000;
+        messageFlux = Flux.interval(Duration.ofMillis((long) initialDelay), Duration.ofSeconds(5))
                 .subscribe(this::sendMessage);
     }
 
@@ -48,7 +49,7 @@ public class ClientNodeImpl extends NetworkNodeImpl implements ClientNode {
     }
 
     private void sendMessage(long messageId) {
-        if (nodeIsRunning()) {
+        if (isOnline()) {
             var dest = simulation.getRandomServer();
             if (dest != null) {
                 LOGGER.info("Client " + getHostname() + " trying to connect to " + dest.getHostname() + " (" + dest.getIpAddress() + ")");

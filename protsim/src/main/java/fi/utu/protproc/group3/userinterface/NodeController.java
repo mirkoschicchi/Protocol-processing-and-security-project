@@ -6,7 +6,6 @@ import fi.utu.protproc.group3.utils.SimulationReference;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.ActionEvent;
-import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
@@ -48,7 +47,7 @@ public class NodeController implements Initializable {
 
                 nodeName.setText(newValue != null ? newValue.getHostname() : "");
 
-                if (newValue.nodeIsRunning()) {
+                if (newValue.isOnline()) {
                     actionBtn.setText("Shutdown");
                 } else {
                     actionBtn.setText("Start up");
@@ -74,7 +73,7 @@ public class NodeController implements Initializable {
             var node = this.node.get();
             if (node != null) {
                 var gn = SimulationReference.simulation.getGraph().getNode(node.getHostname());
-                if (node.nodeIsRunning()) {
+                if (node.isOnline()) {
                     node.shutdown();
                     gn.addAttribute("ui.style", "stroke-mode: plain; stroke-width: 3px; stroke-color: red;");
                     actionBtn.setText("Start up");

@@ -3,10 +3,12 @@ package fi.utu.protproc.group3.userinterface;
 import fi.utu.protproc.group3.nodes.NetworkNode;
 import fi.utu.protproc.group3.simulator.EthernetInterface;
 import fi.utu.protproc.group3.simulator.Network;
+import fi.utu.protproc.group3.utils.SimulationReference;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
@@ -52,6 +54,22 @@ public class NetworkController implements Initializable {
                 networkName.setText("");
                 networkAddress.setText("");
                 devices.getItems().clear();
+            }
+        });
+
+        actionBtn.addEventHandler(ActionEvent.ACTION, evt -> {
+            var network = this.selectedNetwork.get();
+            if (network != null) {
+                var gn = SimulationReference.simulation.getGraph().getNode(network.getNetworkName());
+                if (network.isOnline()) {
+                    network.shutdown();
+                    gn.addAttribute("ui.style", "stroke-mode: plain; stroke-width: 3px; stroke-color: red;");
+                    actionBtn.setText("Start up");
+                } else {
+                    network.start();
+                    gn.addAttribute("ui.style", "stroke-mode: none;");
+                    actionBtn.setText("Shutdown");
+                }
             }
         });
     }

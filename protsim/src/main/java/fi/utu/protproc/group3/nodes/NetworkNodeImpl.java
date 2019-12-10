@@ -91,7 +91,7 @@ public abstract class NetworkNodeImpl implements NetworkNode, SimpleNode {
         }
 
         for (var intf : interfaces) {
-            routingTable.insertRow(TableRow.create(intf.getNetwork().getNetworkAddress(), null, 0, intf));
+            routingTable.insertRow(TableRow.create(intf.getNetwork().getNetworkAddress(), null, 10, intf));
         }
 
         if (interfaces.size() == 1) {
@@ -130,7 +130,7 @@ public abstract class NetworkNodeImpl implements NetworkNode, SimpleNode {
     }
 
     @Override
-    public boolean nodeIsRunning() {
+    public boolean isOnline() {
         return messageListeners != null;
     }
 
