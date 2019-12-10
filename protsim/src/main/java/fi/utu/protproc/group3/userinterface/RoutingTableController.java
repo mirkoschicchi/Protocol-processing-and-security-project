@@ -27,7 +27,7 @@ public class RoutingTableController implements Initializable {
     private TableColumn<RouteModel, String> nextHopColumn;
 
     @FXML
-    private TableColumn<RouteModel, Integer> metricColumn;
+    private TableColumn<RouteModel, Number> metricColumn;
 
     @FXML
     private TableColumn<RouteModel, String> ethernetInterfaceColumn;
@@ -45,7 +45,7 @@ public class RoutingTableController implements Initializable {
 
         node.addListener((obs, oldValue, newValue) -> {
             if (newValue != null) {
-                table.setItems(FXCollections.observableList(newValue.getRoutingTable().getRows().stream().map(RouteModel::new).collect(Collectors.toUnmodifiableList())));
+                table.setItems(FXCollections.observableList(newValue.getRoutingTable().getRows().stream().map(RouteModel::new).collect(Collectors.toList())));
             } else {
                 table.getItems().clear();
             }
