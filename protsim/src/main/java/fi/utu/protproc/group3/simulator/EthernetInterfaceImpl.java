@@ -4,6 +4,7 @@ import fi.utu.protproc.group3.nodes.NetworkNode;
 import fi.utu.protproc.group3.utils.IPAddress;
 import reactor.core.publisher.Flux;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 public class EthernetInterfaceImpl implements EthernetInterface {
@@ -75,5 +76,16 @@ public class EthernetInterfaceImpl implements EthernetInterface {
     @Override
     public String toString() {
         return getIpAddress() + " on " + network.getNetworkName();
+    }
+
+    @Override
+    public String print() {
+        StringBuilder sb = new StringBuilder(18);
+        for (byte b : getAddress()) {
+            if (sb.length() > 0)
+                sb.append(':');
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString() + " on " + network.getNetworkName();
     }
 }

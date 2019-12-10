@@ -14,7 +14,7 @@ public class RouteModel {
         this.prefixProperty = row.getPrefix() != null ? new SimpleStringProperty(row.getPrefix().toString()) : new SimpleStringProperty("");
         this.nextHopProperty = row.getNextHop() != null ? new SimpleStringProperty(row.getNextHop().toString()) : new SimpleStringProperty("");
         this.metricProperty = new SimpleIntegerProperty((int) row.getCalculatedMetric());
-        this.ethernetInterfaceProperty = row.getInterface() != null ? new SimpleStringProperty(row.getInterface().toString()) : new SimpleStringProperty("");
+        this.ethernetInterfaceProperty = row.getInterface() != null ? new SimpleStringProperty(row.getInterface().print()) : new SimpleStringProperty("");
         this.asPathProperty = row.getAsPath() != null ? new SimpleStringProperty(row.getAsPath().toString()) : new SimpleStringProperty("");
     }
 

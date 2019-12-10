@@ -12,7 +12,7 @@ public class PeerModel {
     private StringProperty statusProperty;
 
     public PeerModel(BGPPeerContext peerContext) {
-        statusProperty = new SimpleStringProperty(peerContext.getFsm().getStatus().toString());
+        statusProperty = new SimpleStringProperty(peerContext.getFsm().getCurrentState().toString());
         peerProperty = new SimpleStringProperty(peerContext.getPeer().toString());
         bgpIdentifierProperty = new SimpleIntegerProperty(peerContext.getBgpIdentifier());
     }
