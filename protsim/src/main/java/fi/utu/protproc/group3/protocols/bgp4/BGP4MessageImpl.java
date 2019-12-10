@@ -65,12 +65,12 @@ public abstract class BGP4MessageImpl implements BGP4Message {
         ByteBuffer buf = ByteBuffer.wrap(message);
 
         buf.get(marker);
-        short len = buf.getShort();
+        buf.position(buf.position() + 2); // skip length
         byte type = buf.get();
 
         switch (type) {
             case BGP4Message.TYPE_OPEN:
-                buf.get();
+                buf.position(buf.position() + 1); // skip version field
                 short myAutonomousSystem = buf.getShort();
                 short holdTime = buf.getShort();
                 int bgpIdentifier = buf.getInt();
@@ -78,25 +78,29 @@ public abstract class BGP4MessageImpl implements BGP4Message {
 
             case BGP4Message.TYPE_UPDATE:
                 List<NetworkAddress> withdrawnRoutes = new ArrayList<>();
+                List<NetworkAddress> networkLayerReachabilityInformation
+                        = new ArrayList<>();
                 byte[] tmp = new byte[16];
-                IPAddress addr;
-                int prefLen = 0;
-                buf.getShort();     // withdrawnRoutesLength
 
-                // Total Path Attribute Length
-                buf.getShort();
+                // Skip withdrawnRoutesLength because it's 0 (withdrawnRoutes in MP_UNREACH_NLRI)
+                buf.position(buf.position() + 2);
 
+                // Skip Total Path Attribute Length, not needed
+                buf.position(buf.position() + 2);
+
+                // Path Attributes
                 //  origin
-                buf.getInt();
+                buf.position(buf.position() + 2); // skip attr type
+                buf.position(buf.position() + 2); // skip attr length
                 byte origin = buf.get();
 
                 List<List<Short>> asPath = new ArrayList<>();
-                buf.getShort();
+                buf.position(buf.position() + 2); // skip attr type
                 short valueLen = buf.getShort();
                 short cont = 0;
                 while (cont < valueLen) {
                     List<Short> asSet = new ArrayList<>();
-                    buf.get();
+                    buf.position(buf.position() + 1); // skip as path type, always set to AS_SET
                     short asLen = buf.get();
                     cont += 2;
                     for (int i=0; i < asLen; i++) {
@@ -107,19 +111,19 @@ public abstract class BGP4MessageImpl implements BGP4Message {
                 }
 
                 // MP_REACH_NLRI
-                buf.getShort();
+                buf.position(buf.position() + 2); // skip attr type
                 short byteLength = buf.getShort();
-                buf.getShort(); buf.get();  // AFI and SAFI
+                buf.position(buf.position() + 3);  // skip AFI and SAFI definition
                 byteLength -= 3;
+
                 // nextHop
-                buf.get();
+                buf.position(buf.position() + 1); // skip length of next hop, always 16
                 buf.get(tmp);
                 IPAddress nextHop = new IPAddress(tmp);
                 byteLength = (short) (byteLength - (1 + nextHop.toArray().length));
-                buf.get(); byteLength--;
+                buf.get(); // skip reserved 0 byte
+                byteLength--;
 
-                List<NetworkAddress> networkLayerReachabilityInformation
-                        = new ArrayList<>();
                 while(byteLength > 0) {
                     NetworkAddress prefix = parseNetworkAddressesFromBuffer(buf);
                     networkLayerReachabilityInformation.add(prefix);
@@ -127,8 +131,9 @@ public abstract class BGP4MessageImpl implements BGP4Message {
                 }
 
                 // MP_UNREACH_NLRI
-                buf.getInt();
-                buf.getShort(); buf.get();  // AFI and SAFI
+                buf.position(buf.position() + 2); // skip attr type
+                buf.position(buf.position() + 2); // skip attr length
+                buf.position(buf.position() + 3);  // skip AFI and SAFI definition
                 while(buf.remaining() > 0) {
                     withdrawnRoutes.add(parseNetworkAddressesFromBuffer(buf));
                 }
