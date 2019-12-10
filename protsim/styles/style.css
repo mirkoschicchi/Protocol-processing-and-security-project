@@ -9,6 +9,8 @@ node {
     fill-mode: image-scaled;
     text-background-mode: rounded-box;
     text-background-color: #eee;
+    text-alignment: under;
+    text-padding: 3px;
 }
 
 node.networks {

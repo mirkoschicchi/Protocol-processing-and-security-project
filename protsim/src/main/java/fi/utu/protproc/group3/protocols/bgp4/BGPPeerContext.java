@@ -13,6 +13,7 @@ import reactor.core.publisher.Flux;
 
 import java.time.Duration;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class BGPPeerContext {
@@ -38,10 +39,11 @@ public class BGPPeerContext {
         var context = this;
         var isInitiator = ethernetInterface.getIpAddress().toArray()[15] < peer.toArray()[15];
         this.fsm = BGPStateMachine.newInstance(new BGPCallbacksDefault() {
+            private boolean isFirstConnection = true;
             // Connection management
             @Override
             public void connectRemotePeer() {
-                if (isInitiator) {
+                if (!isFirstConnection || isInitiator) {
                     connection.connect(peer, BGPServer.PORT);
                 }
             }
@@ -91,11 +93,27 @@ public class BGPPeerContext {
                     updateSendProcess = Flux.interval(Duration.ofSeconds(2), Duration.ofSeconds(30))
                             .subscribe(context::updateLocalRoutes);
                 }
+
+                if (!isFirstConnection) {
+                    context.sendExistingRoutes();
+                }
+
+                isFirstConnection = false;
             }
 
             @Override
             public void deleteAllRoutes() {
-                context.getRouter().getRoutingTable().removeBgpEntries(context.getBgpIdentifier(), null);
+                var withdrawnRoutes = context.getRouter().getRoutingTable().removeBgpEntries(context.getBgpIdentifier(), null);
+
+                for (var neighbour : context.getDistributionList()) {
+                    neighbour.getConnection().send(BGP4MessageUpdate.create(
+                            withdrawnRoutes.stream().map(TableRow::getPrefix).collect(Collectors.toUnmodifiableList()),
+                            BGP4MessageUpdate.ORIGIN_FROM_ESP,
+                            List.of(List.of((short) router.getAutonomousSystem()), List.of((short) router.getBGPIdentifier())),
+                            neighbour.getEthernetInterface().getIpAddress(),
+                            List.of()
+                    ).serialize());
+                }
             }
         });
     }
@@ -167,6 +185,26 @@ public class BGPPeerContext {
                     List.of(List.of((short) router.getAutonomousSystem()), List.of((short) router.getBGPIdentifier())),
                     ethernetInterface.getIpAddress(),
                     newRoutes.stream().map(TableRow::getPrefix).collect(Collectors.toUnmodifiableList())
+            );
+
+            connection.send(msg.serialize());
+        }
+    }
+
+    private void sendExistingRoutes() {
+        var existingRoutesByPath = router.getRoutingTable().getRows().stream()
+                .filter(r -> r.getBgpPeer() != bgpIdentifier)
+                .filter(r -> r.getInterface() != ethernetInterface)
+                .filter(r -> r.getAsPath() != null)
+                .collect(Collectors.groupingBy(i -> i.getAsPath()));
+
+        for (var path : existingRoutesByPath.entrySet()) {
+            var msg = BGP4MessageUpdate.create(
+                    new ArrayList<>(),
+                    BGP4MessageUpdate.ORIGIN_FROM_ESP,
+                    path.getKey(),
+                    ethernetInterface.getIpAddress(),
+                    path.getValue().stream().map(TableRow::getPrefix).collect(Collectors.toUnmodifiableList())
             );
 
             connection.send(msg.serialize());

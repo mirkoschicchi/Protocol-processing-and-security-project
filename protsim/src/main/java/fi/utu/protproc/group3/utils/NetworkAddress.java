@@ -46,6 +46,30 @@ public final class NetworkAddress {
         return address.toString() + "/" + prefixLength;
     }
 
+    @Override
+    public int hashCode() {
+        var result = 0;
+        var addr = address.toArray();
+        for (var i = 0; i < prefixLength / 8; i++) {
+            result = (result * 31) | addr[i];
+        }
+
+        result = result * 31 | prefixLength;
+
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof NetworkAddress) {
+            var other = (NetworkAddress) obj;
+            return isMatch(this, other.address)
+                    && isMatch(other, address);
+        }
+
+        return super.equals(obj);
+    }
+
     private static final byte[] MASK = new byte[]
             {
                     (byte) 0x00, (byte) 0x80, (byte) 0xc0, (byte) 0xe0,

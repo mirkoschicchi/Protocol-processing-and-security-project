@@ -3,8 +3,11 @@ package fi.utu.protproc.group3.nodes;
 import fi.utu.protproc.group3.configuration.NodeConfiguration;
 import fi.utu.protproc.group3.protocols.http.SimpleHttpClient;
 import fi.utu.protproc.group3.protocols.http.SimpleHttpServer;
+import fi.utu.protproc.group3.protocols.tcp.Connection;
+import fi.utu.protproc.group3.protocols.tcp.DatagramHandler;
 import fi.utu.protproc.group3.simulator.Network;
 import fi.utu.protproc.group3.simulator.SimulationBuilderContext;
+import fi.utu.protproc.group3.utils.IPAddress;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 
@@ -48,13 +51,23 @@ public class ClientNodeImpl extends NetworkNodeImpl implements ClientNode {
         }
     }
 
+    private SimpleHttpClient lastConnection;
+    private IPAddress lastDestination;
     private void sendMessage(long messageId) {
         if (isOnline()) {
+            if (lastConnection != null && !lastConnection.wasSuccessful()) {
+                LOGGER.warning("Client " + getHostname() + " timed out connecting " + lastDestination);
+                lastConnection = null;
+            }
+
             var dest = simulation.getRandomServer();
             if (dest != null) {
-                LOGGER.info("Client " + getHostname() + " trying to connect to " + dest.getHostname() + " (" + dest.getIpAddress() + ")");
+                LOGGER.fine("Client " + getHostname() + " trying to connect to " + dest.getHostname() + " (" + dest.getIpAddress() + ")");
                 var connection = new SimpleHttpClient(this);
                 connection.connect(dest.getIpAddress(), SimpleHttpServer.DEFAULT_PORT);
+
+                lastConnection = connection;
+                lastDestination = dest.getIpAddress();
             }
         }
     }

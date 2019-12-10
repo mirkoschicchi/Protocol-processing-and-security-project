@@ -4,6 +4,7 @@ package fi.utu.protproc.group3.routing;
 import fi.utu.protproc.group3.utils.IPAddress;
 import fi.utu.protproc.group3.utils.NetworkAddress;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 public interface RoutingTable {
@@ -26,7 +27,7 @@ public interface RoutingTable {
      */
     TableRow getRowByDestinationAddress(IPAddress destinationAddress);
 
-    void removeBgpEntries(int bgpIdentifier, NetworkAddress prefix);
+    ArrayList<TableRow> removeBgpEntries(int bgpIdentifier, NetworkAddress prefix);
 
     void updateBgpTrust(int bgpIdentifier, double trust);
 

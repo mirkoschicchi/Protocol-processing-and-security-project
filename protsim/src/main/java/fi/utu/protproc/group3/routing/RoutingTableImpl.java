@@ -5,12 +5,13 @@ import fi.utu.protproc.group3.utils.NetworkAddress;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 public class RoutingTableImpl implements RoutingTable {
-    private Collection<TableRow> rows = new ArrayList<>();
+    private List<TableRow> rows = new ArrayList<>();
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
     @Override
@@ -51,15 +52,20 @@ public class RoutingTableImpl implements RoutingTable {
     }
 
     @Override
-    public void removeBgpEntries(int bgpIdentifier, NetworkAddress prefix) {
+    public ArrayList<TableRow> removeBgpEntries(int bgpIdentifier, NetworkAddress prefix) {
         var wl = lock.writeLock();
         wl.lock();
         try {
-            if (prefix == null) {
-                rows.removeIf(r -> r.getBgpPeer() == bgpIdentifier);
-            } else {
-                rows.removeIf(r -> r.getBgpPeer() == bgpIdentifier && r.getPrefix().equals(prefix));
+            var result = new ArrayList<TableRow>();
+            for (var i = rows.size() - 1; i >= 0; i--) {
+                TableRow row = rows.get(i);
+                if (row.getBgpPeer() == bgpIdentifier && (prefix == null || row.getPrefix().equals(prefix))) {
+                    result.add(row);
+                    rows.remove(i);
+                }
             }
+
+            return result;
         } finally {
             wl.unlock();
         }

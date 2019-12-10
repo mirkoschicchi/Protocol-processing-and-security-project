@@ -9,6 +9,8 @@ import java.util.logging.Logger;
 public class SimpleHttpClient extends Connection {
     private static final Logger LOGGER = Logger.getLogger(SimpleHttpClient.class.getName());
 
+    private boolean successful;
+
     public SimpleHttpClient(NetworkNode node) {
         super(node);
     }
@@ -19,15 +21,20 @@ public class SimpleHttpClient extends Connection {
 
         send("GET / HTTP/1.0".getBytes());
 
-        LOGGER.info("Sent GET request for " + connectionState.getDescriptor());
+        LOGGER.fine("Sent GET request for " + connectionState.getDescriptor());
     }
 
     @Override
     public void messageReceived(byte[] message) {
         super.messageReceived(message);
 
-        LOGGER.info("Received response for " + connectionState.getDescriptor());
+        LOGGER.fine("Received response for " + connectionState.getDescriptor());
+        successful = true;
 
         close();
+    }
+
+    public boolean wasSuccessful() {
+        return successful;
     }
 }
