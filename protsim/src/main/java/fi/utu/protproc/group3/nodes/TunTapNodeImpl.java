@@ -14,7 +14,6 @@ import java.nio.ByteBuffer;
 
 public class TunTapNodeImpl extends NetworkNodeImpl {
     private final TapConfiguration configuration;
-    private volatile boolean running;
     private TunDevice device;
     private Thread listenThread;
 
@@ -26,7 +25,7 @@ public class TunTapNodeImpl extends NetworkNodeImpl {
 
     @Override
     public void start() {
-        running = true;
+        super.start();
 
         try {
             this.device = TunDevice.open(configuration.getDevice());
@@ -60,7 +59,6 @@ public class TunTapNodeImpl extends NetworkNodeImpl {
 
     @Override
     public void shutdown() {
-        running = false;
         if (listenThread != null) {
             try {
                 listenThread.interrupt();
@@ -79,6 +77,8 @@ public class TunTapNodeImpl extends NetworkNodeImpl {
 
             device = null;
         }
+
+        super.shutdown();
     }
 
     private void sendPacket(byte[] bytes) {
@@ -94,7 +94,7 @@ public class TunTapNodeImpl extends NetworkNodeImpl {
     }
 
     private void listen() {
-        while (running) {
+        while (isOnline()) {
             try {
                 var packet = device.read();
                 if (packet.isIpv6()) {
@@ -102,7 +102,7 @@ public class TunTapNodeImpl extends NetworkNodeImpl {
                 }
             } catch (IOException e) {
                 e.printStackTrace();
-                running = false;
+                shutdown();
             }
         }
     }
