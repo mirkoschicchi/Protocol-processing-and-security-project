@@ -1,5 +1,6 @@
 package fi.utu.protproc.group3.userinterface;
 
+import fi.utu.protproc.group3.graph.GraphAttributes;
 import fi.utu.protproc.group3.nodes.ClientNode;
 import fi.utu.protproc.group3.nodes.NetworkNode;
 import fi.utu.protproc.group3.nodes.RouterNode;
@@ -54,7 +55,11 @@ public class UserGUI extends Application {
 
             @Override
             public void buttonPushed(String s) {
-                Platform.runLater(() -> controller.selectedNodeProperty().set(nodes.get(s)));
+                var gn = SimulationReference.simulation.getGraph().getNode(s);
+                if (gn.hasAttribute(GraphAttributes.OBJECT)) {
+                    var obj = gn.getAttribute(GraphAttributes.OBJECT);
+                    Platform.runLater(() -> controller.selectedNodeProperty().set(obj));
+                }
             }
 
             @Override

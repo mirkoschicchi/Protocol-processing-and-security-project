@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Text?>
+<AnchorPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="fi.utu.protproc.group3.userinterface.NetworkController"
+fx:id="self">
+    <VBox spacing="30.0" AnchorPane.topAnchor="10" AnchorPane.leftAnchor="10" AnchorPane.rightAnchor="10">
+        <HBox spacing="10" alignment="CENTER">
+            <Button mnemonicParsing="false" text="Shutdown" fx:id="actionBtn"/>
+        </HBox>
+
+        <HBox>
+            <Label text="Network name: " labelFor="$networkName" fx:id="networkNameLabel"/>
+            <Text text=" " fx:id="networkName"/>
+        </HBox>
+        <HBox>
+            <Label text="Network address: " labelFor="$networkAddress" fx:id="networkAddressLabel"/>
+            <Text text=" " fx:id="networkAddress"/>
+        </HBox>
+
+        <VBox spacing="10">
+            <Label text="Devices" fx:id="devicesLabel" labelFor="$devices"/>
+            <TableView fx:id="devices" minHeight="100" editable="false">
+                <columns>
+                    <TableColumn fx:id="deviceIpColumn" prefWidth="200.0" text="IP"/>
+                    <TableColumn fx:id="deviceHostnameColumn" prefWidth="50.0" text="Hostname"/>
+                    <TableColumn fx:id="deviceTypeColumn" prefWidth="50.0" text="Type"/>
+                </columns>
+                <items>
+                </items>
+            </TableView>
+        </VBox>
+    </VBox>
+
+    <padding>
+        <Insets bottom="20.0" left="15.0" right="15.0" top="20.0"/>
+    </padding>
+</AnchorPane>

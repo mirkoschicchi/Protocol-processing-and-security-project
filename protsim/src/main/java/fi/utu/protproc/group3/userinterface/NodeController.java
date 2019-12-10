@@ -1,9 +1,7 @@
 package fi.utu.protproc.group3.userinterface;
 
-import fi.utu.protproc.group3.nodes.ClientNode;
 import fi.utu.protproc.group3.nodes.NetworkNode;
 import fi.utu.protproc.group3.nodes.RouterNode;
-import fi.utu.protproc.group3.nodes.ServerNode;
 import fi.utu.protproc.group3.utils.SimulationReference;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -11,23 +9,25 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
+import javafx.scene.control.Hyperlink;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.text.Text;
 
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 
 public class NodeController implements Initializable {
-    @FXML
-    private PeersController peersController;
-    @FXML
-    private RoutingTableController routesController;
+    public PeersController peersController;
+    public RoutingTableController routesController;
 
-    @FXML
-    private Button actionBtn;
-    @FXML
-    private Text nodeType;
-    @FXML
-    private Text nodeName;
+    public AnchorPane self;
+    public Button actionBtn;
+    public Text nodeType;
+    public Text nodeName;
+    public Hyperlink ipAddress;
 
     private ObjectProperty<NetworkNode> node = new SimpleObjectProperty<>();
 
@@ -40,25 +40,33 @@ public class NodeController implements Initializable {
         routesController.nodeProperty().bind(nodeProperty());
 
         node.addListener((obs, oldValue, newValue) -> {
-            var router = newValue instanceof RouterNode ? ((RouterNode) newValue) : null;
-            peersController.routerProperty().set(router);
+            actionBtn.setDisable(newValue == null);
+            ipAddress.setDisable(newValue == null);
+            if (newValue != null) {
+                var router = newValue instanceof RouterNode ? ((RouterNode) newValue) : null;
+                peersController.routerProperty().set(router);
 
-            nodeName.setText(newValue != null ? newValue.getHostname() : "");
+                nodeName.setText(newValue != null ? newValue.getHostname() : "");
 
-            if (newValue.nodeIsRunning()) {
-                actionBtn.setText("Shutdown");
-            } else {
-                actionBtn.setText("Start up");
-            }
+                if (newValue.nodeIsRunning()) {
+                    actionBtn.setText("Shutdown");
+                } else {
+                    actionBtn.setText("Start up");
+                }
 
-            if (newValue instanceof ClientNode) {
-                nodeType.setText("Client");
-            } else if (newValue instanceof ServerNode) {
-                nodeType.setText("Server");
-            } else if (newValue instanceof RouterNode) {
-                nodeType.setText("Router");
+                nodeType.setText(NetworkNode.getNodeTypeName(newValue));
+
+                if (newValue.getInterfaces().size() == 1) {
+                    String ipAddr = newValue.getInterfaces().iterator().next().getIpAddress().toString();
+                    ipAddress.setText(ipAddr);
+                } else {
+                    ipAddress.setText("[multiple]");
+                }
             } else {
                 nodeType.setText("");
+                nodeName.setText("");
+                peersController.routerProperty().set(null);
+                ipAddress.setText("");
             }
         });
 
@@ -76,6 +84,13 @@ public class NodeController implements Initializable {
                     actionBtn.setText("Shutdown");
                 }
             }
+        });
+
+        ipAddress.addEventHandler(ActionEvent.ACTION, evt -> {
+            var node = this.node.get();
+            var content = new ClipboardContent();
+            content.putString(node.getInterfaces().stream().map(i -> i.getIpAddress().toString()).collect(Collectors.joining("\n")));
+            Clipboard.getSystemClipboard().setContent(content);
         });
     }
 }

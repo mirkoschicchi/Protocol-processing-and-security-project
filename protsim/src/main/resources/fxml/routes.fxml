@@ -13,11 +13,11 @@
         editable="false"
 >
     <columns>
-        <TableColumn fx:id="prefixColumn" prefWidth="150.0" text="Destination" />
-        <TableColumn fx:id="nextHopColumn" prefWidth="250.0" text="Next hop" />
-        <TableColumn fx:id="metricColumn" minWidth="20.0" prefWidth="70.0" text="Metric" />
-        <TableColumn fx:id="ethernetInterfaceColumn" prefWidth="200.0" text="Ethernet interface" />
-        <TableColumn fx:id="asPathColumn" prefWidth="200.0" text="As Path" />
+        <TableColumn fx:id="prefixColumn" prefWidth="200.0" text="Destination" />
+        <TableColumn fx:id="nextHopColumn" prefWidth="200.0" text="Next hop" />
+        <TableColumn fx:id="metricColumn" prefWidth="40.0" text="Metric" />
+        <TableColumn fx:id="ethernetInterfaceColumn" prefWidth="60.0" text="Intf." />
+        <TableColumn fx:id="asPathColumn" prefWidth="300.0" text="AS Path" />
     </columns>
     <items>
     </items>

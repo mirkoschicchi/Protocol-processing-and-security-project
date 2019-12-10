@@ -9,12 +9,11 @@
         xmlns:fx="http://javafx.com/fxml"
         fx:id="table"
         fx:controller="fi.utu.protproc.group3.userinterface.PeersController"
-        maxWidth="350"
         minHeight="100"
         editable="false"
 >
     <columns>
-        <TableColumn fx:id="peerColumn" prefWidth="200.0" text="IP"/>
+        <TableColumn fx:id="peerColumn" prefWidth="250.0" text="IP"/>
         <TableColumn fx:id="identifierColumn" prefWidth="50.0" text="Identifier"/>
         <TableColumn fx:id="statusColumn" prefWidth="100.0" text="Status"/>
     </columns>
