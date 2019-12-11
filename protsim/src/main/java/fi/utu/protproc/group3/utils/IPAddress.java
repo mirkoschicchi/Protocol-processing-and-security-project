@@ -64,7 +64,7 @@ public class IPAddress {
                     result.append(':');
                 }
             }
-            return result.toString().replaceFirst(":(0:)+", "::");
+            return result.toString().replaceFirst(":(0:)+", "::").replaceFirst("::0$", "::");
         }
     }
 

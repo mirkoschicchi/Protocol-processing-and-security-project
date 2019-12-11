@@ -5,14 +5,6 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class NetworkAddressTest {
-//    @Test
-//    public void parseIPv4CidrNotation() throws UnknownHostException {
-//        var netAddr = NetworkAddress.parse("127.0.0.0/8");
-//
-//        assertNotNull(netAddr);
-//        assertEquals("127.0.0.0/8", netAddr.toString());
-//    }
-
     @Test
     void parseIPv6CidrNotation() {
         var netAddr = NetworkAddress.parse("fe80:2001::17:0:0/96");
@@ -48,5 +40,31 @@ class NetworkAddressTest {
 
         assertTrue(NetworkAddress.isMatch(NetworkAddress.parse("::/0"), IPAddress.parse("fe80:100::2")));
         assertTrue(NetworkAddress.isMatch(NetworkAddress.parse("::/0"), IPAddress.parse("::1")));
+    }
+
+    @Test
+    void truncateAddress() {
+        assertNetworkEqual(NetworkAddress.parse("fe80:2001::/32"), NetworkAddress.parse("fe80:2001:1234::1/32"));
+        assertNetworkEqual(NetworkAddress.parse("fe80:2001::/33"), NetworkAddress.parse("fe80:2001:1234::1/33"));
+        assertNetworkEqual(NetworkAddress.parse("fe80:2001::/34"), NetworkAddress.parse("fe80:2001:1234::1/34"));
+        assertNetworkEqual(NetworkAddress.parse("fe80:2001::/35"), NetworkAddress.parse("fe80:2001:1234::1/35"));
+        assertNetworkEqual(NetworkAddress.parse("fe80:2001:1000:/36"), NetworkAddress.parse("fe80:2001:1234::1/36"));
+        assertNetworkEqual(NetworkAddress.parse("fe80:2001:1000:/37"), NetworkAddress.parse("fe80:2001:1234::1/37"));
+        assertNetworkEqual(NetworkAddress.parse("fe80:2001:1200:/38"), NetworkAddress.parse("fe80:2001:1234::1/38"));
+        assertNetworkEqual(NetworkAddress.parse("fe80:2001:1200:/39"), NetworkAddress.parse("fe80:2001:1234::1/39"));
+
+        assertNetworkEqual(NetworkAddress.parse("fe80:2000::/24"), NetworkAddress.parse("fe80:20ff:1234::1/24"));
+        assertNetworkEqual(NetworkAddress.parse("fe80:2080::/25"), NetworkAddress.parse("fe80:20ff:1234::1/25"));
+        assertNetworkEqual(NetworkAddress.parse("fe80:20c0::/26"), NetworkAddress.parse("fe80:20ff:1234::1/26"));
+        assertNetworkEqual(NetworkAddress.parse("fe80:20e0::/27"), NetworkAddress.parse("fe80:20ff:1234::1/27"));
+        assertNetworkEqual(NetworkAddress.parse("fe80:20f0::/28"), NetworkAddress.parse("fe80:20ff:1234::1/28"));
+        assertNetworkEqual(NetworkAddress.parse("fe80:20f8::/29"), NetworkAddress.parse("fe80:20ff:1234::1/29"));
+        assertNetworkEqual(NetworkAddress.parse("fe80:20fc::/30"), NetworkAddress.parse("fe80:20ff:1234::1/30"));
+        assertNetworkEqual(NetworkAddress.parse("fe80:20fe::/31"), NetworkAddress.parse("fe80:20ff:1234::1/31"));
+    }
+
+    private void assertNetworkEqual(NetworkAddress a, NetworkAddress b) {
+        assertEquals(a, b);
+        assertEquals(a.hashCode(), b.hashCode());
     }
 }

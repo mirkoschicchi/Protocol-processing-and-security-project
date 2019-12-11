@@ -9,6 +9,12 @@ public final class NetworkAddress {
     private final IPAddress address;
     private final int prefixLength;
 
+    private static final byte[] MASK = new byte[]
+            {
+                    (byte) 0x00, (byte) 0x80, (byte) 0xc0, (byte) 0xe0,
+                    (byte) 0xf0, (byte) 0xf8, (byte) 0xfc, (byte) 0xfe
+            };
+
     public final static NetworkAddress DEFAULT = parse("::/0");
 
     /**
@@ -28,8 +34,19 @@ public final class NetworkAddress {
         return new NetworkAddress(addr, prefixLength);
     }
 
+    public static IPAddress truncateAddress(IPAddress address, int prefixLength) {
+        var result = address.toArray();
+        var pivot = prefixLength / 8;
+        result[pivot] = (byte) (result[pivot] & MASK[prefixLength % 8]);
+        for (var i = pivot + 1; i < result.length; i++) {
+            result[i] = 0;
+        }
+
+        return new IPAddress(result);
+    }
+
     public NetworkAddress(IPAddress address, int prefixLength) {
-        this.address = address;
+        this.address = truncateAddress(address, prefixLength);
         this.prefixLength = prefixLength;
     }
 
@@ -55,18 +72,11 @@ public final class NetworkAddress {
     public boolean equals(Object obj) {
         if (obj instanceof NetworkAddress) {
             var other = (NetworkAddress) obj;
-            return isMatch(this, other.address)
-                    && isMatch(other, address);
+            return Objects.equals(address, other.address) && prefixLength == other.prefixLength;
         }
 
         return super.equals(obj);
     }
-
-    private static final byte[] MASK = new byte[]
-            {
-                    (byte) 0x00, (byte) 0x80, (byte) 0xc0, (byte) 0xe0,
-                    (byte) 0xf0, (byte) 0xf8, (byte) 0xfc, (byte) 0xfe
-            };
 
     public static boolean isMatch(NetworkAddress networkAddress, IPAddress ipAddress) {
         var net = networkAddress.address.toArray();
