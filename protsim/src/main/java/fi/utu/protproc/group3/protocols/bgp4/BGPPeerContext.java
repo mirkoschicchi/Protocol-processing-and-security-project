@@ -4,6 +4,7 @@ import fi.utu.protproc.group3.nodes.RouterNode;
 import fi.utu.protproc.group3.protocols.bgp4.fsm.BGPCallbacksDefault;
 import fi.utu.protproc.group3.protocols.bgp4.fsm.BGPStateMachine;
 import fi.utu.protproc.group3.protocols.tcp.Connection;
+import fi.utu.protproc.group3.protocols.tcp.DatagramHandler;
 import fi.utu.protproc.group3.routing.TableRow;
 import fi.utu.protproc.group3.simulator.EthernetInterface;
 import fi.utu.protproc.group3.utils.IPAddress;
@@ -13,7 +14,6 @@ import reactor.core.publisher.Flux;
 
 import java.time.Duration;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class BGPPeerContext {
@@ -44,7 +44,9 @@ public class BGPPeerContext {
             @Override
             public void connectRemotePeer() {
                 if (!isFirstConnection || isInitiator) {
-                    connection.connect(peer, BGPServer.PORT);
+                    if (connection.getState() == null || connection.getState().getStatus() != DatagramHandler.ConnectionStatus.Established) {
+                        connection.connect(peer, BGPServer.PORT);
+                    }
                 }
             }
 
@@ -94,11 +96,16 @@ public class BGPPeerContext {
                             .subscribe(context::updateLocalRoutes);
                 }
 
-                if (!isFirstConnection) {
-                    context.sendExistingRoutes();
-                }
-
                 isFirstConnection = false;
+            }
+
+            @Override
+            public void releaseBGPResources() {
+                if (updateSendProcess != null) {
+                    updateSendProcess.dispose();
+                    updateSendProcess = null;
+                    sentRoutes.clear();
+                }
             }
 
             @Override
@@ -139,15 +146,12 @@ public class BGPPeerContext {
     }
 
     public void start() {
-        fireEvent(BGPStateMachine.Event.ManualStart);
+        if (fsm.getCurrentState() == null || fsm.getCurrentState() == BGPStateMachine.State.Idle) {
+            fireEvent(BGPStateMachine.Event.ManualStart);
+        }
     }
 
     public void stop() {
-        if (updateSendProcess != null) {
-            updateSendProcess.dispose();
-            updateSendProcess = null;
-        }
-
         fireEvent(BGPStateMachine.Event.ManualStop);
     }
 
@@ -158,6 +162,10 @@ public class BGPPeerContext {
     private final Set<TableRow> sentRoutes = new HashSet<>();
 
     private void updateLocalRoutes(long updateNum) {
+        if (updateNum == 1) {
+            sendExistingRoutes();
+        }
+
         var newRoutes = new ArrayList<TableRow>();
         var withdrawnRoutes = new ArrayList<TableRow>();
         var currentRoutes = router.getRoutingTable().getRows().stream()

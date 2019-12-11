@@ -26,9 +26,11 @@ public class BGPConnection extends Connection {
         super.connected(connectionState);
 
         // HACK HACK: Make sure the FSM is started, since it could not yet be started during the initial startup
-        // Otherwise we'd have to wait for 30s for the retry of the OPEN message. This is caused by our simulated
-        // network being faster to deliver the first OPEN message for loop is starting all the routers in some cases.
-        context.fireEvent(BGPStateMachine.Event.AutomaticStart);
+        // Otherwise we'd have to wait for 30s for the retry timer. This is caused by our simulation starting all routers
+        // at the same time and not implementing connection conflict resolution.
+        if (context.getFsm().getCurrentState() == null || context.getFsm().getCurrentState() == BGPStateMachine.State.Idle) {
+            context.fireEvent(BGPStateMachine.Event.AutomaticStart);
+        }
 
         context.fireEvent(BGPStateMachine.Event.Tcp_CR_Acked);
     }

@@ -5,6 +5,7 @@ import fi.utu.protproc.group3.protocols.bgp4.BGP4MessageNotification;
 import fi.utu.protproc.group3.protocols.bgp4.BGPPeerContext;
 import org.squirrelframework.foundation.fsm.StateMachineBuilder;
 import org.squirrelframework.foundation.fsm.StateMachineBuilderFactory;
+import org.squirrelframework.foundation.fsm.StateMachineLogger;
 import org.squirrelframework.foundation.fsm.impl.AbstractStateMachine;
 
 import java.util.Objects;
