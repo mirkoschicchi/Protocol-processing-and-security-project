@@ -48,7 +48,7 @@ public class TableRowImpl implements TableRow {
 
     @Override
     public double getCalculatedMetric() {
-        return metric == 0 ? (this.getAsPathLength() * 100) / neighborTrust : (metric * (this.getAsPathLength() * 100)) / neighborTrust;
+        return metric == 0 ? (this.getAsPathLength() * 100) / neighborTrust : metric;
     }
 
     @Override
@@ -108,7 +108,7 @@ public class TableRowImpl implements TableRow {
 
     @Override
     public int hashCode() {
-        return toString().hashCode();
+        return Objects.hash(eInterface, nextHop, prefix, bgpPeer, asPath);
     }
 
     @Override
@@ -117,8 +117,9 @@ public class TableRowImpl implements TableRow {
             var other = (TableRowImpl) obj;
             return Objects.equals(other.nextHop, nextHop)
                     && Objects.equals(other.eInterface, eInterface)
-                    && other.metric == metric
-                    && Objects.equals(other.prefix, prefix);
+                    && Objects.equals(other.prefix, prefix)
+                    && Objects.equals(other.asPath, asPath)
+                    && bgpPeer == other.bgpPeer;
         }
 
         return super.equals(obj);

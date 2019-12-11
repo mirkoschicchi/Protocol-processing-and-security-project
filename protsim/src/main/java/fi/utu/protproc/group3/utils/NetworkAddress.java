@@ -48,15 +48,7 @@ public final class NetworkAddress {
 
     @Override
     public int hashCode() {
-        var result = 0;
-        var addr = address.toArray();
-        for (var i = 0; i < prefixLength / 8; i++) {
-            result = (result * 31) | addr[i];
-        }
-
-        result = result * 31 | prefixLength;
-
-        return result;
+        return Objects.hash(address, prefixLength);
     }
 
     @Override

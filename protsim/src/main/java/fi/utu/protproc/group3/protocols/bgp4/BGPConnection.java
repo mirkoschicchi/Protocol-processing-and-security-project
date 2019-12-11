@@ -54,6 +54,7 @@ public class BGPConnection extends Connection {
                 for (NetworkAddress networkAddress : updateMessage.getWithdrawnRoutes()) {
                     context.getRouter().getRoutingTable().removeBgpEntries(context.getBgpIdentifier(), networkAddress);
                 }
+
                 for (NetworkAddress networkAddress : updateMessage.getNetworkLayerReachabilityInformation()) {
                     // Create a new row parsing also the path attributes
                     TableRow newRoute = TableRow.create(networkAddress, updateMessage.getNextHop(), 0,

@@ -178,7 +178,7 @@ public class DatagramHandler {
 
         @Override
         public int hashCode() {
-            return ((localIp.hashCode() * 31 + remoteIp.hashCode()) * 31 + localPort) * 31 + remotePort;
+            return Objects.hash(localIp, remoteIp, localPort, remotePort);
         }
 
         @Override

@@ -88,6 +88,12 @@ public class RoutingTableImpl implements RoutingTable {
         var wl = lock.writeLock();
         wl.lock();
         try {
+            for (var route : rows) {
+                if (route.equals(row)) {
+                    return;
+                }
+            }
+
             rows.add(row);
         } finally {
             wl.unlock();

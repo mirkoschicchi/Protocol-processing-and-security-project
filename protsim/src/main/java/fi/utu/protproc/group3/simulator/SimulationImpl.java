@@ -117,7 +117,7 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
                 gn.addAttributes(Map.of(
                         GraphAttributes.CLASS, "routers",
                         GraphAttributes.OBJECT, node,
-                        GraphAttributes.LABEL, node.getHostname()
+                        GraphAttributes.LABEL, node.getHostname() + " (" + node.getBGPIdentifier() + ")"
                 ));
 
                 autonomousSystems.computeIfAbsent(routerConf.getAutonomousSystem(), AutonomousSystem::new).routers.add(gn);

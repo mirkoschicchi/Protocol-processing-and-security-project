@@ -162,7 +162,7 @@ public class BGPPeerContext {
     private final Set<TableRow> sentRoutes = new HashSet<>();
 
     private void updateLocalRoutes(long updateNum) {
-        if (updateNum == 1) {
+        if (updateNum == 0) {
             sendExistingRoutes();
         }
 
