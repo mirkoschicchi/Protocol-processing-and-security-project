@@ -40,7 +40,7 @@ public class DatagramHandler {
         Objects.requireNonNull(connection);
         Objects.requireNonNull(ipAddress);
 
-        var route = node.getRoutingTable().getRowByDestinationAddress(ipAddress);
+        var route = node.getRoutingTable().getRowByDestinationAddress(ipAddress, null);
         if (route == null) {
             throw new UnsupportedOperationException("Could not determine route for " + ipAddress);
         }
@@ -74,7 +74,7 @@ public class DatagramHandler {
         var frame = EthernetFrame.parse(pdu);
         if (Arrays.equals(frame.getDestination(), intf.getAddress()) && frame.getType() == EthernetFrame.TYPE_IPV6) {
             var packet = IPv6Packet.parse(frame.getPayload());
-            if (packet.getNextHeader() == 0x6) {
+            if (intf.getIpAddress().equals(packet.getDestinationIP()) && packet.getNextHeader() == 0x6) {
                 var datagram = TCPDatagram.parse(packet.getPayload());
                 var descriptor = new ConnectionDescriptor(
                         packet.getDestinationIP(), packet.getSourceIP(),

@@ -1,11 +1,14 @@
 package fi.utu.protproc.group3.routing;
 
 
+import fi.utu.protproc.group3.simulator.EthernetInterface;
+import fi.utu.protproc.group3.utils.ASPath;
 import fi.utu.protproc.group3.utils.IPAddress;
 import fi.utu.protproc.group3.utils.NetworkAddress;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 public interface RoutingTable {
     static RoutingTable create() {
@@ -26,8 +29,10 @@ public interface RoutingTable {
      * @return A row in the routing table corresponding with that destination address
      */
     TableRow getRowByDestinationAddress(IPAddress destinationAddress);
+    TableRow getRowByDestinationAddress(IPAddress destinationAddress, EthernetInterface exceptIntf);
 
-    ArrayList<TableRow> removeBgpEntries(int bgpIdentifier, NetworkAddress prefix);
+    ArrayList<TableRow> removeBgpEntries(int bgpIdentifier);
+    ArrayList<TableRow> removeBgpEntries(int bgpIdentifier, NetworkAddress prefix, ASPath asPath);
 
     void updateBgpTrust(int bgpIdentifier, double trust);
 

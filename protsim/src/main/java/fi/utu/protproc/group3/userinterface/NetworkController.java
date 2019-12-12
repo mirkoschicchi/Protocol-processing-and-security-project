@@ -3,7 +3,6 @@ package fi.utu.protproc.group3.userinterface;
 import fi.utu.protproc.group3.nodes.NetworkNode;
 import fi.utu.protproc.group3.simulator.EthernetInterface;
 import fi.utu.protproc.group3.simulator.Network;
-import fi.utu.protproc.group3.utils.SimulationReference;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;

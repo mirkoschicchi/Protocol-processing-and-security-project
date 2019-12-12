@@ -37,7 +37,9 @@ public final class NetworkAddress {
     public static IPAddress truncateAddress(IPAddress address, int prefixLength) {
         var result = address.toArray();
         var pivot = prefixLength / 8;
-        result[pivot] = (byte) (result[pivot] & MASK[prefixLength % 8]);
+        if (pivot < result.length) {
+            result[pivot] = (byte) (result[pivot] & MASK[prefixLength % 8]);
+        }
         for (var i = pivot + 1; i < result.length; i++) {
             result[i] = 0;
         }

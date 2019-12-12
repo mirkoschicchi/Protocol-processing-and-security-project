@@ -1,5 +1,6 @@
 package fi.utu.protproc.group3.protocols.bgp4.fsm;
 
+import fi.utu.protproc.group3.utils.ASPath;
 import fi.utu.protproc.group3.utils.IPAddress;
 import fi.utu.protproc.group3.utils.NetworkAddress;
 
@@ -28,8 +29,8 @@ interface BGPCallbacks {
     void sendNotificationMessage(byte errorCode, byte subErrorCode, byte[] data);
 
     void sendUpdateMessage(List<NetworkAddress> withdrawnRoutes, byte origin,
-                                  List<List<Short>> asPath, IPAddress nextHop,
-                                  List<NetworkAddress> networkLayerReachabilityInformation);
+                           ASPath asPath, IPAddress nextHop,
+                           List<NetworkAddress> networkLayerReachabilityInformation);
 
     void performPeerOscillationDamping();
 

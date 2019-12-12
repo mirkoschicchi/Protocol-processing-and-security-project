@@ -2,7 +2,6 @@ package fi.utu.protproc.group3.userinterface;
 
 import fi.utu.protproc.group3.nodes.NetworkNode;
 import fi.utu.protproc.group3.nodes.RouterNode;
-import fi.utu.protproc.group3.utils.SimulationReference;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.ActionEvent;

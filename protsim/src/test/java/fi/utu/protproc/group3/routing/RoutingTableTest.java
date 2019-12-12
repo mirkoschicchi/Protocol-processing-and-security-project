@@ -1,5 +1,6 @@
 package fi.utu.protproc.group3.routing;
 
+import fi.utu.protproc.group3.utils.ASPath;
 import fi.utu.protproc.group3.utils.IPAddress;
 import fi.utu.protproc.group3.utils.NetworkAddress;
 import org.junit.jupiter.api.Test;
@@ -44,16 +45,10 @@ class RoutingTableTest {
 
     @Test
     void longestMatch() {
-        List<Short> list1 = Arrays.asList((short)1, (short)2, (short)3);
-        List<Short> list2 = Arrays.asList((short)1, (short)2);
-
-        List<List<Short>> asPath1 = Collections.singletonList(list1);
-        List<List<Short>> asPath2 = Collections.singletonList(list2);
-
         var table = RoutingTable.create();
 
-        var r1 = TableRow.create(NetworkAddress.parse("fe80:1::/64"), IPAddress.parse("fe80:1::1"), 100, 0, null, asPath1, 5);
-        var r2 = TableRow.create(NetworkAddress.parse("0::/0"), IPAddress.parse("0::1"), 100, 0, null, asPath1, 5);
+        var r1 = TableRow.create(NetworkAddress.parse("fe80:1::/64"), IPAddress.parse("fe80:1::1"), 100, 0, null, ASPath.LOCAL, 5);
+        var r2 = TableRow.create(NetworkAddress.parse("0::/0"), IPAddress.parse("0::1"), 100, 0, null, ASPath.LOCAL, 5);
 
         table.insertRow(r1);
 
@@ -69,15 +64,15 @@ class RoutingTableTest {
         assertEquals(r2, table.getRowByDestinationAddress(IPAddress.parse("fe80:3::1")));
         assertEquals(r2, table.getRowByDestinationAddress(IPAddress.parse("fe00::1")));
 
-        var r3 = TableRow.create(NetworkAddress.parse("fe80:1::/64"), IPAddress.parse("fe80:1::1"), 90, 0, null, asPath1, 5);
+        var r3 = TableRow.create(NetworkAddress.parse("fe80:1::/64"), IPAddress.parse("fe80:1::1"), 90, 0, null, ASPath.LOCAL, 5);
         table.insertRow(r3);
         assertEquals(r3, table.getRowByDestinationAddress(IPAddress.parse("fe80:1::")));
 
-        var r4 = TableRow.create(NetworkAddress.parse("fe80:1::/64"), IPAddress.parse("fe80:1::1"), 90, 0, null, asPath2, 5);
+        var r4 = TableRow.create(NetworkAddress.parse("fe80:1::/64"), IPAddress.parse("fe80:1::1"), 90, 0, null, ASPath.LOCAL, 5);
         table.insertRow(r4);
         assertEquals(r4, table.getRowByDestinationAddress(IPAddress.parse("fe80:1::")));
 
-        var r5 = TableRow.create(NetworkAddress.parse("fe80:1::/64"), IPAddress.parse("fe80:1::1"), 90, 0, null, asPath2, 10);
+        var r5 = TableRow.create(NetworkAddress.parse("fe80:1::/64"), IPAddress.parse("fe80:1::1"), 90, 0, null, ASPath.LOCAL, 10);
         table.insertRow(r5);
         assertEquals(r5, table.getRowByDestinationAddress(IPAddress.parse("fe80:1::")));
     }

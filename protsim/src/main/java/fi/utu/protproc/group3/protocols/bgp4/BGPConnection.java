@@ -6,6 +6,7 @@ import fi.utu.protproc.group3.protocols.tcp.Connection;
 import fi.utu.protproc.group3.protocols.tcp.DatagramHandler;
 import fi.utu.protproc.group3.routing.TableRow;
 import fi.utu.protproc.group3.utils.NetworkAddress;
+import fi.utu.protproc.group3.utils.StringUtils;
 
 import java.util.List;
 import java.util.logging.Logger;
@@ -47,12 +48,9 @@ public class BGPConnection extends Connection {
             context.fireEvent(BGPStateMachine.Event.BGPOpen);
         } else if (bgpMessage instanceof BGP4MessageUpdate) {
             BGP4MessageUpdate updateMessage = (BGP4MessageUpdate) bgpMessage;
-
-            List<Short> asPath = updateMessage.getAsPath().get(0);
-            List<Short> bgpIdentifiers = updateMessage.getAsPath().get(1);
-            if (!bgpIdentifiers.contains((short) context.getRouter().getBGPIdentifier())) {
+            if (!updateMessage.getAsPath().containsRouter(context.getRouter())) {
                 for (NetworkAddress networkAddress : updateMessage.getWithdrawnRoutes()) {
-                    context.getRouter().getRoutingTable().removeBgpEntries(context.getBgpIdentifier(), networkAddress);
+                    context.getRouter().getRoutingTable().removeBgpEntries(context.getBgpIdentifier(), networkAddress, updateMessage.getAsPath());
                 }
 
                 for (NetworkAddress networkAddress : updateMessage.getNetworkLayerReachabilityInformation()) {
@@ -65,14 +63,12 @@ public class BGPConnection extends Connection {
 
                 context.fireEvent(BGPStateMachine.Event.UpdateMsg);
 
-                asPath.add(0, (short) context.getRouter().getAutonomousSystem());
-                bgpIdentifiers.add((short) context.getRouter().getBGPIdentifier());
+                var asPath = updateMessage.getAsPath().add(context.getRouter());
                 for (var neighbour : context.getDistributionList()) {
-                    LOGGER.fine("Router " + context.getRouter().getHostname() + " is forwarding UPDATE to " + neighbour.getPeer());
                     neighbour.getConnection().send(BGP4MessageUpdate.create(
                             updateMessage.getWithdrawnRoutes(),
                             BGP4MessageUpdate.ORIGIN_FROM_ESP,
-                            List.of(asPath, bgpIdentifiers),
+                            asPath,
                             neighbour.getEthernetInterface().getIpAddress(),
                             updateMessage.getNetworkLayerReachabilityInformation()
                     ).serialize());
@@ -83,8 +79,6 @@ public class BGPConnection extends Connection {
             context.fireEvent(BGPStateMachine.Event.KeepAliveMsg);
         } else if (bgpMessage instanceof BGP4MessageNotification) {
             context.fireEvent(BGPStateMachine.Event.NotifMsg);
-
-            // TODO : LOGGER.warn()
         }
     }
 

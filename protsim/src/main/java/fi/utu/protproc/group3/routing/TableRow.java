@@ -1,6 +1,7 @@
 package fi.utu.protproc.group3.routing;
 
 import fi.utu.protproc.group3.simulator.EthernetInterface;
+import fi.utu.protproc.group3.utils.ASPath;
 import fi.utu.protproc.group3.utils.IPAddress;
 import fi.utu.protproc.group3.utils.NetworkAddress;
 
@@ -16,7 +17,7 @@ public interface TableRow {
     }
 
     static TableRowImpl create(NetworkAddress prefix, IPAddress nextHop, int metric, int bgpPeer,
-                               EthernetInterface eInterface, List<List<Short>> asPath, double neighborTrust) {
+                               EthernetInterface eInterface, ASPath asPath, double neighborTrust) {
         return new TableRowImpl(prefix, nextHop, metric, bgpPeer, eInterface, asPath, neighborTrust);
     }
 
@@ -26,8 +27,7 @@ public interface TableRow {
     int getBgpPeer();
 
     EthernetInterface getInterface();
-    List<List<Short>> getAsPath();
-    int getAsPathLength();
+    ASPath getAsPath();
 
     void setTrust(double trust);
 }

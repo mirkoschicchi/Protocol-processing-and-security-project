@@ -1,5 +1,7 @@
 package fi.utu.protproc.group3.routing;
 
+import fi.utu.protproc.group3.simulator.EthernetInterface;
+import fi.utu.protproc.group3.utils.ASPath;
 import fi.utu.protproc.group3.utils.IPAddress;
 import fi.utu.protproc.group3.utils.NetworkAddress;
 
@@ -27,6 +29,11 @@ public class RoutingTableImpl implements RoutingTable {
 
     @Override
     public TableRow getRowByDestinationAddress(IPAddress destinationAddress) {
+        return getRowByDestinationAddress(destinationAddress, null);
+    }
+
+    @Override
+    public TableRow getRowByDestinationAddress(IPAddress destinationAddress, EthernetInterface exceptIntf) {
         int longestMatch = -1;
         double shortestMetric = Integer.MAX_VALUE;
 
@@ -34,7 +41,8 @@ public class RoutingTableImpl implements RoutingTable {
         for(TableRow row: getRows()) {
             var prefixLength = row.getPrefix().getPrefixLength();
             if (prefixLength >= longestMatch
-                    && NetworkAddress.isMatch(row.getPrefix(), destinationAddress)) {
+                    && NetworkAddress.isMatch(row.getPrefix(), destinationAddress)
+                    && (exceptIntf == null || row.getInterface() != exceptIntf)) {
                 // 1) longest prefix length
                 // 2) calculated metric
                 if (prefixLength > longestMatch) {
@@ -52,14 +60,34 @@ public class RoutingTableImpl implements RoutingTable {
     }
 
     @Override
-    public ArrayList<TableRow> removeBgpEntries(int bgpIdentifier, NetworkAddress prefix) {
+    public ArrayList<TableRow> removeBgpEntries(int bgpIdentifier) {
         var wl = lock.writeLock();
         wl.lock();
         try {
             var result = new ArrayList<TableRow>();
             for (var i = rows.size() - 1; i >= 0; i--) {
                 TableRow row = rows.get(i);
-                if (row.getBgpPeer() == bgpIdentifier && (prefix == null || row.getPrefix().equals(prefix))) {
+                if (row.getBgpPeer() == bgpIdentifier) {
+                    result.add(row);
+                    rows.remove(i);
+                }
+            }
+
+            return result;
+        } finally {
+            wl.unlock();
+        }
+    }
+
+    @Override
+    public ArrayList<TableRow> removeBgpEntries(int bgpIdentifier, NetworkAddress prefix, ASPath asPath) {
+        var wl = lock.writeLock();
+        wl.lock();
+        try {
+            var result = new ArrayList<TableRow>();
+            for (var i = rows.size() - 1; i >= 0; i--) {
+                TableRow row = rows.get(i);
+                if (row.getBgpPeer() == bgpIdentifier && row.getPrefix().equals(prefix) && row.getAsPath().equals(asPath)) {
                     result.add(row);
                     rows.remove(i);
                 }

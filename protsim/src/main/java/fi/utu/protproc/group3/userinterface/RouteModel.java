@@ -17,7 +17,7 @@ public class RouteModel {
         this.nextHopProperty = row.getNextHop() != null ? new SimpleStringProperty(row.getNextHop().toString()) : new SimpleStringProperty("");
         this.metricProperty = new SimpleIntegerProperty((int) row.getCalculatedMetric());
         this.ethernetInterfaceProperty = row.getInterface() != null ? new SimpleStringProperty(row.getInterface().getNetwork().getNetworkName()) : new SimpleStringProperty("");
-        this.asPathProperty = row.getAsPath() != null ? new SimpleStringProperty(formatAsPath(row.getAsPath())) : new SimpleStringProperty("");
+        this.asPathProperty = row.getAsPath() != null ? new SimpleStringProperty(row.getAsPath().toString()) : new SimpleStringProperty("");
     }
 
     public StringProperty prefixProperty() {
@@ -38,19 +38,5 @@ public class RouteModel {
 
     public StringProperty asPathProperty() {
         return asPathProperty;
-    }
-
-    private String formatAsPath(List<List<Short>> path) {
-        if (path == null || path.size() < 2) return "";
-
-        var as = path.get(0);
-        var idents = path.get(1);
-
-        var result = new StringBuilder();
-        for (var i = 0; i < as.size(); i++) {
-            if (result.length() > 0) result.append(',');
-            result.append("AS").append(as.get(i)).append('@').append(idents.get(i));
-        }
-        return result.toString();
     }
 }

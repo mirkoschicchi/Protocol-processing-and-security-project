@@ -5,7 +5,7 @@ import fi.utu.protproc.group3.graph.GraphAttributes;
 import fi.utu.protproc.group3.nodes.*;
 import fi.utu.protproc.group3.userinterface.UserGUI;
 import fi.utu.protproc.group3.utils.AddressGenerator;
-import fi.utu.protproc.group3.utils.SimulationReference;
+import fi.utu.protproc.group3.userinterface.SimulationReference;
 import javafx.application.Application;
 import org.graphstream.algorithm.APSP;
 import org.graphstream.graph.Node;
@@ -310,10 +310,7 @@ public class SimulationImpl implements SimulationBuilder, Simulation {
                 Layout layout = Layouts.newLayoutAlgorithm();
                 viewer.enableAutoLayout(layout);
 
-
-                //new UserInterfaceManager(viewer, graph, nodes);
                 SimulationReference.simulation = this;
-                SimulationReference.nodes = nodes;
                 Application.launch(UserGUI.class);
             } catch (IOException e) {
                 e.printStackTrace();

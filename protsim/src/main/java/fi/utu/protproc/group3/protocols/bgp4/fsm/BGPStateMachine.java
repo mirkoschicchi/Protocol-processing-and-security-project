@@ -153,7 +153,11 @@ public class BGPStateMachine extends AbstractStateMachine<BGPStateMachine, BGPSt
     }
 
     public static BGPStateMachine newInstance(BGPCallbacks callbacks) {
-        return builder.newStateMachine(State.Idle, callbacks);
+        BGPStateMachine bgpStateMachine = builder.newStateMachine(State.Idle, callbacks);
+
+        //new StateMachineLogger(bgpStateMachine).startLogging();
+
+        return bgpStateMachine;
     }
 
     public enum Event {

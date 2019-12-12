@@ -18,7 +18,9 @@ public class SimpleHttpServer extends Connection {
 
         var body = "<h1>Hello from " + node.getHostname() + "</h1>" +
                 "<p>Your request:</p>" +
-                "<pre>" + new String(message, StandardCharsets.UTF_8) + "</pre>";
+                "<pre>" + new String(message, StandardCharsets.UTF_8) + "</pre>" +
+                "<h2>Merry christmas!</h2>" +
+                "<p><img src=\"https://imgs.xkcd.com/comics/tree.png\"></img>";
 
         var reply = "HTTP/1.0 418 I'm a simple http server\r\n" +
                 "Content-Type: text/html\r\n" +

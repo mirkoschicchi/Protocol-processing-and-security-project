@@ -24,7 +24,7 @@ public abstract class NetworkNodeImpl implements NetworkNode, SimpleNode {
     private final String hostname;
     final List<EthernetInterface> interfaces = new ArrayList<>();
     private final RoutingTable routingTable = new RoutingTableImpl();
-    private final DatagramHandler tcpHandler = new DatagramHandler(this, this::sendPacket);
+    private final DatagramHandler tcpHandler = new DatagramHandler(this, p -> sendPacket(p, null));
 
     NetworkNodeImpl(SimulationBuilderContext context, NodeConfiguration configuration, Network network) {
         this(context, configuration);
@@ -143,10 +143,10 @@ public abstract class NetworkNodeImpl implements NetworkNode, SimpleNode {
         return hostname;
     }
 
-    void sendPacket(IPv6Packet packet) {
+    void sendPacket(IPv6Packet packet, EthernetInterface exceptIntf) {
         Objects.requireNonNull(packet);
 
-        var route = getRoutingTable().getRowByDestinationAddress(packet.getDestinationIP());
+        var route = getRoutingTable().getRowByDestinationAddress(packet.getDestinationIP(), exceptIntf);
         if (route == null) {
             LOGGER.warning("Cannot route packet from " + hostname + " for " + packet.getDestinationIP() + ". Dropping.");
             return;

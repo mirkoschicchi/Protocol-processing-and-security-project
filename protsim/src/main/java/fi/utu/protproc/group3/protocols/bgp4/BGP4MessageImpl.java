@@ -1,5 +1,6 @@
 package fi.utu.protproc.group3.protocols.bgp4;
 
+import fi.utu.protproc.group3.utils.ASPath;
 import fi.utu.protproc.group3.utils.IPAddress;
 import fi.utu.protproc.group3.utils.NetworkAddress;
 
@@ -138,7 +139,7 @@ public abstract class BGP4MessageImpl implements BGP4Message {
                     withdrawnRoutes.add(parseNetworkAddressesFromBuffer(buf));
                 }
 
-                return BGP4MessageUpdate.create(withdrawnRoutes, origin, asPath, nextHop,
+                return BGP4MessageUpdate.create(withdrawnRoutes, origin, new ASPath(asPath), nextHop,
                         networkLayerReachabilityInformation);
 
             case BGP4Message.TYPE_NOTIFICATION:

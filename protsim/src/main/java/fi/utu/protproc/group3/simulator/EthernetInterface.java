@@ -43,5 +43,4 @@ public interface EthernetInterface {
 
     NetworkNode getHost();
 
-    String print();
 }

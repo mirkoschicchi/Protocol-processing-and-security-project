@@ -1,5 +1,6 @@
 package fi.utu.protproc.group3.protocols.bgp4.fsm;
 
+import fi.utu.protproc.group3.utils.ASPath;
 import fi.utu.protproc.group3.utils.IPAddress;
 import fi.utu.protproc.group3.utils.NetworkAddress;
 
@@ -43,7 +44,7 @@ public class BGPCallbacksDefault implements BGPCallbacks {
 
     @Override
     public void sendUpdateMessage(List<NetworkAddress> withdrawnRoutes, byte origin,
-                                  List<List<Short>> asPath, IPAddress nextHop,
+                                  ASPath asPath, IPAddress nextHop,
                                   List<NetworkAddress> networkLayerReachabilityInformation) {
 
     }

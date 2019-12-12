@@ -7,6 +7,7 @@ import fi.utu.protproc.group3.protocols.tcp.Connection;
 import fi.utu.protproc.group3.protocols.tcp.DatagramHandler;
 import fi.utu.protproc.group3.routing.TableRow;
 import fi.utu.protproc.group3.simulator.EthernetInterface;
+import fi.utu.protproc.group3.utils.ASPath;
 import fi.utu.protproc.group3.utils.IPAddress;
 import fi.utu.protproc.group3.utils.NetworkAddress;
 import reactor.core.Disposable;
@@ -78,11 +79,19 @@ public class BGPPeerContext {
             @Override
             public void sendNotificationMessage(byte errorCode, byte subErrorCode, byte[] data) {
                 connection.send(BGP4MessageNotification.create(errorCode, subErrorCode, data).serialize());
+
+                // HACK: We clean up all routes on hold timer expiring here. Normally, the TCP implementation would
+                // recognize an error in the underlying connection and we'd get a different event, but since our TCP
+                // implementation cannot recognize this condition, we instead run into the hold timer and clean up
+                // because of this.
+                if (errorCode == BGP4MessageNotification.ERR_CODE_HOLD_TIMER_EXPIRED) {
+                    deleteAllRoutes();
+                }
             }
 
             @Override
             public void sendUpdateMessage(List<NetworkAddress> withdrawnRoutes, byte origin,
-                                          List<List<Short>> asPath, IPAddress nextHop,
+                                          ASPath asPath, IPAddress nextHop,
                                           List<NetworkAddress> networkLayerReachabilityInformation) {
                 connection.send(BGP4MessageUpdate.create(withdrawnRoutes, origin, asPath, nextHop,
                         networkLayerReachabilityInformation).serialize());
@@ -110,16 +119,22 @@ public class BGPPeerContext {
 
             @Override
             public void deleteAllRoutes() {
-                var withdrawnRoutes = context.getRouter().getRoutingTable().removeBgpEntries(context.getBgpIdentifier(), null);
+                var withdrawnRoutes = context.getRouter().getRoutingTable().removeBgpEntries(context.getBgpIdentifier())
+                        .stream()
+                        .collect(Collectors.groupingBy(r -> r.getAsPath()));
 
                 for (var neighbour : context.getDistributionList()) {
-                    neighbour.getConnection().send(BGP4MessageUpdate.create(
-                            withdrawnRoutes.stream().map(TableRow::getPrefix).collect(Collectors.toUnmodifiableList()),
-                            BGP4MessageUpdate.ORIGIN_FROM_ESP,
-                            List.of(List.of((short) router.getAutonomousSystem()), List.of((short) router.getBGPIdentifier())),
-                            neighbour.getEthernetInterface().getIpAddress(),
-                            List.of()
-                    ).serialize());
+                    for (var group : withdrawnRoutes.entrySet()) {
+                        var asPath = group.getKey().add(router);
+
+                        neighbour.getConnection().send(BGP4MessageUpdate.create(
+                                group.getValue().stream().map(TableRow::getPrefix).collect(Collectors.toUnmodifiableList()),
+                                BGP4MessageUpdate.ORIGIN_FROM_ESP,
+                                asPath,
+                                neighbour.getEthernetInterface().getIpAddress(),
+                                List.of()
+                        ).serialize());
+                    }
                 }
             }
         });
@@ -190,7 +205,7 @@ public class BGPPeerContext {
             var msg = BGP4MessageUpdate.create(
                     withdrawnRoutes.stream().map(TableRow::getPrefix).collect(Collectors.toUnmodifiableList()),
                     BGP4MessageUpdate.ORIGIN_FROM_IGP,
-                    List.of(List.of((short) router.getAutonomousSystem()), List.of((short) router.getBGPIdentifier())),
+                    new ASPath(router),
                     ethernetInterface.getIpAddress(),
                     newRoutes.stream().map(TableRow::getPrefix).collect(Collectors.toUnmodifiableList())
             );
@@ -201,16 +216,17 @@ public class BGPPeerContext {
 
     private void sendExistingRoutes() {
         var existingRoutesByPath = router.getRoutingTable().getRows().stream()
-                .filter(r -> r.getBgpPeer() != bgpIdentifier)
-                .filter(r -> r.getInterface() != ethernetInterface)
-                .filter(r -> r.getAsPath() != null)
+                .filter(r -> r.getBgpPeer() != bgpIdentifier) // skip routes sent by the peer himself
+                .filter(r -> r.getBgpPeer() != 0) // skip local routes (handled in updateLocalRoutes)
+                .filter(r -> r.getInterface() != ethernetInterface) // skip routes from the same interface
+                .filter(r -> r.getAsPath() != null) // only send BGP routes
                 .collect(Collectors.groupingBy(i -> i.getAsPath()));
 
         for (var path : existingRoutesByPath.entrySet()) {
             var msg = BGP4MessageUpdate.create(
                     new ArrayList<>(),
                     BGP4MessageUpdate.ORIGIN_FROM_ESP,
-                    path.getKey(),
+                    path.getKey().add(router),
                     ethernetInterface.getIpAddress(),
                     path.getValue().stream().map(TableRow::getPrefix).collect(Collectors.toUnmodifiableList())
             );

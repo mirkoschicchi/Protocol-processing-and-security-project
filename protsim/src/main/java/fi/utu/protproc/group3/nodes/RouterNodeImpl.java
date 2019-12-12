@@ -87,7 +87,7 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode, Route
                     packet.getNextHeader(), (byte) (packet.getHopLimit() - 1),
                     packet.getSourceIP(), packet.getDestinationIP(), packet.getPayload());
 
-            sendPacket(newPacket);
+            sendPacket(newPacket, intf);
         }
     }
 
@@ -165,7 +165,7 @@ public class RouterNodeImpl extends NetworkNodeImpl implements RouterNode, Route
         for (var peer : peerings.keySet()) {
             var peering = peerings.get(peer);
             for (var neighbor : peerings.values()) {
-                if (!neighbor.getPeer().equals(peer)) {
+                if (!neighbor.getPeer().equals(peer) && !neighbor.getEthernetInterface().equals(peering.getEthernetInterface())) {
                     peering.getDistributionList().add(neighbor);
                 }
             }

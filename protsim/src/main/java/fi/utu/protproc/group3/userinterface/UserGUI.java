@@ -1,11 +1,7 @@
 package fi.utu.protproc.group3.userinterface;
 
 import fi.utu.protproc.group3.graph.GraphAttributes;
-import fi.utu.protproc.group3.nodes.ClientNode;
 import fi.utu.protproc.group3.nodes.NetworkNode;
-import fi.utu.protproc.group3.nodes.RouterNode;
-import fi.utu.protproc.group3.nodes.ServerNode;
-import fi.utu.protproc.group3.utils.SimulationReference;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.embed.swing.SwingNode;
@@ -13,9 +9,7 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import org.graphstream.ui.view.View;
@@ -29,15 +23,10 @@ import java.util.Map;
 
 public class UserGUI extends Application {
 
-    private Map<String, NetworkNode> nodes;
-
     @Override
     public void start(Stage primaryStage) throws Exception {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/main.fxml"));
         Parent root = loader.load();
-
-        nodes = new HashMap<>();
-        nodes = SimulationReference.nodes;
 
         Viewer viewer = SimulationReference.simulation.getViewer();
         SwingNode node = (SwingNode) root.lookup("#swingnode");

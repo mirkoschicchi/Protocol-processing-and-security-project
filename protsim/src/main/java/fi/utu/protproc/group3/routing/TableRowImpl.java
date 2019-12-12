@@ -1,11 +1,15 @@
 package fi.utu.protproc.group3.routing;
 
 import fi.utu.protproc.group3.simulator.EthernetInterface;
+import fi.utu.protproc.group3.utils.ASPath;
 import fi.utu.protproc.group3.utils.IPAddress;
 import fi.utu.protproc.group3.utils.NetworkAddress;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 
 public class TableRowImpl implements TableRow {
@@ -14,7 +18,7 @@ public class TableRowImpl implements TableRow {
     private final int metric;
     private final EthernetInterface eInterface;
     private int bgpPeer;
-    private List<List<Short>> asPath;
+    private ASPath asPath;
     private double neighborTrust;
 
     public TableRowImpl(NetworkAddress prefix, IPAddress nextHop,
@@ -23,10 +27,11 @@ public class TableRowImpl implements TableRow {
         this.nextHop = nextHop;
         this.metric = metric;
         this.eInterface = eInterface;
+        this.asPath = ASPath.LOCAL;
     }
 
     public TableRowImpl(NetworkAddress prefix, IPAddress nextHop, int metric, int bgpPeer,
-                        EthernetInterface eInterface, List<List<Short>> asPath, double neighborTrust) {
+                        EthernetInterface eInterface, ASPath asPath, double neighborTrust) {
         this.prefix = prefix;
         this.nextHop = nextHop;
         this.metric = metric;
@@ -48,7 +53,7 @@ public class TableRowImpl implements TableRow {
 
     @Override
     public double getCalculatedMetric() {
-        return metric == 0 ? (this.getAsPathLength() * 100) / neighborTrust : metric;
+        return metric != 0 ? metric : (asPath.length() * 100) / Math.max(0.0001, neighborTrust);
     }
 
     @Override
@@ -62,13 +67,8 @@ public class TableRowImpl implements TableRow {
     }
 
     @Override
-    public List<List<Short>> getAsPath() {
+    public ASPath getAsPath() {
         return asPath;
-    }
-
-    @Override
-    public int getAsPathLength() {
-        return asPath != null ? asPath.get(0).size() : 0;
     }
 
     @Override
@@ -96,11 +96,8 @@ public class TableRowImpl implements TableRow {
             result.append(" peer ").append(bgpPeer);
         }
 
-        if (asPath != null && asPath.size() > 0) {
-            result.append(" as_path AS").append(String.join(
-                    ", AS",
-                    (Iterable<String>) asPath.get(0).stream().map(Object::toString)::iterator)
-            );
+        if (asPath != null && asPath.length() > 0) {
+            result.append(" as_path ").append(asPath);
         }
 
         return result.toString();

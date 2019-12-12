@@ -3,10 +3,7 @@ package fi.utu.protproc.group3.protocols.bgp4;
 import fi.utu.protproc.group3.protocols.EthernetFrame;
 import fi.utu.protproc.group3.protocols.IPv6Packet;
 import fi.utu.protproc.group3.protocols.tcp.TCPDatagram;
-import fi.utu.protproc.group3.utils.AddressGenerator;
-import fi.utu.protproc.group3.utils.IPAddress;
-import fi.utu.protproc.group3.utils.NetworkAddress;
-import fi.utu.protproc.group3.utils.StringUtils;
+import fi.utu.protproc.group3.utils.*;
 import org.junit.jupiter.api.Test;
 
 import java.text.MessageFormat;
@@ -30,7 +27,7 @@ class BGP4MessageUpdateTest {
             randomNetList.add(ag.networkAddress(MessageFormat.format("2001:4860:4860::888{0}/32", i)));
             aspath.add(aspathSample);
         }
-        var message = BGP4MessageUpdate.create(randomNetList, BGP4MessageUpdate.ORIGIN_FROM_IGP, aspath,
+        var message = BGP4MessageUpdate.create(randomNetList, BGP4MessageUpdate.ORIGIN_FROM_IGP, new ASPath(aspath),
                 ag.networkAddress("2001:4860:4860::8887/32").getAddress(), randomNetList);
         assertNotNull(message);
 
@@ -60,31 +57,6 @@ class BGP4MessageUpdateTest {
     }
 
     @Test
-    void asPathWithMultipleElements() {
-        var expected = BGP4MessageUpdate.create(
-                List.of(),
-                BGP4MessageUpdate.ORIGIN_FROM_ESP,
-                List.of(
-                        List.of((short) 11, (short) 12, (short) 13),
-                        List.of((short) 21, (short) 22, (short) 23),
-                        List.of((short) 31, (short) 32, (short) 33)
-                ),
-                IPAddress.parse("fe80::1"),
-                List.of()
-        );
-
-        var actual = (BGP4MessageUpdate) BGP4Message.parse(expected.serialize());
-
-        assertEquals(3, actual.getAsPath().size());
-        for (var i = 0; i < 3; i++) {
-            assertEquals(3, actual.getAsPath().get(i).size());
-            assertEquals((short) 1 + (i + 1) * 10, (short) actual.getAsPath().get(i).get(0));
-            assertEquals((short) 2 + (i + 1) * 10, (short) actual.getAsPath().get(i).get(1));
-            assertEquals((short) 3 + (i + 1) * 10, (short) actual.getAsPath().get(i).get(2));
-        }
-    }
-
-    @Test
     void parseMessage() {
         var pdu = StringUtils.parseHexStream("2626e470895e2efc2eae45b186dd60000000008a067f20010001ffffffff152fa8993ea34d1020010001ffffffff4000e24ef7fa0477ccf600b3a4d244935b3bf2335010ffff4b1b0000ffffffffffffffffffffffffffffffff0076020000005f500100010050020018010300010002000301030001000200030103000100020003900e0024000201102001486048600000000000000000888700202001486020200148602020014860900f0012000201202001486020200148602020014860"); // todo
         var frame = EthernetFrame.parse(pdu);
@@ -95,7 +67,6 @@ class BGP4MessageUpdateTest {
         assertEquals(118, message.getLength());
         assertTrue(message instanceof BGP4MessageUpdate);
         var update = (BGP4MessageUpdate) message;
-        AddressGenerator ag = new AddressGenerator();
         List<List<Short>> aspath = new ArrayList<>();
         List<Short> aspathSample = new ArrayList<>();
         aspathSample.add((short)1);
@@ -103,7 +74,7 @@ class BGP4MessageUpdateTest {
         aspathSample.add((short)3);
         List<NetworkAddress> randomNetList = new ArrayList<>();
         for (int i=0; i < 3; i++) {
-            randomNetList.add(ag.networkAddress(MessageFormat.format("2001:4860:4860::888{0}/32", i)));
+            randomNetList.add(NetworkAddress.parse(MessageFormat.format("2001:4860:4860::888{0}/32", i)));
             aspath.add(aspathSample);
         }
         var cont = 0;
@@ -113,8 +84,8 @@ class BGP4MessageUpdateTest {
             cont++;
         }
         assertSame(BGP4MessageUpdate.ORIGIN_FROM_IGP, update.getOrigin());
-        assertEquals(aspath, update.getAsPath());
-        IPAddress nh = ag.networkAddress("2001:4860:4860::8887/32").getAddress();
+        assertEquals(aspath, update.getAsPath().toNetworkFormat());
+        var nh = IPAddress.parse("2001:4860:4860::8887");
         assertEquals(nh, update.getNextHop());
         cont = 0;
         for (NetworkAddress addr : update.getNetworkLayerReachabilityInformation()) {

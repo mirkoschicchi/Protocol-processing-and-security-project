@@ -1,5 +1,6 @@
 package fi.utu.protproc.group3.protocols.bgp4;
 
+import fi.utu.protproc.group3.utils.ASPath;
 import fi.utu.protproc.group3.utils.IPAddress;
 import fi.utu.protproc.group3.utils.NetworkAddress;
 
@@ -24,13 +25,13 @@ public class BGP4MessageUpdateImpl extends BGP4MessageImpl implements BGP4Messag
 
     private final List<NetworkAddress> withdrawnRoutes;
     private final byte origin;
-    private final List<List<Short>> asPath;
+    private final ASPath asPath;
     private final IPAddress nextHop;
     private final List<NetworkAddress> networkLayerReachabilityInformation;
 
     public BGP4MessageUpdateImpl(short length, byte type,
                                  List<NetworkAddress> withdrawnRoutes,
-                                 byte origin, List<List<Short>> asPath, IPAddress nextHop,
+                                 byte origin, ASPath asPath, IPAddress nextHop,
                                  List<NetworkAddress> networkLayerReachabilityInformation) {
         super(length, type);
         this.withdrawnRoutes = withdrawnRoutes;
@@ -52,7 +53,7 @@ public class BGP4MessageUpdateImpl extends BGP4MessageImpl implements BGP4Messag
         short len = 5; // origin
 
         len += 4;
-        for (List<Short> asSet : getAsPath()) {
+        for (List<Short> asSet : getAsPath().toNetworkFormat()) {
             len += 2;
             len += asSet.size() * 2;
         }
@@ -81,7 +82,7 @@ public class BGP4MessageUpdateImpl extends BGP4MessageImpl implements BGP4Messag
     }
 
     @Override
-    public List<List<Short>> getAsPath() {
+    public ASPath getAsPath() {
         return asPath;
     }
 
@@ -112,14 +113,14 @@ public class BGP4MessageUpdateImpl extends BGP4MessageImpl implements BGP4Messag
 
         // ASPATH
         short asPathLen = 0;
-        for (List<Short> aslist : getAsPath()) {
+        for (List<Short> aslist : getAsPath().toNetworkFormat()) {
             asPathLen += 2 + aslist.size() * 2;
         }
         serialized.put(TYPE_FLAGS_WELL_KNOWN_TRANSITIVE)
                 .put(TYPE_ASPATH)
                 .putShort(asPathLen);
 
-        for (List<Short> asSet : getAsPath()) {
+        for (List<Short> asSet : getAsPath().toNetworkFormat()) {
             serialized.put(AS_SET)
                     .put((byte)asSet.size());
             for(Short as : asSet) {
