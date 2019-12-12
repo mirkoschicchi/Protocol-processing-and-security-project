@@ -9,7 +9,7 @@
         xmlns:fx="http://javafx.com/fxml"
         fx:id="table"
         fx:controller="fi.utu.protproc.group3.userinterface.RoutingTableController"
-        minHeight="200" prefHeight="188.0" prefWidth="800.0"
+        minHeight="200" prefHeight="500.0" prefWidth="800.0"
         editable="false"
 >
     <columns>
