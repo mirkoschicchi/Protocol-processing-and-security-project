@@ -1,2 +1,35 @@
 \chapter{Project implementation}
-Presentation of project implementation: functional diagrams, solutions used in the implementation, what were the most difficult/interesting parts of the implementation, why, and how where they implemented (describe any innovative ideas and solutions you included; include code snippets as example if necessary)
+%Presentation of project implementation: functional diagrams, solutions used in the implementation, what were the most difficult/interesting parts of the implementation, why, and how where they implemented (describe any innovative ideas and solutions you included; include code snippets as example if necessary)
+
+\section{BGP Messages}
+The BGP implementation follows quite specifically the RFC 4271 specification, which define four different kind of messages.
+In the next paragraphs there will be a brief recap of required fields for KEEPALIVE, OPEN and NOTIFICATION messages. It's noteworthy to spend more time explaining the implementation of the UPDATE message, which is not trivial as the others due to the taken design decision of using IPv6 rather then the default IPv4.
+
+
+\subsection{KEEPALIVE message}
+
+
+
+\subsection{OPEN message}
+
+
+
+\subsection{NOTIFICATION message}
+
+
+\subsection{UPDATE message}
+As anticipated before, this message required more effort to be implemented because of the requirement to be complient with IPv6. Therefore, the message is still based on the RFC 4271\cite{rfc4271}, but apply necessarly take into account some extra path attributes described in the RFC 1812 specification\cite{rfc1812}.
+In RFC 4271, \texttt{withdrawn routes} and \texttt{network layer reachability information} need to be specified as IPv4 addresses in the relative fields of the message itself. Instead, the \texttt{Path attributes} field need to be fullfilled with at least 3 sub-fields which are \texttt{origin}, \texttt{next hop} and \texttt{as path}.
+cazzo
+RFC 1812 permit to include two additional sub-fields to \texttt{path attributes}, indicating \texttt{withdrawn routes} and \texttt{network layer reachability information} in a IPv6 format.
+This means that:
+\begin{itemize}
+    \item The \texttt{withdrawn routes length} can take value 0;
+    \item Consequently, the \texttt{withdrawn routes} can be leaved empty;
+    \item In the same way, also \texttt{network layer reachability information} won't be present anymore.
+\end{itemize}
+Moreover, in the two additional subfields are specified the following information:
+\begin{itemize}
+    \item \texttt{MP\_REACH\_NLRI} 
+    \item \texttt{MP\_UNREACH\_NLRI}
+\end{itemize}
