@@ -5,22 +5,50 @@
 The BGP implementation follows quite specifically the RFC 4271 specification, which define four different kind of messages.
 In the next paragraphs there will be a brief recap of required fields for KEEPALIVE, OPEN and NOTIFICATION messages. It's noteworthy to spend more time explaining the implementation of the UPDATE message, which is not trivial as the others due to the taken design decision of using IPv6 rather then the default IPv4.
 
-
-\subsection{KEEPALIVE message}
-
-
+Each message need to integrate an header, composed by three simple fields:
+\begin{itemize}
+    \item \texttt{Marker} (16 bytes): each bit is set to 1;
+    \item \texttt{Length} (2 bytes): number of bytes of the message, this header included;
+    \item \texttt{Type} (1 byte): specify which of the 4 messages is following the header.
+\end{itemize}
 
 \subsection{OPEN message}
+The OPEN message is the one used to enstablish a connection need to be sent by both parties of the connection.
+The message is composed by the following fields:
+\begin{itemize}
+    \item \texttt{Version} (1 byte): the protocol version number, in this project it is 4;
+    \item \texttt{My Autonomous System} (2 bytes): identifier number of the sender;
+    \item \texttt{Hold Time} (2 bytes): proposal of Hold Time interval;
+    \item \texttt{BGP Identifier} (4 bytes);
+    \item \texttt{Optional Parameters Length} (1 byte);
+    \item \texttt{Optional Parameters} (variable length).
+\end{itemize}
 
+
+\subsection{KEEPALIVE message}
+This message is used when a well-formatted OPEN message is received and need to be sent regularly to avoid the expiration of the Hold Timer. The suggested interval is a third of the Hold Timer. In this project, the Hold Timer expires after 90 seconds of no received KEEPALIVE, which is sent every 30 seconds. No extra fields are included, therefore the 19 byte message header is the sole content of this message.
 
 
 \subsection{NOTIFICATION message}
-
+When an error is detected, a NOTIFICATION message is sent. Three are the needed fields for this message:
+\begin{itemize}
+    \item \texttt{Error code} (1 byte);
+    \item \texttt{Error subcode} (1 byte);
+    \item \texttt{Data} (variable length).
+\end{itemize}
+Immediatly after the message, the connection is closed.
 
 \subsection{UPDATE message}
 As anticipated before, this message required more effort to be implemented because of the requirement to be complient with IPv6. Therefore, the message is still based on the RFC 4271\cite{rfc4271}, but apply necessarly take into account some extra path attributes described in the RFC 1812 specification\cite{rfc1812}.
-In RFC 4271, \texttt{withdrawn routes} and \texttt{network layer reachability information} need to be specified as IPv4 addresses in the relative fields of the message itself. Instead, the \texttt{Path attributes} field need to be fullfilled with at least 3 sub-fields which are \texttt{origin}, \texttt{next hop} and \texttt{as path}.
-cazzo
+Specified fields from RFC 4271 are:
+\begin{itemize}
+\item \texttt{Withdrawn Routes Length} (2 bytes);
+\item \texttt{Withdrawn Routes} (variable);
+\item \texttt{Total Path Attribute Length} (2 bytes);
+\item \texttt{Path Attributes} (variable);
+\item \texttt{Network Layer Reachability Information} (variable).
+\end{itemize}
+In the standard implementation, \texttt{Withdrawn routes} and \texttt{network layer reachability information} need to be specified as IPv4 addresses in the relative fields of the message itself. Instead, the \texttt{Path attributes} field need to be fullfilled with at least 3 sub-fields which are \texttt{origin}, \texttt{next hop} and \texttt{as path}.
 RFC 1812 permit to include two additional sub-fields to \texttt{path attributes}, indicating \texttt{withdrawn routes} and \texttt{network layer reachability information} in a IPv6 format.
 This means that:
 \begin{itemize}
@@ -28,8 +56,8 @@ This means that:
     \item Consequently, the \texttt{withdrawn routes} can be leaved empty;
     \item In the same way, also \texttt{network layer reachability information} won't be present anymore.
 \end{itemize}
-Moreover, in the two additional subfields are specified the following information:
+In turn, two additional subfields are specified:
 \begin{itemize}
-    \item \texttt{MP\_REACH\_NLRI} 
-    \item \texttt{MP\_UNREACH\_NLRI}
+    \item \texttt{MP\_REACH\_NLRI}, where network layer reachability information is specified together with the \texttt{next hop};
+    \item \texttt{MP\_UNREACH\_NLRI}, containing the withdrawn routes.
 \end{itemize}
