@@ -6,16 +6,16 @@ decisions concerning the implementation and development of the code.
 First of all we agreed on using plain Java 13 (without the use of a simulator) because we
 wanted to implement all the protocols and packets from scratch in order to have a deeper
 understanding of the proposed task.\\
-We also determined to implement IPv6 as network layer protocol since it has simpler fields with respect to IPv4 and 
-it's very important to get a better knowledge of it in the prospect of a future widespread use. In addition, we were 
+We also determined to implement IPv6 as network layer protocol since it has simpler fields with respect to IPv4 and
+it's very important to get a better knowledge of it in the prospect of a future widespread use. In addition, we were
 also open to do a dual-stack implementation in case we would have enough time (but it was not the case).
 
-Thanks to our software engineering experience we were able to subdivide the main task in 
+Thanks to our software engineering experience we were able to subdivide the main task in
 subtasks and we put milestones and preferred deadlines for each of them, trying to predict
 the amount of working hours required.\\
 The work was split between the team members in the following way:
 \begin{itemize}
-    \item Simulator and infrastructure, Layer 2, Project management (Stephan) 
+    \item Simulator and infrastructure, Layer 2, Project management (Stephan)
     \item IPv6 (excluding routing) and TCP (Filippo)
     \item Routing and BGP (Mirko and Gabriele)
 \end{itemize}
@@ -34,11 +34,11 @@ A detailed plan about tasks' splitting and the proposed deadlines is shown in fi
 %\end{figure}
 
 We managed to follow quite well the plan that we did at the beginning but we slightly
-adapted it from time to time. 
+adapted it from time to time.
 Very important for future debugging purposes was the implementation of a PCAP exporter
 in order to verify the correctness of created packets using Wireshark.
 
-\subsection{Week 1 \& 2}
+\section{Week 1 \& 2}
 At the end of the second week of work these were the results:
 
 \begin{itemize}
@@ -52,7 +52,7 @@ At the end of the second week of work these were the results:
 \end{itemize}
 
 For the week 3 we planned to implement end-to-end connection using TCP, dynamic routing
-using BGP and the possibility of loading custom based scenarios. 
+using BGP and the possibility of loading custom based scenarios.
 To go more into the details:
 
 \begin{itemize}
@@ -64,7 +64,7 @@ To go more into the details:
     \item BGP open, update, notification message handlers
 \end{itemize}
 
-\subsection{Week 3}
+\section{Week 3}
 In this week Filippo joined Stephan in the implementation of the simulator and
 core networking.
 

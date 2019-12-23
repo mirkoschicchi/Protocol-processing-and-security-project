@@ -13,7 +13,7 @@
 \usepackage{titlesec} % for chapters' titles custom format
 \usepackage[hidelinks]{hyperref} % to write clickable URLs
 \usepackage{textcomp} % for arrow in normal text mode
-\usepackage[utf8x]{inputenc} % for Linux 
+\usepackage[utf8]{inputenc} % for Linux
 \singlespacing
 \usepackage[english]{babel} % setting language to english
 
@@ -24,56 +24,62 @@
 \usepackage{color}
 \usepackage{parskip}
 
+\usepackage[style=ieee, urldate=comp]{biblatex}
+\usepackage{silence}
+\WarningFilter{biblatex}{File 'english-ieee.lbx'}
+\usepackage{xpatch}
+\usepackage{url}
+\usepackage{filecontents}
+\usepackage{csquotes}
+\addbibresource{biblio.bib}
+
 \definecolor{dkgreen}{rgb}{0,0.6,0}
 \definecolor{gray}{rgb}{0.5,0.5,0.5}
 \definecolor{mauve}{rgb}{0.58,0,0.82}
 \graphicspath{{data/}}
 
 \begin{document}
-  \pagenumbering{gobble} 
   \input{cover}
 
-  \clearpage
- 
-  \clearpage
-  \pagestyle{plain} % nessuna intestazione e pie pagina con numero al centro
-  
+  %\clearpage
+  %\pagestyle{plain} % nessuna intestazione e pie pagina con numero al centro
+
   \tableofcontents
+  \thispagestyle{empty} % used to eliminate ToC page number
+  \addtocontents{toc}{\protect\thispagestyle{empty}} % used to eliminate ToC page number when there is more than one page
   \newpage
+
   \begingroup
-    \renewcommand{\cleardoublepage}{} 
-    \renewcommand{\clearpage}{} 
-    \pagenumbering{arabic} 
+    \renewcommand{\cleardoublepage}{}
+    \renewcommand{\clearpage}{}
+    \pagenumbering{arabic}
     \titleformat{\chapter}
       {\normalfont\Huge\bfseries}{\thechapter}{1em}{}
-      
+
     \titlespacing*{\chapter}{0pt}{0in}{0.02in}
     \titlespacing*{\section}{0pt}{0.20in}{0.02in}
     \titlespacing*{\subsection}{0pt}{0.10in}{0.02in}
     \titlespacing*{\subsubsection}{0pt}{0.05in}{0.02in}
-    
-    \input{1_intro}
-    \pagebreak
-    
-    \input{2_projPlan}
-    \pagebreak
-    
-    \input{3_simulatorDoc}
-    \pagebreak
-    
-    \input{4_projImpl}
-    \pagebreak
-    
-    \input{5_conclusion}
-    \pagebreak
 
+    \input{1_intro}
+
+    \pagebreak
+    \input{2_projPlan}
+
+    \pagebreak
+    \input{3_simulatorDoc}
+
+    \pagebreak
+    \input{4_projImpl}
+
+    \pagebreak
+    \input{5_conclusion}
   \endgroup
 
   % bibliography in bibtex format
   % adding chapter to index
-  \addcontentsline{toc}{chapter}{References}
-  \renewcommand{\bibname}{References}
+  %\addcontentsline{toc}{chapter}{References}
+  %\renewcommand{\bibname}{References}
   % style with alphabetical order wrt authors
-  \bibliography{biblio}
-  \bibliographystyle{unsrt}
+  \printbibliography
 \end{document}

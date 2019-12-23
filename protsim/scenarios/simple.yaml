@@ -8,10 +8,10 @@ networks:
   - name: t2a # first tier 2 ISP
     autonomousSystem: 1000
     address: "2002:1:ffff:ffff::0/64"
-  - name: t2b # first tier 2 ISP
+  - name: t2b # second tier 2 ISP
     autonomousSystem: 1000
     address: "2002:2:ffff:ffff::0/64"
-  - name: t2c # first tier 2 ISP
+  - name: t2c # third tier 2 ISP
     autonomousSystem: 1000
     address: "2002:3:ffff:ffff::0/64"
   - name: net1 # first test net (servers)
@@ -22,7 +22,7 @@ networks:
     address: "2003:2::0/64"
     autonomousSystem: 1
     randomServers: 1
-  - name: net3 # first test net (servers & clients)
+  - name: net3 # third test net (servers & clients)
     address: "2003:3::0/64"
     autonomousSystem: 3
     randomClients: 1
