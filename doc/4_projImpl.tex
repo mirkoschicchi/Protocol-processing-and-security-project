@@ -2,9 +2,9 @@
 %Presentation of project implementation: functional diagrams, solutions used in the implementation, what were the most difficult/interesting parts of the implementation, why, and how where they implemented (describe any innovative ideas and solutions you included; include code snippets as example if necessary)
 Ciao
 
-\section{Layer 2}
+\section{Layer 2}\label{layer2}
 
-\section{Layer 3}
+\section{Layer 3}\label{layer3}
 For what concerns the Network Layer we first created the IPv6 header following the RFC 2460 \cite{rfc2460}.\newline
 To be sure that the implementation was correct we created several unit tests to check that the IP packet was parsed correctly.
 Moreover, we tried to exchange messages using Wireshark and we noticed that everything was correct.\newline
@@ -17,7 +17,7 @@ In case the prefix is equal, we calculate a second parameter.
 It can be the BGP metric whether it is set, or the result of our formula, which takes the AS\_PATH length multiplied by 100 and divides the result by the neighbour trust.
 Therefore, the more we trust the next-hop, the smaller will be the calculated parameter and the higher will be the probability that route will be chosen.
 
-\section{Layer 4}
+\section{Layer 4}\label{layer4}
 About the Transport Layer, we decided to implement the TCP header following the RFC 793 \cite{rfc793}.
 Also, in this case, we used some default values like the Urgent Pointer, the Options and the relative Padding since we do not need them for this application.\newline
 One fundamental limitation is that our TCP implementation is message-based since it was not the main goal of the project and it was a lot easier.
@@ -25,7 +25,7 @@ Therefore, there is not data buffer and it can be considered like a UDP protocol
 Moreover, we did not implement any error handling or retransmission technique.\newline
 Nevertheless, we implemented the 3WHS to establish the connection and the FIN based messages to close it.
 
-\section{BGP Messages}
+\section{BGP Messages}\label{BGPMex}
 The BGP implementation follows quite specifically the RFC 4271 specification, which define four different kind of messages.
 In the next paragraphs there will be a brief recap of required fields for KEEPALIVE, OPEN and NOTIFICATION messages. It's noteworthy to spend more time explaining the implementation of the UPDATE message, which is not trivial as the others due to the taken design decision of using IPv6 rather then the default IPv4.
 
@@ -67,11 +67,11 @@ As anticipated before, this message required more effort to be implemented becau
 Therefore, the message is still based on the RFC 4271 \cite{rfc4271}, but apply necessarly take into account some extra path attributes described in the RFC 1812 \cite{rfc1812} specification.
 Specified fields from RFC 4271 are:
 \begin{itemize}
-\item \texttt{Withdrawn Routes Length} (2 bytes);
-\item \texttt{Withdrawn Routes} (variable);
-\item \texttt{Total Path Attribute Length} (2 bytes);
-\item \texttt{Path Attributes} (variable);
-\item \texttt{Network Layer Reachability Information} (variable).
+    \item \texttt{Withdrawn Routes Length} (2 bytes);
+    \item \texttt{Withdrawn Routes} (variable);
+    \item \texttt{Total Path Attribute Length} (2 bytes);
+    \item \texttt{Path Attributes} (variable);
+    \item \texttt{Network Layer Reachability Information} (variable).
 \end{itemize}
 In the standard implementation, \texttt{Withdrawn routes} and \texttt{network layer reachability information} need to be specified as IPv4 addresses in the relative fields of the message itself. Instead, the \texttt{Path attributes} field need to be fullfilled with at least 3 sub-fields which are \texttt{origin}, \texttt{next hop} and \texttt{as path}.
 RFC 1812 permit to include two additional sub-fields to \texttt{path attributes}, indicating \texttt{withdrawn routes} and \texttt{network layer reachability information} in a IPv6 format.
