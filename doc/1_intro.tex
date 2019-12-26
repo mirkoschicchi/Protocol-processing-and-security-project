@@ -1,19 +1,16 @@
 \chapter{Introduction}
-In this chapter, we will describe the project overview starting from requirements and specifications and continuing with the group composition, roles, responsibilities and effort.
+In this chapter, we aim to give an overview of how we separated the workload and managed the project complexity.
+We will describe the project implementation starting from requirements and specifications, continuing with the group composition, the roles and the related responsibilities.
+Lastly, we will talk about the effort made by each group member.
 
-Introduction (
- each member's effort in the project as a percentage of the overall work including project,
- reporting and presentation.
-)
-
-\section{Problem description}
+\section{Problem Description}
 The project required to implement a scalable and customizable simulator of inter-AS routing using the BGP protocol.
 For this task, every programming language was allowed and we decided to use plain Java 13.
 Specifically, we decided to implement our infrastructure from scratch, starting from layer 2 up to layer 4. The details are explained in \ref{layer2}, \ref{layer3} and \ref{layer4}.
 An option that we considered, in the beginning, was to realize a dual-stack implementation to allow both IPv4 and IPv6 packets but, in the end, we have not enough time to do so.
-Eventually, as required in the specifications, we managed to implement the BGP messages, the T-BGP and the hybrid model. Look at \ref{BGPMex} and (ref trust impl) for further information.
+Eventually, as required in the specifications, we managed to implement the BGP messages, the T-BGP and the hybrid model. Look at \ref{BGPMex} and \ref{BGPTrust}, respectively, for further information.
 
-\section{Team description}
+\section{Team Description}
 Our team was composed of four members, Stephan, Filippo, Mirko and Gabriele. To introduce us, we will briefly describe our background.\newline
 Stephan is a senior developer and software architect with 20 years of experience.\newline
 Filippo has a bachelor degree in telecommunication engineering, while Mirko and Gabriele in computer science.\newline
@@ -33,10 +30,10 @@ Moreover, when possible, we helped each other to complete the tasks.
 We decided to dedicate an average of 16 hours per week for the project implementation to respect the total hours suggested by the teacher during the first lecture.\newline
 Down below, are reported the total hours spent for the whole project implementation and presentation preparation by each group member based on the personal diary:
 \begin{itemize}
- \item Stephan 112 hours.
- \item Filippo 102 hours and 30 minutes.
- \item Mirko 79 hours and 30 minutes.
- \item Gabriele 68 hours.
+  \item Stephan 112 hours.
+  \item Filippo 102 hours and 30 minutes.
+  \item Mirko 79 hours and 30 minutes.
+  \item Gabriele 68 hours.
 \end{itemize}
 Note that only the hours dedicated to writing the final report are not inserted in the total count.\newline
 Down below are reported the contribution statistics made by each member in the project repository from the beginning to end of the implementation:
