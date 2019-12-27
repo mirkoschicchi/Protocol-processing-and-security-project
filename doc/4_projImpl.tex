@@ -20,20 +20,18 @@ Moreover, to improve the UI, we decided to use JavaFX to provide more in-dept vi
     \item View the routes
 \end{itemize}
 We decided to use a test-driven development (TDD) approach, trying when possible to write the tests as first and then implement the algorithms. \newline
-To have an easier view of the exchanged messages and check the correctness of the protocol algorithms, we decided to export a PCAP file after every run.\newline
-There is the possibility to avoid the PCAP export just using a flag from the command line as you can see in the usage chapter \ref{simulatorDoc}.\newline
+The simulator includes support to export the traffic one or all networks via command line arguments (see \ref{simulatorDoc}). This was used to prove that the protocol implementations were according to standard.\newline
 Last but not least, we inserted a TUN device support to open a tunnel into the simulation (Linux only).
 In this way, we can directly connect our host computer with a simulated server.
 
 \section{Layer 2}\label{layer2}
-Our simulated IEEE 802.3 Ethernet allows an infinite number of octets as MTU.
-To reduce the workload, we decided to not implement the Preamble, start frame delimiter (SFD), frame check sequence (FCS) and the interframe gap (IFG).
-Given that the project is in a simulation environment, all these components were not necessary to have correct BGP functionalities.\newline
-Then, we created our own data structures to simplify further the data handling.
-These structures refer to:
+Our simulated IEEE 802.3 Ethernet allows an unlimited MTU.
+The Preamble, start frame delimiter (SFD), frame check sequence (FCS) and the interframe gap (IFG) are not implemented to reduce the workload and since they are not required for the PCAP export.
+Given that the project is in a simulation environment, all these components were not necessary for the required functionality.\newline
+We also implemented data structures and algorithms to support operations which are normally solved by other protocols:
 \begin{itemize}
-    \item The way we resolve the IP (replacing the ARP protocol)
-    \item How we enumerate the devices (Neighbor Discovery Protocol replacement)
+    \item Support to resolve IP addresses (replacing the ARP protocol)
+    \item Support to enumerate devices on a network (Neighbor Discovery Protocol replacement)
 \end{itemize}
 
 
@@ -43,12 +41,12 @@ To be sure that the implementation was correct we created several unit tests to 
 Moreover, we tried to exchange messages using Wireshark and we noticed that everything was correct.\newline
 Then, to simplify the implementation we get rid of the traffic class and the flow label, which are both set to 0.
 Note that we do not need them for the BGP implementation itself.
-\par About the routing, we initiate the simulation using a YAML document and from that, we initialize the local static routes.\newline
+\par About the routing, we initiate the simulation using a YAML document and from that, we generate the local static routes.\newline
 Once the system is running, the routing tables are updated by the routers through the BGP messages.
-The path to delivering a packet is based on the prefix match, where we consider the length of the prefix as learnt in the lectures.\newline
+The path to delivering a packet is based on the prefix match, where we consider the length of the prefix as discussed in the lectures.\newline
 In case the prefix is equal, we calculate a second parameter.
-It can be the BGP metric whether it is set, or the result of our formula, which takes the AS\_PATH length multiplied by 100 and divides the result by the neighbour trust.
-Therefore, the more we trust the next-hop, the smaller will be the calculated parameter and the higher will be the probability that route will be chosen.
+It can be the route metric (if set), or the result of our formula, which takes the AS\_PATH length multiplied by 100 and divides the result by the neighbour trust.
+Therefore, the more we trust the next-hop, the smaller the calculated parameter will be and the higher the probability that route will be chosen is.
 
 \section{Layer 4}\label{layer4}
 About the Transport Layer, we decided to implement the TCP header following the RFC 793 \cite{rfc793}.
@@ -111,7 +109,7 @@ RFC 1812 permit to include two additional sub-fields to \texttt{path attributes}
 This means that:
 \begin{itemize}
     \item The \texttt{withdrawn routes length} can take value 0;
-    \item Consequently, the \texttt{withdrawn routes} can be leaved empty;
+    \item Consequently, the \texttt{withdrawn routes} can be left empty;
     \item In the same way, also \texttt{network layer reachability information} won't be present anymore.
 \end{itemize}
 In turn, two additional subfields are specified:
