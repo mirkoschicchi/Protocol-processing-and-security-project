@@ -1,4 +1,4 @@
-\chapter{Project implementation}
+\chapter{Project Implementation}
 % Presentation of project implementation:
 % functional diagrams,
 % solutions used in the implementation,
@@ -10,9 +10,29 @@ At the end we will explain our T-BGP and hybrid model implementation.\newline
 In every section we will describe also the limitations and workarounds that we made to reduce the workload.
 Note that thanks to these simplifactions, we have been able to finish the project in six weeks maintaining a very high outcome quality.
 
-\section{Simulator infrastructure}
+\section{Simulator Infrastructure}
+To implement our simulator we used plain Java 13.
+Specifically, we used Project Reactor for scheduling and PDU delivery, while we used Graphstream for visualization and graph operations.
+Moreover, to improve the UI, we decided to use JavaFX to provide more in-dept visualization and some runtime controls like:
+\begin{itemize}
+    \item Turn off and on a router
+    \item Check the router state
+    \item View the routes
+\end{itemize}
+We decided to use a test-driven development (TDD) approach, trying when possible to write the tests as first and then implement the algorithms. \newline
+The simulator includes support to export the traffic one or all networks via command line arguments (see \ref{simulatorDoc}). This was used to prove that the protocol implementations were according to standard.\newline
+Last but not least, we inserted a TUN device support to open a tunnel into the simulation (Linux only).
+In this way, we can directly connect our host computer with a simulated server.
 
 \section{Layer 2}\label{layer2}
+Our simulated IEEE 802.3 Ethernet allows an unlimited MTU.
+The Preamble, start frame delimiter (SFD), frame check sequence (FCS) and the interframe gap (IFG) are not implemented to reduce the workload and since they are not required for the PCAP export.
+Given that the project is in a simulation environment, all these components were not necessary for the required functionality.\newline
+We also implemented data structures and algorithms to support operations which are normally solved by other protocols:
+\begin{itemize}
+    \item Support to resolve IP addresses (replacing the ARP protocol)
+    \item Support to enumerate devices on a network (Neighbor Discovery Protocol replacement)
+\end{itemize}
 
 
 \section{Layer 3}\label{layer3}
@@ -21,12 +41,12 @@ To be sure that the implementation was correct we created several unit tests to 
 Moreover, we tried to exchange messages using Wireshark and we noticed that everything was correct.\newline
 Then, to simplify the implementation we get rid of the traffic class and the flow label, which are both set to 0.
 Note that we do not need them for the BGP implementation itself.
-\par About the routing, we initiate the simulation using a YAML document and from that, we initialize the local static routes.\newline
+\par About the routing, we initiate the simulation using a YAML document and from that, we generate the local static routes.\newline
 Once the system is running, the routing tables are updated by the routers through the BGP messages.
-The path to delivering a packet is based on the prefix match, where we consider the length of the prefix as learnt in the lectures.\newline
+The path to delivering a packet is based on the prefix match, where we consider the length of the prefix as discussed in the lectures.\newline
 In case the prefix is equal, we calculate a second parameter.
-It can be the BGP metric whether it is set, or the result of our formula, which takes the AS\_PATH length multiplied by 100 and divides the result by the neighbour trust.
-Therefore, the more we trust the next-hop, the smaller will be the calculated parameter and the higher will be the probability that route will be chosen.
+It can be the route metric (if set), or the result of our formula, which takes the AS\_PATH length multiplied by 100 and divides the result by the neighbour trust.
+Therefore, the more we trust the next-hop, the smaller the calculated parameter will be and the higher the probability that route will be chosen is.
 
 \section{Layer 4}\label{layer4}
 About the Transport Layer, we decided to implement the TCP header following the RFC 793 \cite{rfc793}.
@@ -47,7 +67,7 @@ Each message need to integrate an header, composed by three simple fields:
     \item \texttt{Type} (1 byte): specify which of the 4 messages is following the header.
 \end{itemize}
 
-\subsection{OPEN message}
+\subsection{OPEN Message}
 The OPEN message is the one used to enstablish a connection need to be sent by both parties of the connection.
 The message is composed by the following fields:
 \begin{itemize}
@@ -60,11 +80,11 @@ The message is composed by the following fields:
 \end{itemize}
 
 
-\subsection{KEEPALIVE message}
+\subsection{KEEPALIVE Message}
 This message is used when a well-formatted OPEN message is received and need to be sent regularly to avoid the expiration of the Hold Timer. The suggested interval is a third of the Hold Timer. In this project, the Hold Timer expires after 90 seconds of no received KEEPALIVE, which is sent every 30 seconds. No extra fields are included, therefore the 19 byte message header is the sole content of this message.
 
 
-\subsection{NOTIFICATION message}
+\subsection{NOTIFICATION Message}
 When an error is detected, a NOTIFICATION message is sent. Three are the needed fields for this message:
 \begin{itemize}
     \item \texttt{Error code} (1 byte);
@@ -73,7 +93,7 @@ When an error is detected, a NOTIFICATION message is sent. Three are the needed 
 \end{itemize}
 Immediatly after the message, the connection is closed.
 
-\subsection{UPDATE message}
+\subsection{UPDATE Message}
 As anticipated before, this message required more effort to be implemented because of the requirement to be complient with IPv6.
 Therefore, the message is still based on the RFC 4271 \cite{rfc4271}, but apply necessarly take into account some extra path attributes described in the RFC 1812 \cite{rfc1812} specification.
 Specified fields from RFC 4271 are:
@@ -89,7 +109,7 @@ RFC 1812 permit to include two additional sub-fields to \texttt{path attributes}
 This means that:
 \begin{itemize}
     \item The \texttt{withdrawn routes length} can take value 0;
-    \item Consequently, the \texttt{withdrawn routes} can be leaved empty;
+    \item Consequently, the \texttt{withdrawn routes} can be left empty;
     \item In the same way, also \texttt{network layer reachability information} won't be present anymore.
 \end{itemize}
 In turn, two additional subfields are specified:
@@ -97,3 +117,5 @@ In turn, two additional subfields are specified:
     \item \texttt{MP\_REACH\_NLRI}, where network layer reachability information is specified together with the \texttt{next hop}.
     \item \texttt{MP\_UNREACH\_NLRI}, containing the withdrawn routes.
 \end{itemize}
+
+\section{T-BGP And Hybrid Model Implementation}\label{BGPTrust}

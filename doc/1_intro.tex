@@ -1,19 +1,16 @@
 \chapter{Introduction}
-In this chapter, we will describe the project overview starting from requirements and specifications and continuing with the group composition, roles, responsibilities and effort.
+In this chapter, we aim to give an overview of how we separated the workload and managed the project complexity.
+We will describe the project implementation starting from requirements and specifications, continuing with the group composition, the roles and the related responsibilities.
+Lastly, we will talk about the effort made by each group member.
 
-Introduction (
- each member's effort in the project as a percentage of the overall work including project,
- reporting and presentation.
-)
-
-\section{Problem description}
+\section{Problem Description}
 The project required to implement a scalable and customizable simulator of inter-AS routing using the BGP protocol.
 For this task, every programming language was allowed and we decided to use plain Java 13.
 Specifically, we decided to implement our infrastructure from scratch, starting from layer 2 up to layer 4. The details are explained in \ref{layer2}, \ref{layer3} and \ref{layer4}.
 An option that we considered, in the beginning, was to realize a dual-stack implementation to allow both IPv4 and IPv6 packets but, in the end, we have not enough time to do so.
-Eventually, as required in the specifications, we managed to implement the BGP messages, the T-BGP and the hybrid model. Look at \ref{BGPMex} and (ref trust impl) for further information.
+Eventually, as required in the specifications, we managed to implement the BGP messages, the T-BGP and the hybrid model. Look at \ref{BGPMex} and \ref{BGPTrust}, respectively, for further information.
 
-\section{Team description}
+\section{Team Description}
 Our team was composed of four members, Stephan, Filippo, Mirko and Gabriele. To introduce us, we will briefly describe our background.\newline
 Stephan is a senior developer and software architect with 20 years of experience.\newline
 Filippo has a bachelor degree in telecommunication engineering, while Mirko and Gabriele in computer science.\newline
@@ -33,55 +30,55 @@ Moreover, when possible, we helped each other to complete the tasks.
 We decided to dedicate an average of 16 hours per week for the project implementation to respect the total hours suggested by the teacher during the first lecture.\newline
 Down below, are reported the total hours spent for the whole project implementation and presentation preparation by each group member based on the personal diary:
 \begin{itemize}
- \item Stephan 112 hours.
- \item Filippo 102 hours and 30 minutes.
- \item Mirko 79 hours and 30 minutes.
- \item Gabriele 68 hours.
+  \item Stephan 112 hours.
+  \item Filippo 102 hours and 30 minutes.
+  \item Mirko 79 hours and 30 minutes.
+  \item Gabriele 68 hours.
 \end{itemize}
-Note that only the hours dedicated to writing the final report are not inserted in the total count.\newline
+Note that the hours dedicated to writing the final report are not inserted in the total count.\newline
 Down below are reported the contribution statistics made by each member in the project repository from the beginning to end of the implementation:
 \begin{tabbing}
-  Filippo Piconese \= (filippopiconese@hotmail.it):\\
-  insertions: \> 2022 (8\%)\\
-  deletions: \> 790 (5\%)\\
-  files: \> 155 (18\%)\\
-  commits: \> 40 (27\%)\\
-  lines changed: \> 2812\\
+  Filippo Piconese \= \textlangle{}filippopiconese@hotmail.it\textrangle{}:\\
+  insertions: \> 4360 (15\%)\\
+  deletions: \> 872 (5\%)\\
+  files: \> 171 (18\%)\\
+  commits: \> 44 (26\%)\\
+  lines changed: \> 5232\\
   first commit: \> Sat Nov 9 19:12:36 2019 +0100\\
-  last commit: \> Fri Dec 6 13:06:43 2019 +0200\\
+  last commit: \> Thu Dec 26 18:17:57 2019 +0100\\
   \\
-  Gabriele Orazi \> (gabriorazi07@gmail.com):\\
-  insertions: \> 814 (3\%)\\
-  deletions: \> 362 (2\%)\\
-  files: \> 59 (7\%)\\
-  commits: \> 16 (11\%)\\
-  lines changed: \> 1176\\
+  Gabriele Orazi \> \textlangle{}gabriorazi07@gmail.com\textrangle{}:\\
+  insertions: \> 1067 (4\%)\\
+  deletions: \> 399 (2\%)\\
+  files: \> 75 (8\%)\\
+  commits: \> 20 (12\%)\\
+  lines changed: \> 1466\\
   first commit: \> Thu Nov 7 23:41:23 2019 +0200\\
-  last commit: \> Thu Dec 5 11:53:36 2019 +0200\\
+  last commit: \> Mon Dec 23 18:33:49 2019 +0100\\
   \\
-  Stephan Hauser \> stephan@codefreeze.ch):\\
-  insertions: \> 18574 (71\%)\\
-  deletions: \> 15057 (88\%)\\
-  files: \> 537 (61\%)\\
-  commits: \> 67 (45\%)\\
-  lines changed: \> 33631\\
+  Stephan Hauser \> \textlangle{}stephan@codefreeze.ch\textrangle{}:\\
+  insertions: \> 19037 (65\%)\\
+  deletions: \> 15349 (87\%)\\
+  files: \> 594 (61\%)\\
+  commits: \> 75 (45\%)\\
+  lines changed: \> 34386\\
   first commit: \> Wed Nov 6 16:10:17 2019 +0200\\
-  last commit: \> Tue Dec 10 13:07:44 2019 +0200\\
+  last commit: \> Fri Dec 27 09:52:32 2019 +0100\\
   \\
-  Mirko Schicchi \> (mirko.schicchi@gmail.com):\\
-  insertions: \> 4579 (18\%)\\
-  deletions: \> 940 (5\%)\\
-  files: \> 129 (15\%)\\
-  commits: \> 27 (18\%)\\
-  lines changed: \> 5518\\
+  Mirko Schicchi \> \textlangle{}mirko.schicchi@gmail.com\textrangle{}:\\
+  insertions: \> 4661 (16\%)\\
+  deletions: \> 941 (5\%)\\
+  files: \> 129 (13\%)\\
+  commits: \> 27 (16\%)\\
+  lines changed: \> 5602\\
   first commit: \> Thu Nov 7 16:49:33 2019 +0100\\
-  last commit: \> Tue Dec 10 08:22:26 2019 +0100\\
+  last commit: \> Tue Dec 17 09:29:43 2019 +0100\\
   \\
-  Total:\\
-  insertions: \> 25989 (100\%)\\
-  deletions: \> 17149 (100\%)\\
-  files: \> 880 (100\%)\\
-  commits: \> 150 (100\%)\\
+  total:\\
+  insertions: \> 29126 (100\%)\\
+  deletions: \> 17561 (100\%)\\
+  files: \> 970 (100\%)\\
+  commits: \> 167 (100\%)\\
 \end{tabbing}
 It is worth to mention that all the members of the group have done their utmost to successfully complete the project objectives.\newline
 A special thank you goes to Stephan who was able to guide us and evenly distribute the tasks taking into account our capabilities.
