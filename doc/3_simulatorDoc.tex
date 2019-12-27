@@ -1,2 +1,37 @@
 \chapter{Simulator Documentation}\label{simulatorDoc}
-Using the simulator the group implemented (how does it look, how is it used, what software is needed to run the simulator)
+We dedicate this part of the report to explain how to download and use our simulator, along with his features.\newline
+First of all, the user should download the repository as follow:
+\begin{verbatim}
+  git clone https://github.com/mirkoschicchi/Protocol-processing-and-security-project.git
+\end{verbatim}
+
+\section{Project Structure}
+This project is created with Maven and, as said in chapter \ref{projPlan}, Java 13 is needed to run the code.\newline
+a quick overview of the project is reported in the following points:
+\begin{itemize}
+  \item The repository folder is divided into "doc", which contains the files related to this report, and "protsim", where the simulator files lie;
+  \item Inside protsim/src/main/java/fi/utu/protproc/group3 you can find the simulator components like the configuration files, the UI, the nodes definition and the structures used to exchange data;
+  \item Inside protsim/src/test/java/fi/utu/protproc/group3 there are the unit tests created to continuously check the code correctness upon modifications;
+  \item In the folder protsim/scenarios there are the .yaml files needed to communicate to the simulator the network structure;
+  \item There are other folders not needed for the project overview;
+\end{itemize}
+
+\section{Usage}
+You can use any Java IDE like Intellij Idea or Eclipse.
+Navigate the folders untill you reach the App.java file in the main folder. It contains the starting function of the simulator.\newline
+To run the code is required to specify as a parameter one of the simulation scenarios contained in the scenarios folder (protsim/scenarios):
+\begin{verbatim}
+  run [-q] [-n=<network>] [-w=<networkFile>] <scenarioFile>
+\end{verbatim}
+The other options that you can see above are:
+\begin{verbatim}
+  -q, --no-gui              Disables the simulation UI
+  -n, --network=<network>   Limit traffic capture to the given network
+  -w, --write=<networkFile> Write network traffic to file (ngpcap file format)
+\end{verbatim}
+Some usage examples can be:
+\begin{verbatim}
+  run -w=/tmp/protsim.ngpcap -n=net1 scenarios/static.yaml (static routing example)
+  run -w=/tmp/protsim.ngpcap -n=t1 scenarios/simple.yaml
+  run -w=/tmp/protsim.ngpcap -n=t1 -q scenarios/demo.yaml
+\end{verbatim}
