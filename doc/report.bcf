@@ -2134,6 +2134,7 @@
     <bcf:citekey order="2">rfc793</bcf:citekey>
     <bcf:citekey order="3">rfc4271</bcf:citekey>
     <bcf:citekey order="4">rfc1812</bcf:citekey>
+    <bcf:citekey order="5">rfc4271</bcf:citekey>
   </bcf:section>
   <!-- SORTING TEMPLATES -->
   <bcf:sortingtemplate name="none">

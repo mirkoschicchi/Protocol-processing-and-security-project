@@ -118,4 +118,23 @@ In turn, two additional subfields are specified:
     \item \texttt{MP\_UNREACH\_NLRI}, containing the withdrawn routes.
 \end{itemize}
 
+\section{Finite State Machine}\label{fsm}
+Each router holds a \texttt{Finite State Machine} for each peer connection it has. The FSM contains all the parameters needed to perform the connection, send messages and manage the context. It describes what actions should be taken by the BGP routing engine and when.\\
+It has been implemented using the \textit{Squirrel Foundation}\footnote{\url{https://github.com/hekailiang/squirrel}} Java library, an open source project which provides a lightweight and easy-to-use state machine implementation.\\
+Since only one peer needs to open the connection, we implemented a naive collision avoidance algorithm that selects, as node initiator of a connection, the one that has the lower IP address. This approach is not exactly correct, but it works well for our purposes.\\
+As stated in RFC 4271 \cite{rfc4271}, the finite state machine can be in six different states, each one performing specific actions. The transition between one state to another is fired by events (all the transitions are implemented, but not all the error events are fired to simplify the implementation), and each of them holds callback functions.\\
+We also implemented the three mandatory timers (\texttt{ConnectRetryTimer}, \texttt{HoldTimer} and \texttt{KeepaliveTimer}), plus the \texttt{DelayOpenTimer}, by following the specification of RFC 4271.
+
+\section{Graphical User Interface}
+The GUI is essential to give the user the possibility to interact with the simulation and turn on/off nodes, inspect the routing tables and the state of the finite state machines.\\
+As you can see from Fig. \ref{fig:gui}, on the left side of the window it is shown the graph of the network infrastructure which can be dragged and arranged as wanted. By clicking on a node, on the right hand side we can see the information about it, such as the BGP peers connection status and the routing table. Pressing the "Shutdown" button it is possible to turn off the node and the information in the tables will be refreshed accordingly. 
+On the bottom side, there is a console that logs any error occurring.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1.0\textwidth]{gui.png}
+    \caption{Graphical User Interface}
+    \label{fig:gui}
+\end{figure}
+
+
 \section{T-BGP And Hybrid Model Implementation}\label{BGPTrust}
