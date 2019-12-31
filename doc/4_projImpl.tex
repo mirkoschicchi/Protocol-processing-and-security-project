@@ -138,3 +138,11 @@ On the bottom side, there is a console that logs any error occurring.
 
 
 \section{T-BGP And Hybrid Model Implementation}\label{BGPTrust}
+In the development process of the BGP protocol, trust in between different routers has been taken into account. The followed approach is a conjunction of \textit{Direct} and \textit{Voted Trust}. In the first one, the main focus has been concentrated in the well-known trust model for inter-domain in routing\cite{he2006novel} discussed by \textit{Liwen He}, where Direct Trust is calculated combining \textit{Observed} and \textit{Inherent Trust}.\\
+In our implementation, the Inherent Trust is randomly initialized at the startup phase, while the Observed one has a fixed 0.5 default value. Thus, the Observed Trust value vary during the execution of the simulation depending on the neighbor's behaviors: when a KEEPALIVE message is received, the value is increased by 5\%, while in case of connection closure a 10\% reduction is applied.
+
+On the other hand, the realized implementation of the \textit{Voted Trust} follows the baseline provided by the Hybrid Trust Model\cite{rantala2011hybrid}. To realize such system, a specific TCP connection has been established in order to communicate together with the second level neighbors. To achieve so, each party need also to keep an updated list of the second level neighborhood to establish the \textit{Trust Agent} connection, as well as all the updated votes collected from the connections. The peer context has been chosen as the best place where to store such values.
+
+All this values are combined together in order to create a more reliable and precise idea over the neighbor. The calculation follows the formula:
+$$ \left\{[(Inherent Trust + Observed Trust) / 2 ] + Voted Trust \right\} / 2 $$
+It's trivial to understand that the result is the mean between voted and direct trust, the latter composed in turn of the average between inherent and observed trust.
