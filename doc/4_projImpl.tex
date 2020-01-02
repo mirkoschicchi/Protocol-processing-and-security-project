@@ -10,9 +10,9 @@ To implement our simulator we used plain Java 13.
 Specifically, we used Project Reactor for scheduling and PDU delivery, while we used Graphstream for visualization and graph operations.
 Moreover, to improve the UI, we decided to use JavaFX to provide more in-dept visualization and some runtime controls like:
 \begin{itemize}
- \item Turn off and on a router
- \item Check the router state
- \item View the routes
+    \item Turn off and on a router
+    \item Check the router state
+    \item View the routes
 \end{itemize}
 We decided to use a test-driven development (TDD) approach, trying when possible to write the tests as first and then implement the algorithms. \newline
 The simulator includes support to export the traffic one or all networks via command-line arguments (see \ref{simulatorDoc}). This was used to prove that the protocol implementations were according to standard.\newline
@@ -25,8 +25,8 @@ The Preamble, start frame delimiter (SFD), frame check sequence (FCS) and the in
 Given that the project is in a simulation environment, all these components were not necessary for the required functionality.\newline
 We also implemented data structures and algorithms to support operations which are normally solved by other protocols:
 \begin{itemize}
- \item Support to resolve IP addresses (replacing the ARP protocol)
- \item Support to enumerate devices on a network (Neighbor Discovery Protocol replacement)
+    \item Support to resolve IP addresses (replacing the ARP protocol)
+    \item Support to enumerate devices on a network (Neighbor Discovery Protocol replacement)
 \end{itemize}
 
 
@@ -57,21 +57,21 @@ In the next paragraphs, there will be a brief recap of required fields for KEEPA
 
 Each message need to integrate an header, composed by three simple fields:
 \begin{itemize}
- \item \texttt{Marker} (16 bytes): each bit is set to 1;
- \item \texttt{Length} (2 bytes): number of bytes of the message, this header included;
- \item \texttt{Type} (1 byte): specify which of the 4 messages is following the header.
+    \item \texttt{Marker} (16 bytes): each bit is set to 1
+    \item \texttt{Length} (2 bytes): number of bytes of the message, this header included
+    \item \texttt{Type} (1 byte): specify which of the 4 messages is following the header
 \end{itemize}
 
 \subsection{OPEN Message}
 The OPEN message is the one used to establish a connection need to be sent by both parties of the connection.
 The message is composed by the following fields:
 \begin{itemize}
- \item \texttt{Version} (1 byte): the protocol version number, in this project it is 4;
- \item \texttt{My Autonomous System} (2 bytes): identifier number of the sender;
- \item \texttt{Hold Time} (2 bytes): proposal of Hold Time interval;
- \item \texttt{BGP Identifier} (4 bytes);
- \item \texttt{Optional Parameters Length} (1 byte);
- \item \texttt{Optional Parameters} (variable length).
+    \item \texttt{Version} (1 byte): the protocol version number, in this project it is 4
+    \item \texttt{My Autonomous System} (2 bytes): identifier number of the sender
+    \item \texttt{Hold Time} (2 bytes): proposal of Hold Time interval
+    \item \texttt{BGP Identifier} (4 bytes)
+    \item \texttt{Optional Parameters Length} (1 byte)
+    \item \texttt{Optional Parameters} (variable length)
 \end{itemize}
 
 
@@ -82,9 +82,9 @@ This message is used when a well-formatted OPEN message is received and need to 
 \subsection{NOTIFICATION Message}
 When an error is detected, a NOTIFICATION message is sent. Three are the needed fields for this message:
 \begin{itemize}
- \item \texttt{Error code} (1 byte);
- \item \texttt{Error subcode} (1 byte);
- \item \texttt{Data} (variable length).
+    \item \texttt{Error code} (1 byte)
+    \item \texttt{Error subcode} (1 byte)
+    \item \texttt{Data} (variable length)
 \end{itemize}
 Immediatly after the message, the connection is closed.
 
@@ -93,24 +93,24 @@ As anticipated before, this message required more effort to be implemented becau
 Therefore, the message is still based on the RFC 4271 \cite{rfc4271}, but apply necessarily take into account some extra path attributes described in the RFC 1812 \cite{rfc1812} specification.
 Specified fields from RFC 4271 are:
 \begin{itemize}
- \item \texttt{Withdrawn Routes Length} (2 bytes);
- \item \texttt{Withdrawn Routes} (variable);
- \item \texttt{Total Path Attribute Length} (2 bytes);
- \item \texttt{Path Attributes} (variable);
- \item \texttt{Network Layer Reachability Information} (variable).
+    \item \texttt{Withdrawn Routes Length} (2 bytes)
+    \item \texttt{Withdrawn Routes} (variable)
+    \item \texttt{Total Path Attribute Length} (2 bytes)
+    \item \texttt{Path Attributes} (variable)
+    \item \texttt{Network Layer Reachability Information} (variable)
 \end{itemize}
 In the standard implementation, \texttt{Withdrawn routes} and \texttt{network layer reachability information} need to be specified as IPv4 addresses in the relative fields of the message itself. Instead, the \texttt{Path attributes} field need to be fullfilled with at least 3 sub-fields which are \texttt{origin}, \texttt{next hop} and \texttt{as path}.
 RFC 1812 permit to include two additional sub-fields to \texttt{path attributes}, indicating \texttt{withdrawn routes} and \texttt{network layer reachability information} in a IPv6 format.
 This means that:
 \begin{itemize}
- \item The \texttt{withdrawn routes length} can take value 0;
- \item Consequently, the \texttt{withdrawn routes} can be left empty;
- \item In the same way, also \texttt{network layer reachability information} won't be present anymore.
+    \item The \texttt{withdrawn routes length} can take value 0
+    \item Consequently, the \texttt{withdrawn routes} can be left empty
+    \item In the same way, also \texttt{network layer reachability information} won't be present anymore
 \end{itemize}
 In turn, two additional subfields are specified:
 \begin{itemize}
- \item \texttt{MP\_REACH\_NLRI}, where network layer reachability information is specified together with the \texttt{next hop}.
- \item \texttt{MP\_UNREACH\_NLRI}, containing the withdrawn routes.
+    \item \texttt{MP\_REACH\_NLRI}, where network layer reachability information is specified together with the \texttt{next hop}
+    \item \texttt{MP\_UNREACH\_NLRI}, containing the withdrawn routes
 \end{itemize}
 
 \section{Finite State Machine}\label{fsm}
@@ -125,10 +125,10 @@ The GUI is essential to give the user the possibility to interact with the simul
 As you can see from Fig. \ref{fig:gui}, on the left side of the window it is shown the graph of the network infrastructure which can be dragged and arranged as wanted. By clicking on a node, on the right-hand side we can see the information about it, such as the BGP peers connection status and the routing table. Pressing the "Shutdown" button it is possible to turn off the node and the information in the tables will be refreshed accordingly.
 On the bottom side, there is a console that logs any error occurring.
 \begin{figure}[h]
- \centering
- \includegraphics[width=1.0\textwidth]{gui1.png}
- \caption{Graphical User Interface}
- \label{fig:gui}
+    \centering
+    \includegraphics[width=1.0\textwidth]{gui1.png}
+    \caption{Graphical User Interface}
+    \label{fig:gui}
 \end{figure}
 
 
