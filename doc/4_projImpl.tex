@@ -10,18 +10,18 @@ To implement our simulator we used plain Java 13.
 Specifically, we used Project Reactor for scheduling and PDU delivery, while we used Graphstream for visualization and graph operations.
 Moreover, to improve the UI, we decided to use JavaFX to provide more in-dept visualization and some runtime controls like:
 \begin{itemize}
-    \item Turn off and on a router
+    \item Turn off and on a router or network
     \item Check the router state
-    \item View the routes
+    \item View the routes and other debugging information
 \end{itemize}
 We decided to use a test-driven development (TDD) approach, trying when possible to write the tests as first and then implement the algorithms. \newline
-The simulator includes support to export the traffic one or all networks via command-line arguments (see \ref{simulatorDoc}). This was used to prove that the protocol implementations were according to standard.\newline
+The simulator includes support to export the traffic for one or all networks via command-line arguments (see \ref{simulatorDoc}). This was used to prove that the protocol implementations were according to standard.\newline
 Last but not least, we inserted a TUN device support to open a tunnel into the simulation (Linux only).
 In this way, we can directly connect our host computer with a simulated server.
 
 \section{Layer 2}\label{layer2}
 Our simulated IEEE 802.3 Ethernet allows an unlimited MTU.
-The Preamble, start frame delimiter (SFD), frame check sequence (FCS) and the interframe gap (IFG) are not implemented to reduce the workload and since they are not required for the PCAP export.
+The preamble, start frame delimiter (SFD), frame check sequence (FCS) and the interframe gap (IFG) are not implemented to reduce the workload and since they are not required for the PCAP export.
 Given that the project is in a simulation environment, all these components were not necessary for the required functionality.\newline
 We also implemented data structures and algorithms to support operations which are normally solved by other protocols:
 \begin{itemize}
@@ -33,10 +33,10 @@ We also implemented data structures and algorithms to support operations which a
 \section{Layer 3}\label{layer3}
 For what concerns the Network Layer we first created the IPv6 header following the RFC 2460 \cite{rfc2460}.\newline
 To be sure that the implementation was correct we created several unit tests to check that the IP packet was parsed correctly.
-Moreover, we tried to exchange messages using Wireshark and we noticed that everything was correct.\newline
+Moreover, we tried to parse messages using Wireshark to verify that everything was correct.\newline
 Then, to simplify the implementation we get rid of the traffic class and the flow label, which are both set to 0.
 Note that we do not need them for the BGP implementation itself.
-\par About the routing, we initiate the simulation using a YAML document and from that, we generate the local static routes.\newline
+\par About the routing, we initiate the simulation using a YAML document and from that, we generate the local static routes for any directly connected networks as well as networks belonging to the same AS.\newline
 Once the system is running, the routing tables are updated by the routers through the BGP messages.
 The path to delivering a packet is based on the prefix match, where we consider the length of the prefix as discussed in the lectures.\newline
 In case the prefix is equal, we calculate a second parameter.
@@ -47,15 +47,15 @@ Therefore, the more we trust the next-hop, the smaller the calculated parameter 
 About the Transport Layer, we decided to implement the TCP header following the RFC 793 \cite{rfc793}.
 Also, in this case, we used some default values like the Urgent Pointer, the Options and the relative Padding since we do not need them for this application.\newline
 One fundamental limitation is that our TCP implementation is message-based since it was not the main goal of the project and it was a lot easier.
-Therefore, there is not data buffer and it can be considered like a UDP protocol but with the TCP header.
+Therefore, there are no data buffers and it can be considered like a UDP protocol but with the TCP header.
 Moreover, we did not implement any error handling or retransmission technique.\newline
 Nevertheless, we implemented the 3WHS to establish the connection and the FIN based messages to close it.
 
 \section{BGP Messages}\label{BGPMex}
-The BGP implementation follows quite specifically the RFC 4271 specification, which define four different kind of messages.
-In the next paragraphs, there will be a brief recap of required fields for KEEPALIVE, OPEN and NOTIFICATION messages. It's noteworthy to spend more time explaining the implementation of the UPDATE message, which is not trivial as the others due to the taken design decision of using IPv6 rather than the default IPv4.
+time explaining the implementation of the UPDATE message, which is The BGP implementation follows quite specifically the RFC 4271 specification, which define four different kind of messages.
+In the next paragraphs, there will be a brief recap of required fields for KEEPALIVE, OPEN and NOTIFICATION messages. It's noteworthy to spend more not trivial as the others due to the taken design decision of using IPv6 rather than the default IPv4.
 
-Each message need to integrate an header, composed by three simple fields:
+Each message need to integrate a header, composed by three simple fields:
 \begin{itemize}
     \item \texttt{Marker} (16 bytes): each bit is set to 1
     \item \texttt{Length} (2 bytes): number of bytes of the message, this header included
@@ -133,7 +133,7 @@ On the bottom side, there is a console that logs any error occurring.
 
 
 \section{T-BGP And Hybrid Model Implementation}\label{BGPTrust}
-In the development process of the BGP protocol, trust in between different routers has been taken into account. The followed approach is a conjunction of \textit{Direct} and \textit{Voted Trust}. In the first one, the main focus has been concentrated in the well-known trust model for inter-domain in routing\cite{he2006novel} discussed by \textit{Liwen He}, where Direct Trust is calculated combining \textit{Observed} and \textit{Inherent Trust}.\\
+In the development process of the BGP protocol, trust in between different routers has been taken into account. The followed approach is a combination of \textit{Direct} and \textit{Voted Trust}. In the first one, the main focus has been concentrated in the well-known trust model for inter-domain in routing\cite{he2006novel} discussed by \textit{Liwen He}, where Direct Trust is calculated combining \textit{Observed} and \textit{Inherent Trust}.\\
 In our implementation, the Inherent Trust is randomly initialized at the startup phase, while the Observed one has a fixed 0.5 default value. Thus, the Observed Trust value varies during the execution of the simulation depending on the neighbour's behaviours: when a KEEPALIVE message is received, the value is increased by 5\%, while in case of connection closure a 10\% reduction is applied.
 
 On the other hand, the realized implementation of the \textit{Voted Trust} follows the baseline provided by the Hybrid Trust Model\cite{rantala2011hybrid}. To realize such a system, a specific TCP connection has been established to communicate together with the second level neighbours. To achieve so, each party need also to keep an updated list of the second level neighbourhood to establish the \textit{Trust Agent} connection, as well as all the updated votes collected from the connections. The peer context has been chosen as the best place where to store such values.
