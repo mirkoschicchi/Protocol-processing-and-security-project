@@ -53,7 +53,7 @@ Nevertheless, we implemented the 3WHS to establish the connection and the FIN ba
 
 \section{BGP Messages}\label{BGPMex}
 time explaining the implementation of the UPDATE message, which is The BGP implementation follows quite specifically the RFC 4271 specification, which define four different kind of messages.
-In the next paragraphs, there will be a brief recap of required fields for KEEPALIVE, OPEN and NOTIFICATION messages. It's noteworthy to spend more words for the UPDATE message, which is not trivial as the other messages due to the usage of IPv6 rather than the default IPv4.
+In the next paragraphs, there will be a brief recap of required fields for KEEPALIVE, OPEN and NOTIFICATION messages. It's noteworthy to spend more words for the UPDATE message, which is not as straightforward as the other messages due to the usage of IPv6 rather than the default IPv4.
 
 Each message need to integrate a header, composed by three simple fields:
 \begin{itemize}
